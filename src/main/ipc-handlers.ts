@@ -237,6 +237,12 @@ export class IPCHandlers {
     ipcMain.handle('call-openai-api', async (event, { apiKey, model, prompt }) => {
       try {
         console.log('🤖 Main process: Calling OpenAI API...');
+        console.log('🔑 API Key length:', apiKey.length);
+        console.log('🔑 API Key starts with:', apiKey.substring(0, 20));
+        console.log('🔑 API Key ends with:', apiKey.substring(apiKey.length - 20));
+        console.log('🔑 API Key contains sk-proj:', apiKey.includes('sk-proj'));
+        console.log('🤖 Model:', model);
+        console.log('📝 Prompt length:', prompt.length);
         
         const response = await axios.post(
           'https://api.openai.com/v1/chat/completions',
@@ -275,6 +281,9 @@ export class IPCHandlers {
         
         if (axios.isAxiosError(error)) {
           if (error.response?.status === 401) {
+            console.error('🔑 401 Unauthorized - API key issue');
+            console.error('🔑 Sent API key length:', apiKey.length);
+            console.error('🔑 Sent API key start:', apiKey.substring(0, 20));
             return { error: 'Invalid API key. Please check your OpenAI API key.' };
           } else if (error.response?.status === 429) {
             return { error: 'Rate limit exceeded. Please try again later.' };

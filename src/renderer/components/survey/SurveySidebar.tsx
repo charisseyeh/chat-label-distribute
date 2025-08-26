@@ -179,7 +179,7 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages 
 
   if (!currentTemplate) {
     return (
-      <div className="w-80 bg-gray-50 border-l border-gray-200 p-4">
+      <div className="p-4">
         <div className="text-center text-gray-500 py-8">
           <p>No survey template available</p>
           <p className="text-sm">Please create a template in Survey Questions</p>
@@ -189,8 +189,7 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages 
   }
 
   return (
-    <div className="w-80 bg-gray-50 border-l border-gray-200 flex flex-col h-full">
-
+    <div className="flex flex-col h-full">
       {/* Survey Sections */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {surveySections.map((section) => (

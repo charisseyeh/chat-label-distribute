@@ -5,6 +5,7 @@ import { useNavigationStore } from '../../stores/navigationStore';
 import { useSurveyStore } from '../../stores/surveyStore';
 
 import SurveySidebar from '../survey/SurveySidebar';
+import { TwoPanelLayout } from '../common';
 
 interface Message {
   id: string;
@@ -340,96 +341,95 @@ const ConversationViewer: React.FC = () => {
   const surveyStatus = getSurveyCompletionStatus();
 
   return (
-    <div className="flex h-screen bg-background conversation-viewer">
-      {/* Main Content - 80% width */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border bg-white">
-          <div className="flex items-center space-x-4">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">{currentConversation.title}</h1>
-            </div>
+    <TwoPanelLayout
+      sidebarContent={
+        <SurveySidebar 
+          conversationId={id || ''}
+          messages={messages}
+        />
+      }
+      className="conversation-viewer"
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between p-6 border-b border-border bg-white">
+        <div className="flex items-center space-x-4">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">{currentConversation.title}</h1>
           </div>
-        </div>
-
-        {/* Conversation Metadata */}
-        <div className="p-6 bg-white border-b border-border">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <div className="text-sm text-muted-foreground">Messages</div>
-              <div className="font-medium">{currentConversation.messageCount}</div>
-            </div>
-            <div>
-              <div className="text-sm text-muted-foreground">Created</div>
-              <div className="font-medium">{new Date(currentConversation.createdAt).toLocaleDateString()}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Messages Container - Scrollable */}
-        <div className="flex-1 overflow-y-auto p-6 messages-container">
-          {!Array.isArray(messages) || messages.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              {!Array.isArray(messages) ? 'Error: Messages not loaded properly' : 'No messages found in this conversation'}
-            </div>
-          ) : (
-            <>
-              <div className="space-y-4">
-                {displayedMessages.map((message, index) => (
-                  <div key={message.id} className="flex space-x-3">
-                    
-                    {/* Message Content */}
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getRoleColor(message.role)}`}>
-                          {getRoleDisplayName(message.role)}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(message.create_time * 1000).toLocaleTimeString()}
-                        </span>
-                      </div>
-                      
-                      <div className="prose prose-sm max-w-none">
-                        {formatMessageContent(message.content)}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              {/* Lazy Loading Controls */}
-              {messages.length > messageLimit && !showAllMessages && (
-                <div className="mt-6 text-center">
-                  <div className="flex items-center justify-center space-x-4">
-                    <button
-                      onClick={() => setMessageLimit(prev => Math.min(prev + 50, messages.length))}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                    >
-                      Load More Messages (+50)
-                    </button>
-                    <button
-                      onClick={() => setShowAllMessages(true)}
-                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-                    >
-                      Show All Messages ({messages.length})
-                    </button>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Loading messages in batches for better performance
-                  </p>
-                </div>
-              )}
-            </>
-          )}
         </div>
       </div>
 
-      {/* Survey Sidebar - 20% width */}
-      <SurveySidebar 
-        conversationId={id || ''}
-        messages={messages}
-      />
-    </div>
+      {/* Conversation Metadata */}
+      <div className="p-6 bg-white border-b border-border">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <div className="text-sm text-muted-foreground">Messages</div>
+            <div className="font-medium">{currentConversation.messageCount}</div>
+          </div>
+          <div>
+            <div className="text-sm text-muted-foreground">Created</div>
+            <div className="font-medium">{new Date(currentConversation.createdAt).toLocaleDateString()}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Messages Container - Scrollable */}
+      <div className="flex-1 overflow-y-auto p-6 messages-container">
+        {!Array.isArray(messages) || messages.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            {!Array.isArray(messages) ? 'Error: Messages not loaded properly' : 'No messages found in this conversation'}
+          </div>
+        ) : (
+          <>
+            <div className="space-y-4">
+              {displayedMessages.map((message, index) => (
+                <div key={message.id} className="flex space-x-3">
+                  
+                  {/* Message Content */}
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getRoleColor(message.role)}`}>
+                        {getRoleDisplayName(message.role)}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(message.create_time * 1000).toLocaleTimeString()}
+                      </span>
+                    </div>
+                    
+                    <div className="prose prose-sm max-w-none">
+                      {formatMessageContent(message.content)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Lazy Loading Controls */}
+            {messages.length > messageLimit && !showAllMessages && (
+              <div className="mt-6 text-center">
+                <div className="flex items-center justify-center space-x-4">
+                  <button
+                    onClick={() => setMessageLimit(prev => Math.min(prev + 50, messages.length))}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  >
+                    Load More Messages (+50)
+                  </button>
+                  <button
+                    onClick={() => setShowAllMessages(true)}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                  >
+                    Show All Messages ({messages.length})
+                  </button>
+                </div>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Loading messages in batches for better performance
+                </p>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </TwoPanelLayout>
   );
 };
 
