@@ -6,6 +6,7 @@ import ConversationBrowser from './components/conversation/ConversationBrowser';
 import LabelConversations from './components/conversation/LabelConversations';
 import ConversationViewer from './components/conversation/ConversationViewer';
 import AIComparisons from './components/ai-analysis/AIComparisons';
+import SurveyQuestionsPage from './pages/SurveyQuestionsPage';
 import { useConversationStore } from './stores/conversationStore';
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
               <Route path="/label-conversations" element={<LabelConversations />} />
               <Route path="/conversation/:id" element={<ConversationViewer />} />
               <Route path="/ai-comparisons" element={<AIComparisons />} />
+              <Route path="/survey-questions" element={<SurveyQuestionsPage />} />
             </Routes>
           </main>
         </div>

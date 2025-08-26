@@ -85,76 +85,71 @@ const ConversationBrowser: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Conversation Selection</h2>
-        
-        {/* Upload Button - Only show if no files are stored */}
-        {storedFiles.length === 0 && (
-          <button
-            onClick={handleFileSelect}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-          >
-            Select Conversations File
-          </button>
-        )}
-
-        {/* Show file list when files exist */}
-        {storedFiles.length > 0 && (
-          <FileList
-            storedFiles={storedFiles}
-            onLoadFile={loadConversationsFromStoredFile}
-            onDeleteFile={handleDeleteFile}
-            onUploadNew={handleFileSelect}
-          />
-        )}
-
-        {/* Current File Display */}
-        {currentSourceFile && (
-          <div className="flex items-center gap-4 mb-4">
-            <span className="text-sm text-gray-600">
-              Current File: {currentSourceFile.split('/').pop()}
-            </span>
-            <button
-              onClick={handleFileSelect}
-              className="text-blue-600 hover:text-blue-700 text-sm underline"
-            >
-              Upload New File
-            </button>
-          </div>
-        )}
-
-        {/* AI Filtering Panel */}
-        {currentSourceFile && loadedConversations.length > 0 && (
-          <div>
-            <AIFilteringPanel
-              conversations={filteredConversations}
-              onFilteredConversations={(filtered) => {
-                setFilteredConversations(filtered);
-              }}
-              onRelevancyResults={(results) => {
-                setAiRelevancyResults(results);
-              }}
+          
+          {/* Show file list when files exist */}
+          {storedFiles.length > 0 && (
+            <FileList
+              storedFiles={storedFiles}
+              currentSourceFile={currentSourceFile}
+              onLoadFile={loadConversationsFromStoredFile}
+              onDeleteFile={handleDeleteFile}
+              onUploadNew={handleFileSelect}
             />
-          </div>
-        )}
+          )}
 
-        {/* Show message when no file is selected */}
-        {!currentSourceFile && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="text-center">
-              <h3 className="text-lg font-medium text-blue-800 mb-2">No File Selected</h3>
-              <p className="text-blue-600 mb-4">
-                Please select a conversations.json file to view and select conversations for labeling.
-              </p>
+          {/* Current File Display */}
+          {currentSourceFile && (
+            <div className="flex items-center gap-4 mb-4">
+              <span className="text-sm text-gray-600">
+                Current File: {currentSourceFile.split('/').pop()}
+              </span>
               <button
                 onClick={handleFileSelect}
-                className="bg-blue-600 hover:text-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                className="text-blue-600 hover:text-blue-700 text-sm underline"
               >
-                Select Conversations File
+                Upload New File
               </button>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+
+          {/* AI Filtering Panel */}
+          {currentSourceFile && loadedConversations.length > 0 && (
+            <div>
+              <AIFilteringPanel
+                conversations={filteredConversations}
+                onFilteredConversations={(filtered) => {
+                  setFilteredConversations(filtered);
+                }}
+                onRelevancyResults={(results) => {
+                  setAiRelevancyResults(results);
+                }}
+              />
+            </div>
+          )}
+
+          {/* Show message when no file is selected OR no files are stored */}
+          {(!currentSourceFile || storedFiles.length === 0) && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="text-center">
+                <h3 className="text-lg font-medium text-blue-800 mb-2">
+                  {storedFiles.length === 0 ? 'No Files Available' : 'No File Selected'}
+                </h3>
+                <p className="text-blue-600 mb-4">
+                  {storedFiles.length === 0 
+                    ? 'Please upload a conversations.json file to get started.'
+                    : 'Please select a conversations.json file to view and select conversations for labeling.'
+                  }
+                </p>
+                <button
+                  onClick={handleFileSelect}
+                  className="bg-blue-600 hover:text-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                >
+                  {storedFiles.length === 0 ? 'Upload Conversations File' : 'Select Conversations File'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
       {error && (
         <div className="mb-4 p-3 bg-red-100 text-red-800 border border-red-200 rounded-lg">
@@ -162,16 +157,6 @@ const ConversationBrowser: React.FC = () => {
         </div>
       )}
 
-      {/* Debug info - remove this after fixing */}
-      {currentSourceFile && (
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <div className="text-sm text-yellow-800">
-            <strong>Debug Info:</strong> Selected file: {currentSourceFile} | 
-            Conversations loaded: {loadedConversations.length} | 
-            Filtered conversations: {filteredConversations.length}
-          </div>
-        </div>
-      )}
 
       {currentSourceFile && loadedConversations.length > 0 && (
         <div className="bg-white rounded-lg border border-gray-200">

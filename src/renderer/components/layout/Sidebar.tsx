@@ -20,6 +20,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         return 'Label Conversations';
       case 'ai-comparisons':
         return 'AI Comparisons';
+      case 'survey-questions':
+        return 'Survey Questions';
       default:
         return 'Unknown Page';
     }
@@ -39,7 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     }));
   };
 
-  const handlePageNavigation = (page: 'select-conversations' | 'label-conversations' | 'ai-comparisons') => {
+  const handlePageNavigation = (page: 'select-conversations' | 'label-conversations' | 'ai-comparisons' | 'survey-questions') => {
     setCurrentPage(page);
     navigate(`/${page === 'select-conversations' ? 'select-conversations' : page}`);
   };
@@ -65,6 +67,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         label: truncateTitle(conv.title),
         onClick: () => handleConversationClick(conv.id)
       }))
+    },
+    {
+      id: 'survey-questions',
+      label: 'Survey Questions',
+      icon: '📝',
+      onClick: () => handlePageNavigation('survey-questions')
     },
     {
       id: 'ai-comparisons',
