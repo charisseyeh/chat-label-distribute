@@ -17,24 +17,31 @@ export const DateFilteringSection: React.FC<DateFilteringSectionProps> = ({
 }) => {
   const dateRanges = DateFilterService.getDateRanges();
 
-  // Date filtering handlers
-  const handleDateRangeToggle = (rangeLabel: string) => {
-    const newOptions = {
-      ...dateFilterOptions,
-      selectedRanges: dateFilterOptions.selectedRanges.includes(rangeLabel)
-        ? dateFilterOptions.selectedRanges.filter(r => r !== rangeLabel)
-        : [...dateFilterOptions.selectedRanges, rangeLabel]
-    };
-    onDateFilterOptionsChange(newOptions);
-  };
+  // Handle model era selection from dropdown
+  const handleModelEraChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedEra = event.target.value;
+    
+    if (selectedEra === '') {
+      // No era selected, clear custom dates
+      const newOptions = {
+        ...dateFilterOptions,
+        customStartDate: undefined,
+        customEndDate: undefined
+      };
+      onDateFilterOptionsChange(newOptions);
+      return;
+    }
 
-  const handleCustomRangeToggle = (useCustom: boolean) => {
-    const newOptions = {
-      ...dateFilterOptions,
-      useCustomRange: useCustom,
-      selectedRanges: useCustom ? [] : dateFilterOptions.selectedRanges
-    };
-    onDateFilterOptionsChange(newOptions);
+    // Find the selected era and prefill custom dates
+    const selectedRange = dateRanges.find(range => range.label === selectedEra);
+    if (selectedRange) {
+      const newOptions = {
+        ...dateFilterOptions,
+        customStartDate: selectedRange.startDate,
+        customEndDate: selectedRange.endDate
+      };
+      onDateFilterOptionsChange(newOptions);
+    }
   };
 
   const handleCustomDateChange = (field: 'start' | 'end', value: string) => {
@@ -48,12 +55,16 @@ export const DateFilteringSection: React.FC<DateFilteringSectionProps> = ({
 
   // Apply date filtering
   const applyDateFiltering = () => {
+    if (!dateFilterOptions.customStartDate || !dateFilterOptions.customEndDate) {
+      return; // Don't apply if dates aren't set
+    }
+
     const filteredConversations = DateFilterService.filterByDateRanges(
       conversations,
-      dateFilterOptions.selectedRanges,
+      [], // No predefined ranges used
       dateFilterOptions.customStartDate,
       dateFilterOptions.customEndDate,
-      dateFilterOptions.useCustomRange
+      true // Always use custom range
     );
     
     onFilteredConversations(filteredConversations);
@@ -71,75 +82,79 @@ export const DateFilteringSection: React.FC<DateFilteringSectionProps> = ({
     onFilteredConversations(conversations);
   };
 
+  // Get the currently selected era based on custom dates
+  const getSelectedEra = (): string => {
+    if (!dateFilterOptions.customStartDate || !dateFilterOptions.customEndDate) {
+      return '';
+    }
+    
+    for (const range of dateRanges) {
+      if (dateFilterOptions.customStartDate.getTime() === range.startDate.getTime() &&
+          dateFilterOptions.customEndDate.getTime() === range.endDate.getTime()) {
+        return range.label;
+      }
+    }
+    return '';
+  };
+
   return (
     <div className="mb-6 p-4 bg-gray-50 rounded-lg">
       <h4 className="text-md font-medium text-gray-900 mb-3">Date Filtering</h4>
       
-      {/* Predefined Date Ranges */}
+      {/* Model Era Dropdown */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Filter by GPT Model Era
+          Select GPT Model Era
         </label>
-        <div className="grid grid-cols-2 gap-2">
+        <select
+          value={getSelectedEra()}
+          onChange={handleModelEraChange}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          <option value="">-- Select a model era --</option>
           {dateRanges.map((range) => (
-            <label key={range.label} className="flex items-center">
-              <input
-                type="checkbox"
-                checked={dateFilterOptions.selectedRanges.includes(range.label)}
-                onChange={() => handleDateRangeToggle(range.label)}
-                disabled={dateFilterOptions.useCustomRange}
-                className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <div className="text-sm">
-                <div className="font-medium text-gray-700">{range.label}</div>
-                <div className="text-xs text-gray-500">{DateFilterService.formatDateRange(range)}</div>
-              </div>
-            </label>
+            <option key={range.label} value={range.label}>
+              {range.label} ({DateFilterService.formatDateRange(range)})
+            </option>
           ))}
-        </div>
+        </select>
+        <p className="text-xs text-gray-500 mt-1">
+          Select a model era to automatically set the date range, or manually adjust the dates below
+        </p>
       </div>
 
-      {/* Custom Date Range */}
+      {/* Custom Date Range - Always Visible */}
       <div className="mb-4">
-        <label className="flex items-center mb-2">
-          <input
-            type="checkbox"
-            checked={dateFilterOptions.useCustomRange}
-            onChange={(e) => handleCustomRangeToggle(e.target.checked)}
-            className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-          />
-          <span className="text-sm font-medium text-gray-700">Custom Date Range</span>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Custom Date Range
         </label>
-        
-        {dateFilterOptions.useCustomRange && (
-          <div className="grid grid-cols-2 gap-3 ml-6">
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Start Date</label>
-              <input
-                type="date"
-                value={dateFilterOptions.customStartDate?.toISOString().split('T')[0] || ''}
-                onChange={(e) => handleCustomDateChange('start', e.target.value)}
-                className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">End Date</label>
-              <input
-                type="date"
-                value={dateFilterOptions.customEndDate?.toISOString().split('T')[0] || ''}
-                onChange={(e) => handleCustomDateChange('end', e.target.value)}
-                className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Start Date</label>
+            <input
+              type="date"
+              value={dateFilterOptions.customStartDate?.toISOString().split('T')[0] || ''}
+              onChange={(e) => handleCustomDateChange('start', e.target.value)}
+              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
           </div>
-        )}
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">End Date</label>
+            <input
+              type="date"
+              value={dateFilterOptions.customEndDate?.toISOString().split('T')[0] || ''}
+              onChange={(e) => handleCustomDateChange('end', e.target.value)}
+              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Date Filter Actions */}
       <div className="flex gap-2">
         <button
           onClick={applyDateFiltering}
-          disabled={dateFilterOptions.selectedRanges.length === 0 && !dateFilterOptions.useCustomRange}
+          disabled={!dateFilterOptions.customStartDate || !dateFilterOptions.customEndDate}
           className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white text-sm font-medium py-2 px-3 rounded-md transition-colors disabled:cursor-not-allowed"
         >
           Apply Date Filter

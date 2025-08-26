@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
@@ -9,12 +9,18 @@ import AIAnalysis from '@/components/ai-analysis/AIAnalysis';
 import ExportPanel from '@/components/export/ExportPanel';
 
 function App() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   return (
     <Router>
       <div className="flex h-screen bg-background">
-        <Sidebar />
+        <Sidebar isOpen={isSidebarOpen} />
         <div className="flex-1 flex flex-col">
-          <Header />
+          <Header isSidebarOpen={isSidebarOpen} onToggleSidebar={toggleSidebar} />
           <main className="flex-1 overflow-auto p-6">
             <Routes>
               <Route path="/" element={<ConversationList />} />

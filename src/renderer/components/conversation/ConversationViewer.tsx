@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useConversations } from '../../hooks/useConversations';
 import { useSurveyStore } from '../../stores/surveyStore';
 import { readJsonFile } from '../../utils/conversationUtils';
@@ -13,6 +13,7 @@ interface Message {
 
 const ConversationViewer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { 
     conversations, 
     getConversationById,
@@ -46,7 +47,6 @@ const ConversationViewer: React.FC = () => {
         setLoading(false);
       }
     } catch (err) {
-      console.error('Error loading conversation:', err);
       setError('Failed to load conversation');
       setLoading(false);
     }
@@ -63,7 +63,7 @@ const ConversationViewer: React.FC = () => {
         setMessages(extractedMessages);
       }
     } catch (err) {
-      console.error('Error loading messages:', err);
+      // Silently handle message loading errors
     }
   };
 
@@ -110,6 +110,10 @@ const ConversationViewer: React.FC = () => {
     }
   };
 
+  const handleBackToLabeling = () => {
+    navigate('/label-conversations');
+  };
+
   if (loading || conversationsLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -146,11 +150,19 @@ const ConversationViewer: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">{currentConversation.title}</h1>
-          <p className="text-muted-foreground mt-2">
-            Conversation details and analysis
-          </p>
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={handleBackToLabeling}
+            className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+          >
+            ← Back to Labeling
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">{currentConversation.title}</h1>
+            <p className="text-muted-foreground mt-2">
+              Conversation details and analysis
+            </p>
+          </div>
         </div>
         
         <div className="flex items-center space-x-2">
@@ -285,6 +297,13 @@ const ConversationViewer: React.FC = () => {
 
       {/* Action Buttons */}
       <div className="flex justify-center space-x-4">
+        <button
+          onClick={handleBackToLabeling}
+          className="btn-outline"
+        >
+          ← Back to Labeling
+        </button>
+        
         <Link 
           to={`/survey?conversationId=${id}`}
           className="btn-primary"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useConversationImport } from '@/hooks/useConversationImport';
 import { Conversation } from '@/stores/conversationStore';
@@ -31,6 +31,11 @@ const ConversationList: React.FC = () => {
       }
     });
   });
+
+  // Filter conversations to only show those with more than 8 messages
+  const filteredConversations = useMemo(() => {
+    return conversations.filter(conversation => conversation.messageCount > 8);
+  }, [conversations]);
 
   useEffect(() => {
     loadConversations();
@@ -116,6 +121,11 @@ const ConversationList: React.FC = () => {
           <p className="text-muted-foreground mt-2">
             Manage and analyze your imported conversation data
           </p>
+          {conversations.length > 0 && (
+            <p className="text-sm text-blue-600 mt-1">
+              Showing conversations with more than 8 messages (user + bot exchanges)
+            </p>
+          )}
         </div>
         
         <div className="flex items-center space-x-2">
@@ -182,15 +192,18 @@ const ConversationList: React.FC = () => {
         </div>
       )}
 
-      {conversations.length === 0 ? (
+      {filteredConversations.length === 0 ? (
         <div className="card">
           <div className="card-content text-center py-12">
             <div className="text-6xl mb-4">💬</div>
             <h3 className="text-xl font-semibold text-foreground mb-2">
-              No conversations yet
+              {conversations.length === 0 ? 'No conversations yet' : 'No conversations with more than 8 messages'}
             </h3>
             <p className="text-muted-foreground mb-6">
-              Import your first conversation to get started with analysis and labeling
+              {conversations.length === 0 
+                ? 'Import your first conversation to get started with analysis and labeling'
+                : 'Only conversations with more than 8 messages (user + bot) are displayed. Import conversations with longer exchanges to see them here.'
+              }
             </p>
             <div className="flex items-center justify-center space-x-2">
               <input
@@ -218,41 +231,58 @@ const ConversationList: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="grid gap-4">
-          {conversations.map((conversation) => (
-            <div key={conversation.id} className="card hover:shadow-md transition-shadow duration-200">
-              <div className="card-content">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <Link 
-                      to={`/conversations/${conversation.id}`}
-                      className="text-lg font-semibold text-foreground hover:text-primary-600 transition-colors duration-200"
-                    >
-                      {conversation.title}
-                    </Link>
-                    <div className="flex items-center space-x-4 mt-2 text-sm text-muted-foreground">
-                      <span>Model: {conversation.modelVersion || 'Unknown'}</span>
-                      <span>Messages: {conversation.messageCount}</span>
-                      <span>Length: {conversation.conversationLength}</span>
-                      <span>Created: {new Date(conversation.createdAt).toLocaleDateString()}</span>
+        <div className="space-y-4">
+          {/* Summary of filtering */}
+          {conversations.length > filteredConversations.length && (
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+              <div className="flex items-center text-sm text-blue-800">
+                <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                <span>
+                  Showing {filteredConversations.length} of {conversations.length} conversations 
+                  (filtered to show only conversations with more than 8 messages)
+                </span>
+              </div>
+            </div>
+          )}
+          
+          <div className="grid gap-4">
+            {filteredConversations.map((conversation) => (
+              <div key={conversation.id} className="card hover:shadow-md transition-shadow duration-200">
+                <div className="card-content">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <Link 
+                        to={`/conversations/${conversation.id}`}
+                        className="text-lg font-semibold text-foreground hover:text-primary-600 transition-colors duration-200"
+                      >
+                        {conversation.title}
+                      </Link>
+                      <div className="flex items-center space-x-4 mt-2 text-sm text-muted-foreground">
+                        <span>Model: {conversation.modelVersion || 'Unknown'}</span>
+                        <span>Messages: {conversation.messageCount}</span>
+                        <span>Length: {conversation.conversationLength}</span>
+                        <span>Created: {new Date(conversation.createdAt).toLocaleDateString()}</span>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Link 
-                      to={`/conversations/${conversation.id}`}
-                      className="btn-outline text-sm"
-                    >
-                      View
-                    </Link>
-                    <button className="btn-secondary text-sm">
-                      Survey
-                    </button>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Link 
+                        to={`/conversations/${conversation.id}`}
+                        className="btn-outline text-sm"
+                      >
+                        View
+                      </Link>
+                      <button className="btn-secondary text-sm">
+                        Survey
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
     </div>

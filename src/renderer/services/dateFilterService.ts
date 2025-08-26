@@ -28,40 +28,64 @@ export class DateFilterService {
     
     return [
       {
-        label: 'Pre-GPT Era',
-        startDate: new Date('2015-01-01'),
-        endDate: new Date('2020-05-31'),
-        description: 'Conversations before GPT-3 was released'
-      },
-      {
-        label: 'GPT-3 Era',
-        startDate: new Date('2020-06-01'),
-        endDate: new Date('2022-10-31'),
-        description: 'Conversations during GPT-3 availability'
-      },
-      {
         label: 'GPT-3.5 Era',
-        startDate: new Date('2022-11-01'),
-        endDate: new Date('2023-02-28'),
+        startDate: new Date('2022-11-30'),
+        endDate: new Date('2023-03-13'),
         description: 'Conversations during GPT-3.5 availability'
       },
       {
+        label: 'GPT-3.5 Turbo Era',
+        startDate: new Date('2023-03-14'),
+        endDate: new Date('2023-06-12'),
+        description: 'Conversations during GPT-3.5 Turbo availability'
+      },
+      {
         label: 'GPT-4 Era',
-        startDate: new Date('2023-03-01'),
-        endDate: new Date('2023-10-31'),
+        startDate: new Date('2023-03-14'),
+        endDate: new Date('2023-11-05'),
         description: 'Conversations during GPT-4 availability'
       },
       {
+        label: 'GPT-3.5 Turbo 16K Era',
+        startDate: new Date('2023-06-13'),
+        endDate: new Date('2023-11-05'),
+        description: 'Conversations during GPT-3.5 Turbo 16K availability'
+      },
+      {
         label: 'GPT-4 Turbo Era',
-        startDate: new Date('2023-11-01'),
-        endDate: new Date('2024-04-30'),
+        startDate: new Date('2023-11-06'),
+        endDate: new Date('2024-04-08'),
         description: 'Conversations during GPT-4 Turbo availability'
       },
       {
+        label: 'GPT-4 Turbo 2024-04-09 Era',
+        startDate: new Date('2024-04-09'),
+        endDate: new Date('2024-05-12'),
+        description: 'Conversations during GPT-4 Turbo (2024-04-09) availability'
+      },
+      {
         label: 'GPT-4o Era',
-        startDate: new Date('2024-05-01'),
-        endDate: now,
+        startDate: new Date('2024-05-13'),
+        endDate: new Date('2024-07-19'),
         description: 'Conversations during GPT-4o availability'
+      },
+      {
+        label: 'GPT-4o Mini Era',
+        startDate: new Date('2024-07-20'),
+        endDate: new Date('2024-09-30'),
+        description: 'Conversations during GPT-4o Mini availability'
+      },
+      {
+        label: 'GPT-4o 2024-10-01 Era',
+        startDate: new Date('2024-10-01'),
+        endDate: new Date('2024-12-31'),
+        description: 'Conversations during GPT-4o (2024-10-01) availability'
+      },
+      {
+        label: 'GPT-5 Era',
+        startDate: new Date('2025-01-01'),
+        endDate: now,
+        description: 'Conversations during GPT-5 availability'
       }
     ];
   }

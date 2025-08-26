@@ -40,6 +40,25 @@ export const AIFilteringSection: React.FC<AIFilteringSectionProps> = ({
     updateAISettings({ enableAIFiltering: enabled });
   };
 
+  const getConversationsToAnalyzeCount = () => {
+    // First filter by message count (more than 8 messages)
+    let count = conversations.filter(conv => conv.messageCount > 8).length;
+    
+    // Then apply date filtering if specified
+    if (dateFilterOptions.selectedRanges.length > 0 || dateFilterOptions.useCustomRange) {
+      const dateFiltered = DateFilterService.filterByDateRanges(
+        conversations.filter(conv => conv.messageCount > 8),
+        dateFilterOptions.selectedRanges,
+        dateFilterOptions.customStartDate,
+        dateFilterOptions.customEndDate,
+        dateFilterOptions.useCustomRange
+      );
+      count = dateFiltered.length;
+    }
+    
+    return count;
+  };
+
   const analyzeConversations = async () => {
     if (!ai.apiKey) {
       setError('Please enter your OpenAI API key first.');
@@ -60,16 +79,25 @@ export const AIFilteringSection: React.FC<AIFilteringSectionProps> = ({
         model: ai.model
       });
 
-      // Apply date filtering first
-      let conversationsToAnalyze = conversations;
+      // First filter by message count (more than 8 messages)
+      let conversationsToAnalyze = conversations.filter(conv => conv.messageCount > 8);
+      
+      // Then apply date filtering if specified
       if (dateFilterOptions.selectedRanges.length > 0 || dateFilterOptions.useCustomRange) {
         conversationsToAnalyze = DateFilterService.filterByDateRanges(
-          conversations,
+          conversationsToAnalyze,
           dateFilterOptions.selectedRanges,
           dateFilterOptions.customStartDate,
           dateFilterOptions.customEndDate,
           dateFilterOptions.useCustomRange
         );
+      }
+
+      // Check if we have any conversations to analyze after filtering
+      if (conversationsToAnalyze.length === 0) {
+        setError('No conversations meet the filtering criteria (more than 8 messages and date range).');
+        setIsAnalyzing(false);
+        return;
       }
 
       // Prepare conversation samples for AI analysis
@@ -88,6 +116,7 @@ export const AIFilteringSection: React.FC<AIFilteringSectionProps> = ({
       // Show success message
       setError(null);
     } catch (error) {
+      console.error('AI analysis error:', error);
       setError(error instanceof Error ? error.message : 'AI analysis failed');
     } finally {
       setIsAnalyzing(false);
@@ -149,10 +178,10 @@ export const AIFilteringSection: React.FC<AIFilteringSectionProps> = ({
       <div className="flex gap-3">
         <button
           onClick={analyzeConversations}
-          disabled={isAnalyzing || !ai.apiKey || conversations.length === 0}
+          disabled={isAnalyzing || !ai.apiKey || getConversationsToAnalyzeCount() === 0}
           className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition-colors disabled:cursor-not-allowed"
         >
-          {isAnalyzing ? 'Analyzing...' : `Analyze ${conversations.length} Conversations`}
+          {isAnalyzing ? 'Analyzing...' : `Analyze ${getConversationsToAnalyzeCount()} Conversations`}
         </button>
       </div>
 
@@ -162,16 +191,6 @@ export const AIFilteringSection: React.FC<AIFilteringSectionProps> = ({
           <p className="text-sm text-red-700">{error}</p>
         </div>
       )}
-
-      {/* Info */}
-      <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-        <p className="text-sm text-blue-700">
-          <strong>How it works:</strong> The AI will analyze your conversations and identify those 
-          relevant for reflective or therapy-like discussions. It looks for topics like personal growth, 
-          emotions, relationships, self-reflection, and mental health. Date filtering can be used alone 
-          or combined with AI analysis.
-        </p>
-      </div>
     </>
   );
 };

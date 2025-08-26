@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useConversationStore } from '../../stores/conversationStore';
+import { useNavigationStore } from '../../stores/navigationStore';
 import { ConversationService, ConversationData } from '../../services/conversationService';
 import { AIFilteringPanel } from './AIFilteringPanel';
 import { AIRelevancyResult } from '../../services/ai-service';
@@ -92,10 +93,14 @@ const ConversationDisplay: React.FC = () => {
       setError(null);
       
       const conversationData = await conversationService.getConversationsFromFile(filePath);
+      
       setConversations(conversationData);
-      setFilteredConversations(conversationData);
+      // Filter conversations to only show those with more than 8 messages
+      const filteredData = conversationData.filter(conv => conv.messageCount > 8);
+      setFilteredConversations(filteredData);
       clearSelection();
     } catch (error) {
+      console.error('Error loading conversations:', error);
       setError(error instanceof Error ? error.message : 'Failed to load conversations');
     } finally {
       setLoading(false);
@@ -130,7 +135,9 @@ const ConversationDisplay: React.FC = () => {
       // Read conversations from the stored file
       const conversationData = await conversationService.getConversationsFromFile(storeResult.data.storedPath);
       setConversations(conversationData);
-      setFilteredConversations(conversationData);
+      // Filter conversations to only show those with more than 8 messages
+      const filteredData = conversationData.filter(conv => conv.messageCount > 8);
+      setFilteredConversations(filteredData);
       
       // Clear previous selection when loading new file
       clearSelection();
@@ -317,11 +324,17 @@ const ConversationDisplay: React.FC = () => {
 
         {/* AI Filtering Panel */}
         {selectedFile && conversations.length > 0 && (
-          <AIFilteringPanel
-            conversations={conversations}
-            onFilteredConversations={setFilteredConversations}
-            onRelevancyResults={setAiRelevancyResults}
-          />
+          <div>
+            <AIFilteringPanel
+              conversations={filteredConversations}
+              onFilteredConversations={(filtered) => {
+                setFilteredConversations(filtered);
+              }}
+              onRelevancyResults={(results) => {
+                setAiRelevancyResults(results);
+              }}
+            />
+          </div>
         )}
       </div>
 
@@ -332,8 +345,8 @@ const ConversationDisplay: React.FC = () => {
       )}
 
       {conversations.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md">
-          <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+        <div className="bg-white rounded-lg border border-gray-200">
+          <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">
               Conversations ({filteredConversations.length} of {conversations.length})
               {aiRelevancyResults.length > 0 && (
@@ -357,6 +370,15 @@ const ConversationDisplay: React.FC = () => {
               </button>
             </div>
           </div>
+
+          {/* Filtering info */}
+          {conversations.length > filteredConversations.length && (
+            <div className="px-4 py-2 bg-blue-50 border-b border-blue-200">
+              <div className="text-sm text-blue-800">
+                <span className="font-medium">Filtering:</span> Only showing conversations with more than 8 messages (user + bot exchanges)
+              </div>
+            </div>
+          )}
 
           <div className="max-h-96 overflow-y-auto">
             {filteredConversations.map((conversation) => (
@@ -399,6 +421,11 @@ const ConversationDisplay: React.FC = () => {
                         <strong>AI Analysis:</strong> {conversation.aiRelevancy.explanation}
                       </div>
                     )}
+                    {conversation.conversationPreview && (
+                      <div className="mt-2 text-xs text-gray-600 bg-blue-50 p-2 rounded">
+                        <strong>Preview:</strong> {conversation.conversationPreview}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -407,11 +434,33 @@ const ConversationDisplay: React.FC = () => {
 
           {selectedConversationIds.length > 0 && (
             <div className="p-4 bg-blue-50 border-t border-blue-200">
-              <div className="text-sm text-blue-800">
-                <strong>{selectedConversationIds.length}</strong> conversation(s) selected for labeling
-              </div>
-              <div className="mt-2 text-xs text-blue-600">
-                Selected IDs: {selectedConversationIds.join(', ')}
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm text-blue-800">
+                    <strong>{selectedConversationIds.length}</strong> conversation(s) selected for labeling
+                  </div>
+                  <div className="text-xs text-blue-600 mt-1">
+                    Selected IDs: {selectedConversationIds.join(', ')}
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    // Update navigation store with selected conversations
+                    const selectedConvs = filteredConversations
+                      .filter(conv => selectedConversationIds.includes(conv.id))
+                      .map(conv => ({
+                        id: conv.id,
+                        title: conv.title || 'Untitled Conversation'
+                      }));
+                    useNavigationStore.getState().setSelectedConversations(selectedConvs);
+                    useNavigationStore.getState().setCurrentPage('label-conversations');
+                    // Navigate to labeling page
+                    window.history.pushState({}, '', '/label-conversations');
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                >
+                  Go to Labeling
+                </button>
               </div>
             </div>
           )}
@@ -421,6 +470,17 @@ const ConversationDisplay: React.FC = () => {
       {conversations.length === 0 && selectedFile && (
         <div className="text-center py-8 text-gray-500">
           No conversations found in the selected file.
+        </div>
+      )}
+
+      {conversations.length > 0 && filteredConversations.length === 0 && (
+        <div className="text-center py-8 text-gray-500">
+          <div className="text-lg font-medium mb-2">No conversations meet the display criteria</div>
+          <div className="text-sm">
+            Only conversations with more than 8 messages (user + bot exchanges) are displayed.
+            <br />
+            The selected file contains {conversations.length} conversation(s), but none have enough messages.
+          </div>
         </div>
       )}
     </div>

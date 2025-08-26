@@ -6,6 +6,7 @@ export interface ConversationData {
   model?: string;
   messageCount: number;
   firstMessage?: string;
+  conversationPreview?: string; // New field for first 200 characters of conversation
   aiRelevancy?: {
     category: 'relevant' | 'not-relevant';
     explanation: string;
@@ -38,24 +39,23 @@ export class ConversationService {
 
       // Process the raw JSON data to extract conversations
       const jsonData = result.data;
+      
       let conversations: ConversationData[] = [];
       
       if (Array.isArray(jsonData)) {
-        // If it's an array of conversations
         conversations = jsonData.map((conv: RawConversationData) => this.extractConversationData(conv));
       } else if (jsonData.conversations && Array.isArray(jsonData.conversations)) {
-        // If it's wrapped in a conversations property
         conversations = jsonData.conversations.map((conv: RawConversationData) => this.extractConversationData(conv));
       } else if (jsonData.conversation_id) {
-        // If it's a single conversation
         conversations = [this.extractConversationData(jsonData as RawConversationData)];
       } else {
+        console.error('ConversationService: Unsupported format - jsonData:', jsonData);
         throw new Error('Unsupported conversation file format');
       }
-
+      
       return conversations;
     } catch (error) {
-      console.error('Error reading conversation file:', error);
+      console.error('ConversationService: Error reading conversation file:', error);
       throw new Error(`Failed to read conversation file: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -68,9 +68,11 @@ export class ConversationService {
     const updateTime = conv.update_time || createTime;
     const model = conv.model || 'unknown';
     
-    // Count messages if mapping exists
+    // Count messages and extract conversation content if mapping exists
     let messageCount = 0;
     let firstMessage = '';
+    let conversationPreview = '';
+    
     if (conv.mapping) {
       const messages = Object.values(conv.mapping).filter((msg: any) => msg.message);
       messageCount = messages.length;
@@ -80,17 +82,34 @@ export class ConversationService {
       if (firstUserMessage?.message?.content?.parts?.[0]?.text) {
         firstMessage = firstUserMessage.message.content.parts[0].text;
       }
+      
+      // Extract first 200 characters from all messages combined
+      const allMessageTexts: string[] = [];
+      messages.forEach((msg: any) => {
+        if (msg.message?.content?.parts?.[0]?.text) {
+          allMessageTexts.push(msg.message.content.parts[0].text);
+        }
+      });
+      
+      const fullConversationText = allMessageTexts.join(' ');
+      conversationPreview = fullConversationText.substring(0, 200);
+      if (fullConversationText.length > 200) {
+        conversationPreview += '...';
+      }
     }
     
-    return {
+    const extractedData = {
       id,
       title,
       createTime,
       updateTime,
       model,
       messageCount,
-      firstMessage
+      firstMessage,
+      conversationPreview
     };
+    
+    return extractedData;
   }
 
   // Helper method to format conversation data for display
