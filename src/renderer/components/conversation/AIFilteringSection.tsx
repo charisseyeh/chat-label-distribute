@@ -108,10 +108,7 @@ export const AIFilteringSection: React.FC<AIFilteringSectionProps> = ({
       });
 
       // Initialize AI service
-      const aiService = new AIService({
-        apiKey: ai.apiKey,
-        model: ai.model
-      });
+      const aiService = new AIService(ai.apiKey, ai.model);
 
       // Update progress to show analyzing status
       setAnalysisProgress(prev => ({ ...prev, status: 'analyzing' }));

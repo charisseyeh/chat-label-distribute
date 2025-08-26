@@ -1,0 +1,71 @@
+# 🚀 Chat Labeling App - Ready to Use!
+
+## 📦 What You're Getting
+
+This package contains everything you need to install and use the **Chat Labeling App** - a powerful desktop application for AI-assisted conversation analysis and labeling.
+
+## 🎯 What This App Does
+
+The Chat Labeling App helps researchers, analysts, and teams:
+- **Import and organize** conversation data from various sources
+- **Analyze conversations** using AI-powered labeling
+- **Create surveys** and track responses
+- **Export results** in multiple formats for further analysis
+
+## 📱 System Requirements
+
+- **macOS 10.12 (Sierra) or later**
+- **Apple Silicon (M1/M2/M3) or Intel Mac**
+- **4GB RAM minimum, 8GB recommended**
+- **500MB available disk space**
+
+## 🚀 Quick Installation
+
+### Option 1: Simple Drag & Drop
+1. **Double-click** `Chat Labeling App-1.0.0-arm64.dmg`
+2. **Drag** the app icon to your Applications folder
+3. **Launch** from Applications
+
+### Option 2: Automated Installation
+1. **Run** `./install.sh` in Terminal
+2. **Follow** the prompts
+3. **Launch** from Applications
+
+## 📚 Documentation
+
+- **`QUICK_START.md`** - Get running in 5 minutes
+- **`USER_MANUAL.md`** - Comprehensive usage guide
+- **`DISTRIBUTION_README.md`** - Detailed installation instructions
+- **`CHANGELOG.md`** - What's new in this version
+
+## 🎉 First Steps
+
+1. **Install** the app using either method above
+2. **Launch** from your Applications folder
+3. **Import** your first conversation file
+4. **Start analyzing** with AI assistance!
+
+## 🔧 Need Help?
+
+- Check the documentation files above
+- Review the troubleshooting section in the user manual
+- Contact support with specific issues
+
+---
+
+## 📊 Package Contents
+
+- **`Chat Labeling App-1.0.0-arm64.dmg`** - Main installer (145MB)
+- **`install.sh`** - Automated installation script
+- **`QUICK_START.md`** - 5-minute setup guide
+- **`USER_MANUAL.md`** - Complete user guide
+- **`DISTRIBUTION_README.md`** - Detailed installation guide
+- **`CHANGELOG.md`** - Version information
+
+---
+
+**Version**: 1.0.0  
+**Release Date**: August 26, 2024  
+**Compatibility**: macOS 10.12+ (Apple Silicon & Intel)
+
+**Happy Analyzing! 🚀**
