@@ -43,10 +43,19 @@ export interface Message {
   createdAt: string;
 }
 
+// New interface for selected conversations with file path
+export interface SelectedConversation {
+  id: string;
+  title: string;
+  sourceFilePath: string; // Path to the original conversations.json file
+}
+
 interface ConversationState {
   conversations: Conversation[];
   currentConversation: Conversation | null;
   selectedConversationIds: string[];
+  selectedConversations: SelectedConversation[]; // New: full selected conversation data
+  currentSourceFile: string | null; // New: current source file path
   loading: boolean;
   error: string | null;
 }
@@ -67,7 +76,11 @@ interface ConversationActions {
   // Selection management
   toggleConversationSelection: (id: string) => void;
   setSelectedConversations: (ids: string[]) => void;
+  setSelectedConversationsWithFile: (conversations: SelectedConversation[]) => void; // New
   clearSelection: () => void;
+  
+  // File management
+  setCurrentSourceFile: (filePath: string) => void; // New
   
   // Bulk operations
   setConversations: (conversations: Conversation[]) => void;
@@ -83,6 +96,8 @@ export const useConversationStore = create<ConversationStore>()(
       conversations: [],
       currentConversation: null,
       selectedConversationIds: [],
+      selectedConversations: [], // New
+      currentSourceFile: null, // New
       loading: false,
       error: null,
 
@@ -148,7 +163,12 @@ export const useConversationStore = create<ConversationStore>()(
 
       setSelectedConversations: (ids) => set({ selectedConversationIds: ids }),
 
-      clearSelection: () => set({ selectedConversationIds: [] }),
+      setSelectedConversationsWithFile: (conversations) => set({ selectedConversations: conversations }), // New
+
+      clearSelection: () => set({ selectedConversationIds: [], selectedConversations: [] }), // Updated
+
+      // File management
+      setCurrentSourceFile: (filePath) => set({ currentSourceFile: filePath }), // New
 
       // Bulk operations
       setConversations: (conversations) => set({ conversations }),
@@ -159,7 +179,10 @@ export const useConversationStore = create<ConversationStore>()(
       // Only persist conversations, not loading/error states
       partialize: (state) => ({ 
         conversations: state.conversations,
-        currentConversation: state.currentConversation 
+        currentConversation: state.currentConversation,
+        selectedConversationIds: state.selectedConversationIds, // Persist selected conversation IDs
+        selectedConversations: state.selectedConversations, // Persist selected conversations with file paths
+        currentSourceFile: state.currentSourceFile // Persist source file
       }),
     }
   )

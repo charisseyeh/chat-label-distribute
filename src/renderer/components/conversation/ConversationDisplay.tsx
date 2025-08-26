@@ -92,7 +92,8 @@ const ConversationDisplay: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const conversationData = await conversationService.getConversationsFromFile(filePath);
+      // Use the new conversation index method instead of loading all conversations
+      const conversationData = await conversationService.getConversationIndex(filePath);
       
       setConversations(conversationData);
       // Filter conversations to only show those with more than 8 messages
@@ -132,8 +133,8 @@ const ConversationDisplay: React.FC = () => {
 
       setSelectedFile(storeResult.data.storedPath);
       
-      // Read conversations from the stored file
-      const conversationData = await conversationService.getConversationsFromFile(storeResult.data.storedPath);
+      // Read conversations from the stored file using the new method
+      const conversationData = await conversationService.getConversationIndex(storeResult.data.storedPath);
       setConversations(conversationData);
       // Filter conversations to only show those with more than 8 messages
       const filteredData = conversationData.filter(conv => conv.messageCount > 8);
@@ -445,15 +446,26 @@ const ConversationDisplay: React.FC = () => {
                 </div>
                 <button
                   onClick={() => {
-                    // Update navigation store with selected conversations
+                    // Update conversation store with selected conversations and file path
                     const selectedConvs = filteredConversations
                       .filter(conv => selectedConversationIds.includes(conv.id))
                       .map(conv => ({
                         id: conv.id,
-                        title: conv.title || 'Untitled Conversation'
+                        title: conv.title || 'Untitled Conversation',
+                        sourceFilePath: selectedFile || ''
                       }));
-                    useNavigationStore.getState().setSelectedConversations(selectedConvs);
+                    
+                    // Store in conversation store for persistence
+                    useConversationStore.getState().setSelectedConversationsWithFile(selectedConvs);
+                    useConversationStore.getState().setCurrentSourceFile(selectedFile || '');
+                    
+                    // Also update navigation store for backward compatibility
+                    useNavigationStore.getState().setSelectedConversations(selectedConvs.map(conv => ({
+                      id: conv.id,
+                      title: conv.title
+                    })));
                     useNavigationStore.getState().setCurrentPage('label-conversations');
+                    
                     // Navigate to labeling page
                     window.history.pushState({}, '', '/label-conversations');
                   }}

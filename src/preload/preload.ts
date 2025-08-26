@@ -11,7 +11,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getStorageStats: () => ipcRenderer.invoke('file:get-storage-stats'),
   cleanupDuplicateFiles: () => ipcRenderer.invoke('file:cleanup-duplicates'),
   // Conversation operations
-  readConversationsFromFile: (filePath: string) => ipcRenderer.invoke('conversations:read-from-file', filePath),
+  getConversationIndex: (filePath: string) => ipcRenderer.invoke('conversations:get-index', filePath),
+  readSingleConversation: (filePath: string, conversationId: string) => ipcRenderer.invoke('conversations:read-single-conversation', filePath, conversationId),
 });
 
 // Type definitions for TypeScript
@@ -24,7 +25,8 @@ declare global {
       deleteStoredFile: (fileId: string) => Promise<{ success: boolean; data?: any; error?: string }>;
       getStorageStats: () => Promise<{ success: boolean; data?: any; error?: string }>;
       cleanupDuplicateFiles: () => Promise<{ success: boolean; data?: any; error?: string }>;
-      readConversationsFromFile: (filePath: string) => Promise<{ success: boolean; data?: any; error?: string }>;
+      getConversationIndex: (filePath: string) => Promise<{ success: boolean; data?: Array<{id: string, title: string, createTime: number, messageCount: number, model?: string}>; total: number; returned: number; error?: string }>;
+      readSingleConversation: (filePath: string, conversationId: string) => Promise<{ success: boolean; data?: any; found: boolean; error?: string }>;
     };
   }
 }

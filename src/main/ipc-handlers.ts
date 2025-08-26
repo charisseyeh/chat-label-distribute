@@ -89,18 +89,103 @@ export class IPCHandlers {
       }
     });
 
-    // Read conversations from stored file
-    ipcMain.handle('conversations:read-from-file', async (event, filePath: string) => {
+    // Get conversation index (titles only) for selection list
+    ipcMain.handle('conversations:get-index', async (event, filePath: string) => {
+      const startTime = performance.now();
+      console.log(`📋 IPC: Getting conversation index from: ${filePath}`);
+      
       try {
-        // Read the JSON file and return raw content
+        const stats = await fs.stat(filePath);
+        const fileSizeMB = stats.size / (1024 * 1024);
+        console.log(`📊 IPC: File size: ${fileSizeMB.toFixed(2)}MB`);
+        
+        // Simple approach: read file and extract only what we need
         const fileContent = await fs.readFile(filePath, 'utf-8');
         const jsonData = JSON.parse(fileContent);
         
-                return { success: true, data: jsonData };
+        let conversations: any[] = [];
+        
+        if (Array.isArray(jsonData)) {
+          conversations = jsonData;
+        } else if (jsonData.conversations && Array.isArray(jsonData.conversations)) {
+          conversations = jsonData.conversations;
+        } else if (jsonData.conversation_id) {
+          conversations = [jsonData];
+        }
+        
+        const totalConversations = conversations.length;
+        console.log(`📚 IPC: Total conversations in file: ${totalConversations}`);
+        
+        // Extract only the metadata we need for the list (ALL conversations)
+        const conversationIndex = conversations.map(conv => ({
+          id: conv.conversation_id || conv.id || `conv_${Date.now()}`,
+          title: conv.title || 'Untitled Conversation',
+          createTime: conv.create_time || Date.now(),
+          messageCount: conv.mapping ? Object.keys(conv.mapping).filter(key => conv.mapping[key].message).length : 0,
+          model: conv.model || 'Unknown'
+        }));
+        
+        const totalTime = performance.now() - startTime;
+        console.log(`✅ IPC: Indexed ALL ${conversationIndex.length} conversations in ${totalTime.toFixed(2)}ms`);
+        
+        return { 
+          success: true, 
+          data: conversationIndex,
+          total: totalConversations,
+          returned: conversationIndex.length
+        };
       } catch (error) {
+        const totalTime = performance.now() - startTime;
+        console.error(`❌ IPC: Indexing failed after ${totalTime.toFixed(2)}ms:`, error);
         return { 
           success: false, 
-          error: error instanceof Error ? error.message : 'Unknown error occurred' 
+          error: error instanceof Error ? error.message : 'Unknown error occurred',
+          data: [],
+          total: 0,
+          returned: 0
+        };
+      }
+    });
+
+    // Read a single conversation by ID from file
+    ipcMain.handle('conversations:read-single-conversation', async (event, filePath: string, conversationId: string) => {
+      const startTime = performance.now();
+      console.log(`🎯 IPC: Reading single conversation ${conversationId} from: ${filePath}`);
+      
+      try {
+        const fileContent = await fs.readFile(filePath, 'utf-8');
+        const jsonData = JSON.parse(fileContent);
+        
+        let foundConversation: any = null;
+        
+        // Find the specific conversation
+        if (Array.isArray(jsonData)) {
+          foundConversation = jsonData.find((conv: any) => 
+            (conv.conversation_id || conv.id) === conversationId
+          );
+        } else if (jsonData.conversations && Array.isArray(jsonData.conversations)) {
+          foundConversation = jsonData.conversations.find((conv: any) => 
+            (conv.conversation_id || conv.id) === conversationId
+          );
+        } else if (jsonData.conversation_id === conversationId || jsonData.id === conversationId) {
+          foundConversation = jsonData;
+        }
+        
+        const totalTime = performance.now() - startTime;
+        console.log(`🎯 IPC: Single conversation read took ${totalTime.toFixed(2)}ms`);
+        
+        return { 
+          success: true, 
+          data: foundConversation,
+          found: !!foundConversation
+        };
+      } catch (error) {
+        const totalTime = performance.now() - startTime;
+        console.error(`❌ IPC: Single conversation read failed after ${totalTime.toFixed(2)}ms:`, error);
+        return { 
+          success: false, 
+          error: error instanceof Error ? error.message : 'Unknown error occurred',
+          found: false
         };
       }
     });
