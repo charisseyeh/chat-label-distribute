@@ -24,6 +24,11 @@ export const AIFilteringSection: React.FC<AIFilteringSectionProps> = ({
 }) => {
   const { ai, updateAISettings } = useSettingsStore();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisProgress, setAnalysisProgress] = useState<{
+    current: number;
+    total: number;
+    status: 'connecting' | 'analyzing' | 'processing' | 'complete';
+  }>({ current: 0, total: 0, status: 'connecting' });
   const [error, setError] = useState<string | null>(null);
   const [showApiKeyInput, setShowApiKeyInput] = useState(!ai.apiKey);
 
@@ -74,11 +79,6 @@ export const AIFilteringSection: React.FC<AIFilteringSectionProps> = ({
     setError(null);
 
     try {
-      const aiService = new AIService({
-        apiKey: ai.apiKey,
-        model: ai.model
-      });
-
       // First filter by message count (more than 8 messages)
       let conversationsToAnalyze = conversations.filter(conv => conv.messageCount > 8);
       
@@ -100,18 +100,56 @@ export const AIFilteringSection: React.FC<AIFilteringSectionProps> = ({
         return;
       }
 
+      // Update progress to show connecting status
+      setAnalysisProgress({
+        current: 0,
+        total: conversationsToAnalyze.length,
+        status: 'connecting'
+      });
+
+      // Initialize AI service
+      const aiService = new AIService({
+        apiKey: ai.apiKey,
+        model: ai.model
+      });
+
+      // Update progress to show analyzing status
+      setAnalysisProgress(prev => ({ ...prev, status: 'analyzing' }));
+
       // Prepare conversation samples for AI analysis
       const conversationSamples: AIConversationSample[] = conversationsToAnalyze.map(conv => ({
         title: conv.title,
-        firstMessage: conv.firstMessage || 'No message content available'
+        firstMessage: conv.conversationPreview || 'No message content available'
       }));
 
-      // Analyze conversations for relevancy
-      const relevancyResults = await aiService.analyzeConversationRelevancy(conversationSamples);
+      // Analyze conversations for relevancy with progress updates
+      const relevancyResults: AIRelevancyResult[] = [];
+      
+      for (let i = 0; i < conversationSamples.length; i++) {
+        try {
+          setAnalysisProgress(prev => ({ 
+            ...prev, 
+            current: i + 1,
+            status: 'analyzing'
+          }));
+          
+          const result = await aiService.analyzeSingleConversation(conversationSamples[i]);
+          relevancyResults.push(result);
+        } catch (error) {
+          console.error(`Error analyzing conversation ${conversationSamples[i].title}:`, error);
+          // Continue with other conversations
+        }
+      }
+
+      // Update progress to show processing status
+      setAnalysisProgress(prev => ({ ...prev, status: 'processing' }));
       
       // Update parent component with filtered results
       onFilteredConversations(conversationsToAnalyze);
       onRelevancyResults(relevancyResults);
+
+      // Update progress to show complete status
+      setAnalysisProgress(prev => ({ ...prev, status: 'complete' }));
 
       // Show success message
       setError(null);
@@ -120,6 +158,10 @@ export const AIFilteringSection: React.FC<AIFilteringSectionProps> = ({
       setError(error instanceof Error ? error.message : 'AI analysis failed');
     } finally {
       setIsAnalyzing(false);
+      // Reset progress after a short delay to show completion
+      setTimeout(() => {
+        setAnalysisProgress({ current: 0, total: 0, status: 'connecting' });
+      }, 2000);
     }
   };
 
@@ -184,6 +226,49 @@ export const AIFilteringSection: React.FC<AIFilteringSectionProps> = ({
           {isAnalyzing ? 'Analyzing...' : `Analyze ${getConversationsToAnalyzeCount()} Conversations`}
         </button>
       </div>
+
+      {/* Progress and Status Display */}
+      {isAnalyzing && (
+        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-sm font-medium text-blue-800">
+              {analysisProgress.status === 'connecting' && '🔌 Connecting to OpenAI...'}
+              {analysisProgress.status === 'analyzing' && '🤖 Analyzing conversations...'}
+              {analysisProgress.status === 'processing' && '⚙️ Processing results...'}
+              {analysisProgress.status === 'complete' && '✅ Analysis complete!'}
+            </h4>
+            <span className="text-xs text-blue-600">
+              {analysisProgress.current > 0 && `${analysisProgress.current}/${analysisProgress.total}`}
+            </span>
+          </div>
+          
+          {/* Progress Bar */}
+          {analysisProgress.total > 0 && (
+            <div className="w-full bg-blue-200 rounded-full h-2 mb-2">
+              <div 
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
+                style={{ width: `${(analysisProgress.current / analysisProgress.total) * 100}%` }}
+              ></div>
+            </div>
+          )}
+          
+          {/* Status Messages */}
+          <div className="text-xs text-blue-700 space-y-1">
+            {analysisProgress.status === 'connecting' && (
+              <p>Establishing connection to OpenAI API...</p>
+            )}
+            {analysisProgress.status === 'analyzing' && (
+              <p>Analyzing conversation {analysisProgress.current} of {analysisProgress.total}...</p>
+            )}
+            {analysisProgress.status === 'processing' && (
+              <p>Processing analysis results and updating interface...</p>
+            )}
+            {analysisProgress.status === 'complete' && (
+              <p>Analysis completed successfully! {analysisProgress.total} conversations processed.</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Error Display */}
       {error && (

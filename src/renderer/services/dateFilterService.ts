@@ -90,6 +90,39 @@ export class DateFilterService {
     ];
   }
 
+  // Helper method to extract date from conversation
+  private static extractConversationDate(conv: any): Date | null {
+    // Try different date fields in order of preference
+    if (conv.createTime && typeof conv.createTime === 'number') {
+      // Unix timestamp (seconds)
+      return new Date(conv.createTime * 1000);
+    }
+    
+    if (conv.createTime && typeof conv.createTime === 'string') {
+      // ISO string or other date string
+      const date = new Date(conv.createTime);
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+    }
+    
+    if (conv.createdAt && typeof conv.createdAt === 'string') {
+      // ISO string
+      const date = new Date(conv.createdAt);
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+    }
+    
+    if (conv.createdAt && typeof conv.createdAt === 'number') {
+      // Unix timestamp (seconds)
+      return new Date(conv.createdAt * 1000);
+    }
+    
+    // If no valid date found, return null
+    return null;
+  }
+
   // Filter conversations by date ranges
   static filterByDateRanges(
     conversations: any[],
@@ -100,7 +133,8 @@ export class DateFilterService {
   ): any[] {
     if (useCustomRange && customStartDate && customEndDate) {
       return conversations.filter(conv => {
-        const convDate = new Date(conv.createTime * 1000);
+        const convDate = this.extractConversationDate(conv);
+        if (!convDate) return false; // Skip conversations without valid dates
         return convDate >= customStartDate && convDate <= customEndDate;
       });
     }
@@ -113,7 +147,8 @@ export class DateFilterService {
     const selectedRangesData = ranges.filter(range => selectedRanges.includes(range.label));
 
     return conversations.filter(conv => {
-      const convDate = new Date(conv.createTime * 1000);
+      const convDate = this.extractConversationDate(conv);
+      if (!convDate) return false; // Skip conversations without valid dates
       
       return selectedRangesData.some(range => 
         convDate >= range.startDate && convDate <= range.endDate
@@ -131,7 +166,8 @@ export class DateFilterService {
     }
 
     return conversations.filter(conv => {
-      const convDate = new Date(conv.createTime * 1000);
+      const convDate = this.extractConversationDate(conv);
+      if (!convDate) return false; // Skip conversations without valid dates
       return convDate >= targetRange.startDate && convDate <= targetRange.endDate;
     });
   }

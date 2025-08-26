@@ -90,20 +90,12 @@ const Header: React.FC<HeaderProps> = ({ isSidebarOpen, onToggleSidebar }) => {
           
           <span className="text-sm text-muted-foreground">
             {currentConversationId 
-              ? `Viewing conversation: ${getCurrentConversationTitle()}`
+              ? ``
               : getPageDescription(currentPage)
             }
           </span>
         </div>
         
-        <div className="flex items-center space-x-4">
-          <div className="text-sm text-muted-foreground">
-            {currentConversationId 
-              ? `Viewing conversation: ${getCurrentConversationTitle()}`
-              : getPageDescription(currentPage)
-            }
-          </div>
-        </div>
       </div>
     </header>
   );

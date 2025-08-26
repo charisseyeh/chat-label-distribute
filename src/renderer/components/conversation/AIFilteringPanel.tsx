@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSettingsStore } from '../../stores/settingsStore';
+import { useConversationStore } from '../../stores/conversationStore';
 import { ConversationData } from '../../services/conversationService';
 import { AIRelevancyResult } from '../../services/ai-service';
 import { DateFilteringSection } from './DateFilteringSection';
@@ -18,6 +19,7 @@ export const AIFilteringPanel: React.FC<AIFilteringPanelProps> = ({
   onRelevancyResults
 }) => {
   const { ai, updateAISettings } = useSettingsStore();
+  const { loadedConversations, setFilteredConversations } = useConversationStore();
   
   // Date filtering state
   const [dateFilterOptions, setDateFilterOptions] = useState<DateFilterOptions>({
@@ -44,8 +46,10 @@ export const AIFilteringPanel: React.FC<AIFilteringPanelProps> = ({
       customEndDate: undefined
     });
     
-    // Reset conversations to original state
-    onFilteredConversations(conversations);
+    // Reset conversations to original state (with message count filter applied)
+    const resetFiltered = loadedConversations.filter(conv => conv.messageCount > 8);
+    onFilteredConversations(resetFiltered);
+    setFilteredConversations(resetFiltered);
     
     // Clear AI relevancy results
     onRelevancyResults([]);

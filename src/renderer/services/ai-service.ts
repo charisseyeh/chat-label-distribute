@@ -1,4 +1,4 @@
-import axios from 'axios';
+
 
 export interface AIConversationSample {
   title: string;
@@ -18,14 +18,41 @@ export interface AIRelevancyResult {
 
 export interface AIServiceConfig {
   apiKey: string;
-  model?: string;
+  model: string;
 }
 
 export class AIService {
   private config: AIServiceConfig;
 
-  constructor(config: AIServiceConfig) {
-    this.config = config;
+  constructor(apiKey: string, model: string) {
+    this.config = { apiKey, model };
+  }
+
+  async generateSurveyResponses(prompt: string): Promise<string> {
+    try {
+      console.log('🤖 Calling OpenAI API via IPC...');
+      
+      // Use the exposed electronAPI method from preload script
+      const response = await (window as any).electronAPI.callOpenAIAPI({
+        apiKey: this.config.apiKey,
+        model: this.config.model,
+        prompt: prompt
+      });
+
+      if (response.error) {
+        throw new Error(`OpenAI API error: ${response.error}`);
+      }
+
+      return response.content;
+    } catch (error) {
+      console.error('❌ OpenAI API error:', error);
+      
+      if (error instanceof Error) {
+        throw new Error(`Failed to call OpenAI API: ${error.message}`);
+      } else {
+        throw new Error('Failed to call OpenAI API: Unknown error');
+      }
+    }
   }
 
   async analyzeConversationRelevancy(conversationSamples: AIConversationSample[]): Promise<AIRelevancyResult[]> {
@@ -52,58 +79,39 @@ export class AIService {
     }
   }
 
-  private async analyzeSingleConversation(sample: AIConversationSample): Promise<AIRelevancyResult> {
+  async analyzeSingleConversation(sample: AIConversationSample): Promise<AIRelevancyResult> {
     try {
       const prompt = this.buildAnalysisPrompt(sample);
       
-      const response = await axios.post(
-        'https://api.openai.com/v1/chat/completions',
-        {
-          model: this.config.model,
-          messages: [
-            {
-              role: 'system',
-              content: 'You are an expert at analyzing conversation quality and relevance for research purposes.'
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          temperature: 0.3,
-          max_tokens: 500
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${this.config.apiKey}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const response = await (window as any).electronAPI.callOpenAIAPI({
+        apiKey: this.config.apiKey,
+        model: this.config.model,
+        prompt: prompt
+      });
 
-      if (response.data.choices && response.data.choices[0]?.message?.content) {
-        const content = response.data.choices[0].message.content;
-        
-        try {
-          const results = JSON.parse(content);
-          if (Array.isArray(results)) {
-            return {
-              category: 'relevant', // Default category
-              explanation: results[0]?.reasoning || 'No reasoning provided',
-              conversationId: sample.title,
-              relevancyScore: results[0]?.relevancyScore || 0,
-              qualityScore: results[0]?.qualityScore || 0,
-              reasoning: results[0]?.reasoning || 'No reasoning provided',
-              timestamp: new Date().toISOString()
-            };
-          } else {
-            throw new Error('Invalid response format');
-          }
-        } catch (parseError) {
-          throw new Error(`Failed to parse AI response: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`);
+      if (response.error) {
+        throw new Error(`OpenAI API error: ${response.error}`);
+      }
+
+      const content = response.content;
+      
+      try {
+        const results = JSON.parse(content);
+        if (Array.isArray(results)) {
+          return {
+            category: 'relevant', // Default category
+            explanation: results[0]?.reasoning || 'No reasoning provided',
+            conversationId: sample.title,
+            relevancyScore: results[0]?.relevancyScore || 0,
+            qualityScore: results[0]?.qualityScore || 0,
+            reasoning: results[0]?.reasoning || 'No reasoning provided',
+            timestamp: new Date().toISOString()
+          };
+        } else {
+          throw new Error('Invalid response format');
         }
-      } else {
-        throw new Error('No valid response from AI service');
+      } catch (parseError) {
+        throw new Error(`Failed to parse AI response: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`);
       }
     } catch (error) {
       throw new Error(`AI analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -125,5 +133,19 @@ Please respond with only valid JSON in this format:
 
   updateConfig(newConfig: Partial<AIServiceConfig>): void {
     this.config = { ...this.config, ...newConfig };
+  }
+
+  /**
+   * Check if the service is properly configured
+   */
+  isConfigured(): boolean {
+    return !!(this.config.apiKey && this.config.model);
+  }
+
+  /**
+   * Get the current configuration (read-only)
+   */
+  getConfig(): Readonly<AIServiceConfig> {
+    return { ...this.config };
   }
 }

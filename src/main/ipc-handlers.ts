@@ -1,6 +1,7 @@
 import { ipcMain, dialog } from 'electron';
 import { FileManager } from './file-manager';
 import * as fs from 'fs-extra';
+import axios from 'axios';
 
 export class IPCHandlers {
   private fileManager: FileManager;
@@ -229,6 +230,62 @@ export class IPCHandlers {
           error: error instanceof Error ? error.message : 'Unknown error occurred',
           found: false
         };
+      }
+    });
+
+    // OpenAI API handler
+    ipcMain.handle('call-openai-api', async (event, { apiKey, model, prompt }) => {
+      try {
+        console.log('🤖 Main process: Calling OpenAI API...');
+        
+        const response = await axios.post(
+          'https://api.openai.com/v1/chat/completions',
+          {
+            model: model,
+            messages: [
+              {
+                role: 'system',
+                content: 'You are an expert at analyzing conversations and providing survey ratings. Always respond with the exact format requested.'
+              },
+              {
+                role: 'user',
+                content: prompt
+              }
+            ],
+            temperature: 0.3,
+            max_tokens: 1000
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        if (response.data.choices && response.data.choices[0]?.message?.content) {
+          const content = response.data.choices[0].message.content;
+          console.log('✅ Main process: OpenAI API response received');
+          return { content };
+        } else {
+          throw new Error('No valid response from OpenAI API');
+        }
+      } catch (error) {
+        console.error('❌ Main process: OpenAI API error:', error);
+        
+        if (axios.isAxiosError(error)) {
+          if (error.response?.status === 401) {
+            return { error: 'Invalid API key. Please check your OpenAI API key.' };
+          } else if (error.response?.status === 429) {
+            return { error: 'Rate limit exceeded. Please try again later.' };
+          } else if (error.response?.status && error.response.status >= 500) {
+            return { error: 'OpenAI service is currently unavailable. Please try again later.' };
+          } else {
+            return { error: error.response?.data?.error?.message || error.message };
+          }
+        } else {
+          return { error: error instanceof Error ? error.message : 'Unknown error' };
+        }
       }
     });
   }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ConversationData } from '../../services/conversationService';
 import { DateFilterService, DateRange, DateFilterOptions } from '../../services/dateFilterService';
+import { useConversationStore } from '../../stores/conversationStore';
 
 interface DateFilteringSectionProps {
   conversations: ConversationData[];
@@ -15,20 +16,28 @@ export const DateFilteringSection: React.FC<DateFilteringSectionProps> = ({
   onDateFilterOptionsChange,
   onFilteredConversations
 }) => {
+  const { loadedConversations, setFilteredConversations } = useConversationStore();
   const dateRanges = DateFilterService.getDateRanges();
+
+  // Use loadedConversations for filtering (original data) instead of already filtered conversations
+  const originalConversations = loadedConversations.length > 0 ? loadedConversations : conversations;
 
   // Handle model era selection from dropdown
   const handleModelEraChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedEra = event.target.value;
     
     if (selectedEra === '') {
-      // No era selected, clear custom dates
+      // No era selected, clear custom dates and reset to original conversations
       const newOptions = {
         ...dateFilterOptions,
         customStartDate: undefined,
         customEndDate: undefined
       };
       onDateFilterOptionsChange(newOptions);
+      // Reset to original conversations (with message count filter applied)
+      const resetFiltered = originalConversations.filter(conv => conv.messageCount > 8);
+      onFilteredConversations(resetFiltered);
+      setFilteredConversations(resetFiltered);
       return;
     }
 
@@ -41,6 +50,21 @@ export const DateFilteringSection: React.FC<DateFilteringSectionProps> = ({
         customEndDate: selectedRange.endDate
       };
       onDateFilterOptionsChange(newOptions);
+      
+      // Apply the filter immediately when era is selected
+      const filteredConversations = DateFilterService.filterByDateRanges(
+        originalConversations,
+        [], // No predefined ranges used
+        selectedRange.startDate,
+        selectedRange.endDate,
+        true // Always use custom range
+      );
+      
+      // Apply message count filter to date-filtered results
+      const finalFiltered = filteredConversations.filter(conv => conv.messageCount > 8);
+      
+      onFilteredConversations(finalFiltered);
+      setFilteredConversations(finalFiltered);
     }
   };
 
@@ -59,15 +83,31 @@ export const DateFilteringSection: React.FC<DateFilteringSectionProps> = ({
       return; // Don't apply if dates aren't set
     }
 
+    console.log('Applying date filter:', {
+      startDate: dateFilterOptions.customStartDate,
+      endDate: dateFilterOptions.customEndDate,
+      totalOriginalConversations: originalConversations.length
+    });
+
     const filteredConversations = DateFilterService.filterByDateRanges(
-      conversations,
+      originalConversations,
       [], // No predefined ranges used
       dateFilterOptions.customStartDate,
       dateFilterOptions.customEndDate,
       true // Always use custom range
     );
     
-    onFilteredConversations(filteredConversations);
+    // Apply message count filter to date-filtered results
+    const finalFiltered = filteredConversations.filter(conv => conv.messageCount > 8);
+    
+    console.log('Filtered conversations:', {
+      dateFilteredCount: filteredConversations.length,
+      finalFilteredCount: finalFiltered.length,
+      sampleConversation: finalFiltered[0]
+    });
+    
+    onFilteredConversations(finalFiltered);
+    setFilteredConversations(finalFiltered);
   };
 
   // Reset date filtering
@@ -79,7 +119,10 @@ export const DateFilteringSection: React.FC<DateFilteringSectionProps> = ({
       customEndDate: undefined
     };
     onDateFilterOptionsChange(newOptions);
-    onFilteredConversations(conversations);
+    // Reset to original conversations (with message count filter applied)
+    const resetFiltered = originalConversations.filter(conv => conv.messageCount > 8);
+    onFilteredConversations(resetFiltered);
+    setFilteredConversations(resetFiltered);
   };
 
   // Get the currently selected era based on custom dates
@@ -167,6 +210,17 @@ export const DateFilteringSection: React.FC<DateFilteringSectionProps> = ({
           Reset Date Filter
         </button>
       </div>
+
+      {/* Filter Status Display */}
+      {dateFilterOptions.customStartDate && dateFilterOptions.customEndDate && (
+        <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800">
+          <div className="font-medium mb-1">Active Date Filter:</div>
+          <div>{dateFilterOptions.customStartDate.toLocaleDateString()} to {dateFilterOptions.customEndDate.toLocaleDateString()}</div>
+          <div className="mt-1 text-blue-600">
+            {originalConversations.length} total conversations available for filtering
+          </div>
+        </div>
+      )}
     </div>
   );
 };

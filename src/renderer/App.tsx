@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
+import Footer from './components/layout/Footer';
 import ConversationBrowser from './components/conversation/ConversationBrowser';
 import LabelConversations from './components/conversation/LabelConversations';
 import ConversationViewer from './components/conversation/ConversationViewer';
-import AIComparisons from './components/ai-analysis/AIComparisons';
+import AIComparisonsPage from './pages/AIComparisonsPage';
 import SurveyQuestionsPage from './pages/SurveyQuestionsPage';
 import { useConversationStore } from './stores/conversationStore';
 import { useNavigationStore } from './stores/navigationStore';
@@ -90,11 +91,12 @@ function App() {
               <Route path="/select-conversations" element={<ConversationBrowser />} />
               <Route path="/label-conversations" element={<LabelConversations />} />
               <Route path="/conversation/:id" element={<ConversationViewer />} />
-              <Route path="/ai-comparisons" element={<AIComparisons />} />
+              <Route path="/ai-comparisons" element={<AIComparisonsPage />} />
               <Route path="/survey-questions" element={<SurveyQuestionsPage />} />
               <Route path="*" element={<ConversationBrowser />} />
             </Routes>
           </main>
+          <Footer />
         </div>
       </div>
     </Router>
