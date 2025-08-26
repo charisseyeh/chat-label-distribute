@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useConversationStore } from '../../stores/conversationStore';
-import { useSurveyStore } from '../../stores/surveyStore';
-import { extractMessagesFromConversation } from '../../utils/conversationUtils';
+import { useParams } from 'react-router-dom';
+import { useConversations } from '../../hooks/useConversations';
+import { useSurveyResponses } from '../../hooks/useSurveyResponses';
+import { readJsonFile } from '../../utils/conversationUtils';
 
 interface Message {
   id: string;
@@ -19,9 +19,9 @@ const ConversationViewer: React.FC = () => {
     setCurrentConversation,
     loading: conversationsLoading,
     error: conversationsError 
-  } = useConversationStore();
+  } = useConversations();
   
-  const { responses: surveyResponses } = useSurveyStore();
+  const { responses: surveyResponses } = useSurveyResponses();
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,7 +58,7 @@ const ConversationViewer: React.FC = () => {
       const savedConversationData = localStorage.getItem(`conversation_${id}`);
       if (savedConversationData) {
         const data = JSON.parse(savedConversationData);
-        const extractedMessages = extractMessagesFromConversation(data);
+        const extractedMessages = readJsonFile(data);
         setMessages(extractedMessages);
       }
     } catch (err) {
@@ -153,12 +153,14 @@ const ConversationViewer: React.FC = () => {
         </div>
         
         <div className="flex items-center space-x-2">
+          {/* Survey Link */}
           <Link 
             to={`/survey?conversationId=${id}`}
             className="btn-primary"
           >
             {surveyStatus.completed > 0 ? 'Continue Survey' : 'Start Survey'}
           </Link>
+          {/* AI Analysis Link */}
           <Link 
             to="/ai-analysis"
             className="btn-secondary"
