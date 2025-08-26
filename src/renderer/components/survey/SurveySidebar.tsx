@@ -75,9 +75,9 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages 
     if (messages.length === 0) return;
 
     const handleScroll = () => {
-      // Find the specific messages container within ConversationViewer
+      // Find the specific messages container within LabelingPage
       // This is the div with "messages-container" class
-      const messagesContainer = document.querySelector('.conversation-viewer .messages-container') || 
+      const messagesContainer = document.querySelector('.labeling-page .messages-container') || 
                                document.querySelector('.messages-container') ||
                                document.querySelector('[class*="overflow-y-auto"]');
       
@@ -101,7 +101,7 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages 
     };
 
     // Add scroll listener to the messages container
-    const messagesContainer = document.querySelector('.conversation-viewer .messages-container') || 
+    const messagesContainer = document.querySelector('.labeling-page .messages-container') || 
                              document.querySelector('.messages-container') ||
                              document.querySelector('[class*="overflow-y-auto"]');
     

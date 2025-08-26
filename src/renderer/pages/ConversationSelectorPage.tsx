@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useConversationStore } from '../../stores/conversationStore';
-import { useNavigationStore } from '../../stores/navigationStore';
-import { ConversationService, ConversationData } from '../../services/conversationService';
-import { AIFilteringPanel } from './AIFilteringPanel';
-import { AIRelevancyResult } from '../../services/ai-service';
-import { useConversationLoader } from '../../hooks/useConversationLoader';
-import { useFileManager } from '../../hooks/useFileManager';
-import { FileList } from './FileList';
-import { TwoPanelLayout } from '../common';
+import { useConversationStore } from '../stores/conversationStore';
+import { useNavigationStore } from '../stores/navigationStore';
+import { ConversationService, ConversationData } from '../services/conversationService';
+import { AIFilteringPanel } from '../components/conversation/AIFilteringPanel';
+import { AIRelevancyResult } from '../services/ai-service';
+import { useConversationLoader } from '../hooks/useConversationLoader';
+import { useFileManager } from '../hooks/useFileManager';
+import { FileList } from '../components/conversation/FileList';
+import { TwoPanelLayout } from '../components/common';
 
-const ConversationBrowser: React.FC = () => {
+const ConversationSelectorPage: React.FC = () => {
   const [aiRelevancyResults, setAiRelevancyResults] = useState<AIRelevancyResult[]>([]);
   const navigate = useNavigate();
   
@@ -204,6 +204,23 @@ const ConversationBrowser: React.FC = () => {
               >
                 Reset AI Filter
               </button>
+              {selectedConversationIds.length > 0 && (
+                <button
+                  onClick={async () => {
+                    try {
+                      // Save selected conversations to storage
+                      await useConversationStore.getState().saveSelectedConversationsToStorage();
+                      // Navigate to labeling page
+                      navigate('/label-conversations');
+                    } catch (error) {
+                      console.error('Failed to save selected conversations:', error);
+                    }
+                  }}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                >
+                  Continue to Labeling ({selectedConversationIds.length} selected)
+                </button>
+              )}
             </div>
           </div>
 
@@ -310,9 +327,9 @@ const ConversationBrowser: React.FC = () => {
             The selected file contains {loadedConversations.length} conversation(s), but none have enough messages.
           </div>
         </div>
-             )}
-     </TwoPanelLayout>
-   );
-  };
+      )}
+    </TwoPanelLayout>
+  );
+};
 
-export default ConversationBrowser;
+export default ConversationSelectorPage;

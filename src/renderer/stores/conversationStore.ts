@@ -178,17 +178,42 @@ export const useConversationStore = create<ConversationStore>()(
       setCurrentConversation: (conversation) => set({ currentConversation: conversation }),
 
       getConversationById: (id: string) => {
-        const { conversations, selectedConversations } = get();
+        const { conversations, selectedConversations, loadedConversations } = get();
+        
+        console.log('🔍 getConversationById: Looking for conversation ID:', id);
+        console.log('🔍 getConversationById: Regular conversations count:', conversations.length);
+        console.log('🔍 getConversationById: Loaded conversations count:', loadedConversations.length);
+        console.log('🔍 getConversationById: Selected conversations count:', selectedConversations.length);
         
         // First look in regular conversations
         let found = conversations.find(c => c.id === id);
         if (found) {
+          console.log('🔍 getConversationById: Found in regular conversations');
           return found;
         }
         
-        // Then look in selected conversations
+        // Then look in loaded conversations (which should have the full data)
+        const loaded = loadedConversations.find(c => c.id === id);
+        if (loaded) {
+          console.log('🔍 getConversationById: Found in loaded conversations');
+          // Convert ConversationData to Conversation format
+          const converted = {
+            id: loaded.id,
+            title: loaded.title,
+            modelVersion: loaded.modelVersion || 'Unknown',
+            conversationLength: loaded.messageCount || 0, // Use messageCount as conversationLength
+            createdAt: loaded.createdAt || new Date().toISOString(),
+            messageCount: loaded.messageCount || 0,
+            filePath: loaded.sourceFilePath || ''
+          };
+          console.log('🔍 getConversationById: Converted conversation:', converted);
+          return converted;
+        }
+        
+        // Finally look in selected conversations
         const selected = selectedConversations.find(c => c.id === id);
         if (selected) {
+          console.log('🔍 getConversationById: Found in selected conversations');
           // Convert SelectedConversation to Conversation format
           const converted = {
             id: selected.id,
@@ -199,25 +224,80 @@ export const useConversationStore = create<ConversationStore>()(
             messageCount: 0,
             filePath: selected.sourceFilePath
           };
+          console.log('🔍 getConversationById: Converted conversation:', converted);
           return converted;
         }
         
+        console.log('❌ getConversationById: Conversation not found anywhere');
         return undefined;
       },
 
       // Selection management
       toggleConversationSelection: (id) => {
-        const { selectedConversationIds } = get();
+        const { selectedConversationIds, selectedConversations, loadedConversations } = get();
         const isSelected = selectedConversationIds.includes(id);
         
+        console.log('🔍 toggleConversationSelection: Toggling conversation ID:', id);
+        console.log('🔍 toggleConversationSelection: Currently selected IDs:', selectedConversationIds);
+        console.log('🔍 toggleConversationSelection: Loaded conversations count:', loadedConversations.length);
+        
         if (isSelected) {
-          set({ selectedConversationIds: selectedConversationIds.filter(selectedId => selectedId !== id) });
+          // Remove from both arrays
+          const newSelectedIds = selectedConversationIds.filter(selectedId => selectedId !== id);
+          const newSelectedConversations = selectedConversations.filter(conv => conv.id !== id);
+          console.log('🔍 toggleConversationSelection: Removing conversation, new selected IDs:', newSelectedIds);
+          set({ 
+            selectedConversationIds: newSelectedIds,
+            selectedConversations: newSelectedConversations
+          });
         } else {
-          set({ selectedConversationIds: [...selectedConversationIds, id] });
+          // Add to both arrays
+          const newSelectedIds = [...selectedConversationIds, id];
+          const conversationToAdd = loadedConversations.find(conv => conv.id === id);
+          let newSelectedConversations = [...selectedConversations];
+          
+          console.log('🔍 toggleConversationSelection: Adding conversation, found in loaded:', !!conversationToAdd);
+          
+          if (conversationToAdd) {
+            // Convert ConversationData to SelectedConversation format
+            const selectedConversation = {
+              id: conversationToAdd.id,
+              title: conversationToAdd.title,
+              sourceFilePath: conversationToAdd.sourceFilePath || get().currentSourceFile || ''
+            };
+            newSelectedConversations = [...selectedConversations, selectedConversation];
+            console.log('🔍 toggleConversationSelection: Created selected conversation:', selectedConversation);
+          }
+          
+          set({ 
+            selectedConversationIds: newSelectedIds,
+            selectedConversations: newSelectedConversations
+          });
         }
       },
 
-      setSelectedConversations: (ids) => set({ selectedConversationIds: ids }),
+      setSelectedConversations: (ids) => {
+        const { loadedConversations, currentSourceFile } = get();
+        const selectedConversations = ids.map(id => {
+          const conversation = loadedConversations.find(conv => conv.id === id);
+          if (conversation) {
+            return {
+              id: conversation.id,
+              title: conversation.title,
+              sourceFilePath: conversation.sourceFilePath || currentSourceFile || ''
+            };
+          }
+          return {
+            id,
+            title: 'Unknown Conversation',
+            sourceFilePath: currentSourceFile || ''
+          };
+        });
+        set({ 
+          selectedConversationIds: ids,
+          selectedConversations
+        });
+      },
 
       setSelectedConversationsWithFile: (conversations) => set({ selectedConversations: conversations }), // New
 
@@ -228,7 +308,7 @@ export const useConversationStore = create<ConversationStore>()(
         set({ selectedConversationIds: updated.map(conv => conv.id) });
       },
 
-      clearSelection: () => set({ selectedConversationIds: [], selectedConversations: [] }), // Updated
+      clearSelection: () => set({ selectedConversationIds: [], selectedConversations: [] }),
 
       // File management
       setCurrentSourceFile: (filePath) => set({ currentSourceFile: filePath }), // New

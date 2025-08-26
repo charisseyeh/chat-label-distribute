@@ -3,9 +3,9 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
 import Footer from './components/layout/Footer';
-import ConversationBrowser from './components/conversation/ConversationBrowser';
+import ConversationSelectorPage from './pages/ConversationSelectorPage';
 import LabelConversations from './components/conversation/LabelConversations';
-import ConversationViewer from './components/conversation/ConversationViewer';
+import LabelingPage from './pages/LabelingPage';
 import AIComparisonsPage from './pages/AIComparisonsPage';
 import SurveyQuestionsPage from './pages/SurveyQuestionsPage';
 import { useConversationStore } from './stores/conversationStore';
@@ -87,13 +87,13 @@ function App() {
           <main className="flex-1 overflow-auto p-6">
             <NavigationSync />
             <Routes>
-              <Route path="/" element={<ConversationBrowser />} />
-              <Route path="/select-conversations" element={<ConversationBrowser />} />
+              <Route path="/" element={<ConversationSelectorPage />} />
+              <Route path="/select-conversations" element={<ConversationSelectorPage />} />
               <Route path="/label-conversations" element={<LabelConversations />} />
-              <Route path="/conversation/:id" element={<ConversationViewer />} />
+              <Route path="/conversation/:id" element={<LabelingPage />} />
               <Route path="/ai-comparisons" element={<AIComparisonsPage />} />
               <Route path="/survey-questions" element={<SurveyQuestionsPage />} />
-              <Route path="*" element={<ConversationBrowser />} />
+              <Route path="*" element={<ConversationSelectorPage />} />
             </Routes>
           </main>
           <Footer />

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useConversationStore } from '../../stores/conversationStore';
-import { useNavigationStore } from '../../stores/navigationStore';
-import { useSurveyStore } from '../../stores/surveyStore';
+import { useConversationStore } from '../stores/conversationStore';
+import { useNavigationStore } from '../stores/navigationStore';
+import { useSurveyStore } from '../stores/surveyStore';
 
-import SurveySidebar from '../survey/SurveySidebar';
-import { TwoPanelLayout } from '../common';
+import SurveySidebar from '../components/survey/SurveySidebar';
+import { TwoPanelLayout } from '../components/common';
 
 interface Message {
   id: string;
@@ -14,7 +14,7 @@ interface Message {
   create_time: number;
 }
 
-const ConversationViewer: React.FC = () => {
+const LabelingPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { 
@@ -54,10 +54,15 @@ const ConversationViewer: React.FC = () => {
   const loadMessages = useCallback(async (conversation: any) => {
     if (!conversation || !id) return;
     
+    console.log('🔍 LabelingPage: Loading messages for conversation:', conversation);
+    
     // Get the source file path from the conversation or fall back to currentSourceFile
     const sourceFilePath = conversation.filePath || currentSourceFile;
+          console.log('🔍 LabelingPage: Source file path:', sourceFilePath);
+      console.log('🔍 LabelingPage: Current source file:', currentSourceFile);
     
     if (!sourceFilePath) {
+              console.error('❌ LabelingPage: No source file path available');
       setError('No source file path available for this conversation');
       return;
     }
@@ -183,13 +188,17 @@ const ConversationViewer: React.FC = () => {
         
         // Get conversation from store
         const conversation = getConversationById(id);
+              console.log('🔍 LabelingPage: Looking for conversation with ID:', id);
+      console.log('🔍 LabelingPage: Found conversation:', conversation);
         
         if (!conversation) {
+          console.error('❌ LabelingPage: Conversation not found for ID:', id);
           setError('Conversation not found');
           return;
         }
         
         setCurrentConversation(conversation);
+        console.log('🔍 LabelingPage: Set current conversation:', conversation);
         
         // Load messages
         await loadMessages(conversation);
@@ -348,7 +357,7 @@ const ConversationViewer: React.FC = () => {
           messages={messages}
         />
       }
-      className="conversation-viewer"
+              className="labeling-page"
     >
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b border-border bg-white">
@@ -374,7 +383,7 @@ const ConversationViewer: React.FC = () => {
       </div>
 
       {/* Messages Container - Scrollable */}
-      <div className="flex-1 overflow-y-auto p-6 messages-container">
+      <div className="flex-1 overflow-y-auto p-6 messages-container min-h-0">
         {!Array.isArray(messages) || messages.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             {!Array.isArray(messages) ? 'Error: Messages not loaded properly' : 'No messages found in this conversation'}
@@ -433,4 +442,4 @@ const ConversationViewer: React.FC = () => {
   );
 };
 
-export default ConversationViewer;
+export default LabelingPage;
