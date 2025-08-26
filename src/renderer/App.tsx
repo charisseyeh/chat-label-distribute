@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
-import ConversationDisplay from './components/conversation/ConversationDisplay';
+import ConversationBrowser from './components/conversation/ConversationBrowser';
 import LabelConversations from './components/conversation/LabelConversations';
 import ConversationViewer from './components/conversation/ConversationViewer';
 import AIComparisons from './components/ai-analysis/AIComparisons';
@@ -36,8 +36,8 @@ function App() {
           <Header isSidebarOpen={isSidebarOpen} onToggleSidebar={toggleSidebar} />
           <main className="flex-1 overflow-auto p-6">
             <Routes>
-              <Route path="/" element={<ConversationDisplay />} />
-              <Route path="/select-conversations" element={<ConversationDisplay />} />
+              <Route path="/" element={<ConversationBrowser />} />
+              <Route path="/select-conversations" element={<ConversationBrowser />} />
               <Route path="/label-conversations" element={<LabelConversations />} />
               <Route path="/conversation/:id" element={<ConversationViewer />} />
               <Route path="/ai-comparisons" element={<AIComparisons />} />

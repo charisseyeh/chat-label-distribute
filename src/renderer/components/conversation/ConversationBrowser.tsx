@@ -4,175 +4,60 @@ import { useNavigationStore } from '../../stores/navigationStore';
 import { ConversationService, ConversationData } from '../../services/conversationService';
 import { AIFilteringPanel } from './AIFilteringPanel';
 import { AIRelevancyResult } from '../../services/ai-service';
+import { useConversationLoader } from '../../hooks/useConversationLoader';
+import { useFileManager } from '../../hooks/useFileManager';
+import { FileList } from './FileList';
 
-interface StoredFile {
-  id: string;
-  originalName: string;
-  storedPath: string;
-  importDate: string;
-  fileSize: number;
-}
 
-interface StorageStats {
-  totalFiles: number;
-  totalSize: number;
-  averageSize: number;
-}
 
-const ConversationDisplay: React.FC = () => {
-  const [conversations, setConversations] = useState<ConversationData[]>([]);
-  const [filteredConversations, setFilteredConversations] = useState<ConversationData[]>([]);
+const ConversationBrowser: React.FC = () => {
   const [aiRelevancyResults, setAiRelevancyResults] = useState<AIRelevancyResult[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<string | null>(null);
-  const [storedFiles, setStoredFiles] = useState<StoredFile[]>([]);
-  const [storageStats, setStorageStats] = useState<StorageStats | null>(null);
+  
+  // Use our new custom hooks
+  const { loading, error, setError, loadConversationsFromFile, handleNewFileSelect } = useConversationLoader();
+  const { storedFiles, deleteFile, loadStoredFiles } = useFileManager();
   
   const { 
     selectedConversationIds, 
     toggleConversationSelection, 
     setSelectedConversations,
-    clearSelection 
+    clearSelection,
+    loadedConversations,
+    filteredConversations,
+    currentSourceFile,
+    setFilteredConversations
   } = useConversationStore();
 
-  const conversationService = new ConversationService();
-
-  // Load stored files on component mount
+  // Check if we have loaded conversations on mount and restore them
   useEffect(() => {
-    loadStoredFiles();
-  }, []);
-
-  // Load stored files and set the most recent one as selected
-  const loadStoredFiles = async () => {
-    try {
-      if (!window.electronAPI) {
-        setError('Electron API not available');
-        return;
-      }
-
-      const result = await window.electronAPI.getStoredFiles();
-      if (result.success && result.data) {
-        const files = result.data as StoredFile[];
-        setStoredFiles(files);
-        
-        // Don't automatically load conversations - just show the file list
-        // User must manually select which file to load conversations from
-      }
-
-      // Load storage statistics
-      await loadStorageStats();
-    } catch (error) {
-      console.error('Failed to load stored files:', error);
+    if (currentSourceFile && loadedConversations.length > 0) {
+      console.log('🔄 Restoring loaded conversations from store:', loadedConversations.length, 'conversations');
     }
-  };
-
-  // Load storage statistics
-  const loadStorageStats = async () => {
-    try {
-      if (!window.electronAPI) return;
-      
-      const result = await window.electronAPI.getStorageStats();
-      if (result.success && result.data) {
-        setStorageStats(result.data as StorageStats);
-      }
-    } catch (error) {
-      console.error('Failed to load storage stats:', error);
-    }
-  };
+  }, [currentSourceFile, loadedConversations]);
 
   // Load conversations from a stored file
   const loadConversationsFromStoredFile = async (filePath: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Use the new conversation index method instead of loading all conversations
-      const conversationData = await conversationService.getConversationIndex(filePath);
-      
-      setConversations(conversationData);
-      // Filter conversations to only show those with more than 8 messages
-      const filteredData = conversationData.filter(conv => conv.messageCount > 8);
-      setFilteredConversations(filteredData);
-      clearSelection();
-    } catch (error) {
-      console.error('Error loading conversations:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load conversations');
-    } finally {
-      setLoading(false);
-    }
+    // Use our hook's function instead
+    await loadConversationsFromFile(filePath);
   };
 
   const handleFileSelect = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      if (!window.electronAPI) {
-        setError('Electron API not available');
-        return;
-      }
-
-      // Select file using Electron dialog
-      const filePath = await window.electronAPI.selectConversationFile();
-      if (!filePath) {
-        return; // User cancelled
-      }
-
-      // Store the file locally
-      const storeResult = await window.electronAPI.storeJsonFile(filePath);
-      if (!storeResult.success) {
-        setError(`Failed to store file: ${storeResult.error}`);
-        return;
-      }
-
-      setSelectedFile(storeResult.data.storedPath);
-      
-      // Read conversations from the stored file using the new method
-      const conversationData = await conversationService.getConversationIndex(storeResult.data.storedPath);
-      setConversations(conversationData);
-      // Filter conversations to only show those with more than 8 messages
-      const filteredData = conversationData.filter(conv => conv.messageCount > 8);
-      setFilteredConversations(filteredData);
-      
-      // Clear previous selection when loading new file
-      clearSelection();
-      
-      // Reload stored files list
-      await loadStoredFiles();
-      
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to load conversations');
-    } finally {
-      setLoading(false);
-    }
+    // Use our hook's function instead
+    await handleNewFileSelect();
+    // Reload stored files list after successful upload
+    await loadStoredFiles();
   };
 
   const handleDeleteFile = async (fileId: string) => {
-    try {
-      if (!window.electronAPI) {
-        setError('Electron API not available');
-        return;
+    const success = await deleteFile(fileId);
+    if (success) {
+      // If the deleted file was the currently selected one, clear the selection
+      const deletedFile = storedFiles.find(f => f.id === fileId);
+      if (deletedFile && deletedFile.storedPath === currentSourceFile) {
+        useConversationStore.getState().setCurrentSourceFile(null);
+        useConversationStore.getState().clearLoadedConversations();
+        clearSelection();
       }
-
-      const result = await window.electronAPI.deleteStoredFile(fileId);
-      if (result.success) {
-        // Reload stored files
-        await loadStoredFiles();
-        
-        // If the deleted file was the currently selected one, clear the selection
-        const deletedFile = storedFiles.find(f => f.id === fileId);
-        if (deletedFile && deletedFile.storedPath === selectedFile) {
-          setSelectedFile(null);
-          setConversations([]);
-          setFilteredConversations([]);
-          clearSelection();
-        }
-      } else {
-        setError(`Failed to delete file: ${result.error}`);
-      }
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to delete file');
     }
   };
 
@@ -187,11 +72,6 @@ const ConversationDisplay: React.FC = () => {
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleDateString();
-  };
-
-  const formatFileSize = (bytes: number) => {
-    const mb = bytes / (1024 * 1024);
-    return `${mb.toFixed(1)} MB`;
   };
 
   if (loading) {
@@ -219,50 +99,19 @@ const ConversationDisplay: React.FC = () => {
 
         {/* Show file list when files exist */}
         {storedFiles.length > 0 && (
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold text-gray-800">Available Files</h3>
-              <button
-                onClick={handleFileSelect}
-                className="text-blue-600 hover:text-blue-700 text-sm underline"
-              >
-                Upload New File
-              </button>
-            </div>
-            <div className="space-y-2">
-              {storedFiles.map((file) => (
-                <div key={file.id} className="flex items-center justify-between p-3 bg-white rounded border">
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900">{file.originalName}</div>
-                    <div className="text-sm text-gray-500">
-                      {formatFileSize(file.fileSize)} • {new Date(file.importDate).toLocaleDateString()}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => loadConversationsFromStoredFile(file.storedPath)}
-                      className="text-blue-600 hover:text-blue-700 text-sm underline"
-                    >
-                      Load Conversations
-                    </button>
-                    <button
-                      onClick={() => handleDeleteFile(file.id)}
-                      className="text-red-600 hover:text-red-700 text-sm underline"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <FileList
+            storedFiles={storedFiles}
+            onLoadFile={loadConversationsFromStoredFile}
+            onDeleteFile={handleDeleteFile}
+            onUploadNew={handleFileSelect}
+          />
         )}
 
         {/* Current File Display */}
-        {selectedFile && (
+        {currentSourceFile && (
           <div className="flex items-center gap-4 mb-4">
             <span className="text-sm text-gray-600">
-              Current File: {selectedFile.split('/').pop()}
+              Current File: {currentSourceFile.split('/').pop()}
             </span>
             <button
               onClick={handleFileSelect}
@@ -274,7 +123,7 @@ const ConversationDisplay: React.FC = () => {
         )}
 
         {/* AI Filtering Panel */}
-        {selectedFile && conversations.length > 0 && (
+        {currentSourceFile && loadedConversations.length > 0 && (
           <div>
             <AIFilteringPanel
               conversations={filteredConversations}
@@ -289,7 +138,7 @@ const ConversationDisplay: React.FC = () => {
         )}
 
         {/* Show message when no file is selected */}
-        {!selectedFile && (
+        {!currentSourceFile && (
           <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="text-center">
               <h3 className="text-lg font-medium text-blue-800 mb-2">No File Selected</h3>
@@ -298,7 +147,7 @@ const ConversationDisplay: React.FC = () => {
               </p>
               <button
                 onClick={handleFileSelect}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                className="bg-blue-600 hover:text-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
               >
                 Select Conversations File
               </button>
@@ -313,11 +162,22 @@ const ConversationDisplay: React.FC = () => {
         </div>
       )}
 
-      {selectedFile && conversations.length > 0 && (
+      {/* Debug info - remove this after fixing */}
+      {currentSourceFile && (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="text-sm text-yellow-800">
+            <strong>Debug Info:</strong> Selected file: {currentSourceFile} | 
+            Conversations loaded: {loadedConversations.length} | 
+            Filtered conversations: {filteredConversations.length}
+          </div>
+        </div>
+      )}
+
+      {currentSourceFile && loadedConversations.length > 0 && (
         <div className="bg-white rounded-lg border border-gray-200">
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">
-              Conversations ({filteredConversations.length} of {conversations.length})
+              Conversations ({filteredConversations.length} of {loadedConversations.length})
               {aiRelevancyResults.length > 0 && (
                 <span className="ml-2 text-sm font-normal text-green-600">
                   ({aiRelevancyResults.filter(r => r.category === 'relevant').length} relevant)
@@ -341,7 +201,7 @@ const ConversationDisplay: React.FC = () => {
           </div>
 
           {/* Filtering info */}
-          {conversations.length > filteredConversations.length && (
+          {loadedConversations.length > filteredConversations.length && (
             <div className="px-4 py-2 bg-blue-50 border-b border-blue-200">
               <div className="text-sm text-blue-800">
                 <span className="font-medium">Filtering:</span> Only showing conversations with more than 8 messages (user + bot exchanges)
@@ -420,12 +280,12 @@ const ConversationDisplay: React.FC = () => {
                       .map(conv => ({
                         id: conv.id,
                         title: conv.title || 'Untitled Conversation',
-                        sourceFilePath: selectedFile || ''
+                        sourceFilePath: currentSourceFile || ''
                       }));
                     
                     // Store in conversation store for persistence
                     useConversationStore.getState().setSelectedConversationsWithFile(selectedConvs);
-                    useConversationStore.getState().setCurrentSourceFile(selectedFile || '');
+                    useConversationStore.getState().setCurrentSourceFile(currentSourceFile || '');
                     
                     // Save to permanent storage
                     await useConversationStore.getState().saveSelectedConversationsToStorage();
@@ -450,19 +310,19 @@ const ConversationDisplay: React.FC = () => {
         </div>
       )}
 
-      {selectedFile && conversations.length === 0 && (
+      {currentSourceFile && loadedConversations.length === 0 && (
         <div className="text-center py-8 text-gray-500">
           No conversations found in the selected file.
         </div>
       )}
 
-      {selectedFile && conversations.length > 0 && filteredConversations.length === 0 && (
+      {currentSourceFile && loadedConversations.length > 0 && filteredConversations.length === 0 && (
         <div className="text-center py-8 text-gray-500">
           <div className="text-lg font-medium mb-2">No conversations meet the display criteria</div>
           <div className="text-sm">
             Only conversations with more than 8 messages (user + bot exchanges) are displayed.
             <br />
-            The selected file contains {conversations.length} conversation(s), but none have enough messages.
+            The selected file contains {loadedConversations.length} conversation(s), but none have enough messages.
           </div>
         </div>
       )}
@@ -470,4 +330,4 @@ const ConversationDisplay: React.FC = () => {
   );
 };
 
-export default ConversationDisplay;
+export default ConversationBrowser;

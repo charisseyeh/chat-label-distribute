@@ -1,12 +1,10 @@
-const { app, BrowserWindow } = require('electron');
-const path = require('path');
-const { IPCHandlers } = require('./ipc-handlers');
+import { app, BrowserWindow, ipcMain } from 'electron';
+import * as path from 'path';
+import { IPCHandlers } from './ipc-handlers';
 
-let mainWindow = null;
+let mainWindow: BrowserWindow | null = null;
 
-function createWindow() {
-  console.log('Creating main window...');
-  
+const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
@@ -14,46 +12,28 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, '../preload/preload.js')
-    },
+    }
   });
 
-  // Try to find the correct port for the renderer
-  const rendererPort = 3000; // Vite is running on port 3000
-  const rendererURL = `http://localhost:${rendererPort}`;
-  
-  console.log(`Loading renderer from: ${rendererURL}`);
-  console.log(`Preload script path: ${path.join(__dirname, '../preload/preload.js')}`);
-  
-  // Load from Vite dev server
+  // Load the renderer
+  const rendererURL = process.env.NODE_ENV === 'development' 
+    ? 'http://localhost:5173' 
+    : `file://${path.join(__dirname, '../renderer/index.html')}`;
+
   mainWindow.loadURL(rendererURL);
-  
+
   // Open DevTools in development
-  mainWindow.webContents.openDevTools();
-  
-  // Log when the page is loaded
-  mainWindow.webContents.on('did-finish-load', () => {
-    console.log('Renderer page loaded successfully');
+  if (process.env.NODE_ENV === 'development') {
+    mainWindow.webContents.openDevTools();
+  }
+
+  mainWindow.on('closed', () => {
+    mainWindow = null;
   });
-  
-  // Log any load failures
-  mainWindow.webContents.on('did-fail-load', (event: any, errorCode: number, errorDescription: string) => {
-    console.error('Failed to load renderer:', errorCode, errorDescription);
-  });
-}
+};
 
 app.whenReady().then(() => {
-  console.log('App is ready, initializing...');
-  
-  try {
-    // Initialize IPC handlers
-    console.log('Initializing IPC handlers...');
-    new IPCHandlers();
-    console.log('IPC handlers initialized successfully');
-    
-    createWindow();
-  } catch (error) {
-    console.error('Error during initialization:', error);
-  }
+  new IPCHandlers();
 });
 
 app.on('window-all-closed', () => {

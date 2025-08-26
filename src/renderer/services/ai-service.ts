@@ -9,6 +9,11 @@ export interface AIConversationSample {
 export interface AIRelevancyResult {
   category: 'relevant' | 'not-relevant';
   explanation: string;
+  conversationId?: string;
+  relevancyScore?: number;
+  qualityScore?: number;
+  reasoning?: string;
+  timestamp?: string;
 }
 
 export interface AIServiceConfig {
@@ -21,61 +26,53 @@ export class AIService {
 
   constructor(config: AIServiceConfig) {
     this.config = config;
-    console.log('AIService initialized with model:', config.model);
   }
 
-  async analyzeConversationRelevancy(
-    conversationSamples: AIConversationSample[]
-  ): Promise<AIRelevancyResult[]> {
-    console.log('Starting conversation relevancy analysis...');
-    console.log('Number of conversations to analyze:', conversationSamples.length);
-    
+  async analyzeConversationRelevancy(conversationSamples: AIConversationSample[]): Promise<AIRelevancyResult[]> {
     try {
-      const requestBody = {
-        model: this.config.model || "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "system",
-            content: "You are helping to identify conversations that might be relevant for reflective or therapy-like conversations with ChatGPT. Look for conversations about personal growth, emotions, relationships, self-reflection, mental health, or similar topics. You must respond with ONLY a valid JSON array with exactly the same number of items as conversations provided, no other text."
-          },
-          {
-            role: "user",
-            content: `Analyze these ${conversationSamples.length} conversations and determine if each is relevant for reflective or therapy-like conversations with ChatGPT. Look for topics like personal growth, emotions, relationships, self-reflection, mental health, or similar.
+      if (!this.config.apiKey) {
+        throw new Error('OpenAI API key not configured');
+      }
 
-For each conversation, I'll provide the title and a preview of the first 200 characters of the conversation content.
+      const results: AIRelevancyResult[] = [];
+      
+      for (const sample of conversationSamples) {
+        try {
+          const result = await this.analyzeSingleConversation(sample);
+          results.push(result);
+        } catch (error) {
+          console.error(`Error analyzing conversation ${sample.title}:`, error);
+          // Continue with other conversations
+        }
+      }
+      
+      return results;
+    } catch (error) {
+      throw new Error(`AI analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
 
-IMPORTANT: You must respond with exactly ${conversationSamples.length} classifications in a JSON array, one for each conversation provided.
-
-Each object must have exactly these fields:
-- "category": either "relevant" or "not-relevant"
-- "explanation": a brief reason for the classification
-
-Example format:
-[{"category": "relevant", "explanation": "This appears to be about personal relationships"}, {"category": "not-relevant", "explanation": "This is about technical programming"}]
-
-Conversations to analyze:
-
-${conversationSamples.map((sample, index) => 
-  `${index + 1}. Title: "${sample.title}"\n   Conversation Preview: "${sample.conversationPreview || sample.firstMessage}"`
-).join('\n\n')}`
-          }
-        ],
-        temperature: 0.3,
-        max_tokens: 1000
-      };
-
-      console.log('Making OpenAI API request...');
-      console.log('Request body:', {
-        ...requestBody,
-        messages: requestBody.messages.map(msg => ({
-          ...msg,
-          content: msg.content.substring(0, 200) + '...'
-        }))
-      });
-
+  private async analyzeSingleConversation(sample: AIConversationSample): Promise<AIRelevancyResult> {
+    try {
+      const prompt = this.buildAnalysisPrompt(sample);
+      
       const response = await axios.post(
         'https://api.openai.com/v1/chat/completions',
-        requestBody,
+        {
+          model: this.config.model,
+          messages: [
+            {
+              role: 'system',
+              content: 'You are an expert at analyzing conversation quality and relevance for research purposes.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.3,
+          max_tokens: 500
+        },
         {
           headers: {
             'Authorization': `Bearer ${this.config.apiKey}`,
@@ -84,72 +81,49 @@ ${conversationSamples.map((sample, index) =>
         }
       );
 
-      console.log('OpenAI API response received');
-      console.log('Response status:', response.status);
-      console.log('Response data keys:', Object.keys(response.data));
-
-      const content = response.data.choices[0]?.message?.content;
-      if (!content) {
-        console.error('No response content from OpenAI API');
-        throw new Error('No response content from OpenAI API');
-      }
-
-      console.log('Raw API response content:', content);
-
-      // Parse the JSON response
-      const results = JSON.parse(content);
-      console.log('Parsed JSON results:', results);
-      
-      // Validate the response format
-      if (!Array.isArray(results) || results.length !== conversationSamples.length) {
-        console.error('Invalid response format - expected array of length', conversationSamples.length, 'but got', results);
-        throw new Error('Invalid response format from OpenAI API');
-      }
-
-      // Validate each result
-      for (const result of results) {
-        if (!result.category || !result.explanation) {
-          console.error('Invalid result format:', result);
-          throw new Error('Invalid result format from OpenAI API');
-        }
-        if (!['relevant', 'not-relevant'].includes(result.category)) {
-          console.error('Invalid category value:', result.category);
-          throw new Error('Invalid category value from OpenAI API');
-        }
-      }
-
-      console.log('AI analysis completed successfully with', results.length, 'results');
-      return results;
-    } catch (error: unknown) {
-      console.error('AI service error:', error);
-      
-      if (axios.isAxiosError(error)) {
-        console.error('Axios error details:', {
-          status: error.response?.status,
-          statusText: error.response?.statusText,
-          data: error.response?.data
-        });
+      if (response.data.choices && response.data.choices[0]?.message?.content) {
+        const content = response.data.choices[0].message.content;
         
-        if (error.response?.status === 401) {
-          throw new Error('Invalid API key. Please check your OpenAI API key.');
-        } else if (error.response?.status === 429) {
-          throw new Error('Rate limit exceeded. Please try again later.');
-        } else if (error.response?.status && error.response.status >= 500) {
-          throw new Error('OpenAI service is currently unavailable. Please try again later.');
-        } else {
-          throw new Error(`OpenAI API error: ${error.response?.data?.error?.message || error.message}`);
+        try {
+          const results = JSON.parse(content);
+          if (Array.isArray(results)) {
+            return {
+              category: 'relevant', // Default category
+              explanation: results[0]?.reasoning || 'No reasoning provided',
+              conversationId: sample.title,
+              relevancyScore: results[0]?.relevancyScore || 0,
+              qualityScore: results[0]?.qualityScore || 0,
+              reasoning: results[0]?.reasoning || 'No reasoning provided',
+              timestamp: new Date().toISOString()
+            };
+          } else {
+            throw new Error('Invalid response format');
+          }
+        } catch (parseError) {
+          throw new Error(`Failed to parse AI response: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`);
         }
-      } else if (error instanceof SyntaxError) {
-        console.error('JSON parsing error:', error.message);
-        throw new Error('Invalid response format from OpenAI API. Please try again.');
       } else {
-        throw new Error(`AI analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        throw new Error('No valid response from AI service');
       }
+    } catch (error) {
+      throw new Error(`AI analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
-  updateConfig(newConfig: Partial<AIServiceConfig>) {
+  private buildAnalysisPrompt(sample: AIConversationSample): string {
+    return `Please analyze the following conversation excerpt and provide a JSON response with:
+1. relevancyScore (0-10): How relevant is this conversation for research purposes?
+2. qualityScore (0-10): How well-structured and coherent is this conversation?
+3. reasoning: Brief explanation for your scores
+
+Conversation excerpt:
+${sample.conversationPreview || sample.firstMessage}
+
+Please respond with only valid JSON in this format:
+[{"relevancyScore": number, "qualityScore": number, "reasoning": "string"}]`;
+  }
+
+  updateConfig(newConfig: Partial<AIServiceConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    console.log('AIService config updated:', newConfig);
   }
 }

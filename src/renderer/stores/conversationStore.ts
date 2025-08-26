@@ -1,6 +1,20 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+// Import the ConversationData type from the service
+export interface ConversationData {
+  id: string;
+  title: string;
+  createTime: number;
+  messageCount: number;
+  model?: string;
+  conversationPreview?: string;
+  aiRelevancy?: {
+    category: 'relevant' | 'not-relevant';
+    explanation: string;
+  };
+}
+
 export interface Conversation {
   id: string;
   title: string;
@@ -58,6 +72,9 @@ interface ConversationState {
   currentSourceFile: string | null; // New: current source file path
   loading: boolean;
   error: string | null;
+  // Add these new fields for loaded conversations
+  loadedConversations: ConversationData[]; // The conversations loaded from a file
+  filteredConversations: ConversationData[]; // The filtered conversations
 }
 
 interface ConversationActions {
@@ -80,11 +97,16 @@ interface ConversationActions {
   clearSelection: () => void;
   
   // File management
-  setCurrentSourceFile: (filePath: string) => void; // New
+  setCurrentSourceFile: (filePath: string | null) => void; // New
   
   // Bulk operations
   setConversations: (conversations: Conversation[]) => void;
   clearConversations: () => void;
+
+  // Loaded conversations management (NEW)
+  setLoadedConversations: (conversations: ConversationData[]) => void;
+  setFilteredConversations: (conversations: ConversationData[]) => void;
+  clearLoadedConversations: () => void;
 
   // Permanent storage operations
   loadSelectedConversationsFromStorage: () => Promise<boolean>;
@@ -101,10 +123,12 @@ export const useConversationStore = create<ConversationStore>()(
       conversations: [],
       currentConversation: null,
       selectedConversationIds: [],
-      selectedConversations: [], // New
-      currentSourceFile: null, // New
+      selectedConversations: [], 
+      currentSourceFile: null,
       loading: false,
       error: null,
+      loadedConversations: [],
+      filteredConversations: [],
 
       // State management
       setLoading: (loading) => set({ loading }),
@@ -179,21 +203,24 @@ export const useConversationStore = create<ConversationStore>()(
       setConversations: (conversations) => set({ conversations }),
       clearConversations: () => set({ conversations: [], currentConversation: null }),
 
+      // Loaded conversations management (NEW)
+      setLoadedConversations: (conversations) => set({ loadedConversations: conversations }),
+      setFilteredConversations: (conversations) => set({ filteredConversations: conversations }),
+      clearLoadedConversations: () => set({ loadedConversations: [], filteredConversations: [] }),
+
       // Permanent storage operations
       loadSelectedConversationsFromStorage: async () => {
         try {
-          console.log('🔄 Loading selected conversations from permanent storage...');
           if (window.electronAPI && window.electronAPI.getSelectedConversations) {
             const result = await window.electronAPI.getSelectedConversations();
-            if (result.success && result.found && result.data) {
-              console.log(`✅ Loaded ${result.data.length} selected conversations from storage`);
+            if (result.success && result.data && Array.isArray(result.data)) {
               set({ 
                 selectedConversations: result.data,
                 selectedConversationIds: result.data.map((conv: any) => conv.id)
               });
               return true;
             } else {
-              console.log('ℹ️ No selected conversations found in storage');
+              set({ selectedConversations: [], selectedConversationIds: [] });
             }
           } else {
             console.warn('⚠️ Electron API not available for loading selected conversations');
@@ -208,15 +235,13 @@ export const useConversationStore = create<ConversationStore>()(
       saveSelectedConversationsToStorage: async () => {
         try {
           const { selectedConversations } = get();
-          console.log(`💾 Saving ${selectedConversations.length} selected conversations to permanent storage...`);
           if (window.electronAPI && window.electronAPI.storeSelectedConversations) {
             const result = await window.electronAPI.storeSelectedConversations(selectedConversations);
             if (result.success) {
-              console.log('✅ Successfully saved selected conversations to permanent storage');
+              return true;
             } else {
               console.error('❌ Failed to save selected conversations:', result.error);
             }
-            return result.success;
           } else {
             console.warn('⚠️ Electron API not available for saving selected conversations');
           }
@@ -229,16 +254,14 @@ export const useConversationStore = create<ConversationStore>()(
 
       clearAllSelectedAndSave: async () => {
         try {
-          console.log('🗑️ Clearing all selected conversations and saving to storage...');
           set({ selectedConversations: [], selectedConversationIds: [] });
           if (window.electronAPI && window.electronAPI.storeSelectedConversations) {
             const result = await window.electronAPI.storeSelectedConversations([]);
             if (result.success) {
-              console.log('✅ Successfully cleared and saved empty selection to storage');
+              return true;
             } else {
               console.error('❌ Failed to save empty selection:', result.error);
             }
-            return result.success;
           } else {
             console.warn('⚠️ Electron API not available for clearing selected conversations');
           }
@@ -255,9 +278,11 @@ export const useConversationStore = create<ConversationStore>()(
       partialize: (state) => ({ 
         conversations: state.conversations,
         currentConversation: state.currentConversation,
-        selectedConversationIds: state.selectedConversationIds, // Persist selected conversation IDs
-        selectedConversations: state.selectedConversations, // Persist selected conversations with file paths
-        currentSourceFile: state.currentSourceFile // Persist source file
+        selectedConversationIds: state.selectedConversationIds,
+        selectedConversations: state.selectedConversations,
+        currentSourceFile: state.currentSourceFile, 
+        loadedConversations: state.loadedConversations,
+        filteredConversations: state.filteredConversations
       }),
     }
   )

@@ -200,7 +200,7 @@ const ExportPanel: React.FC = () => {
       setExportHistory(updatedHistory);
       localStorage.setItem('export_history', JSON.stringify(updatedHistory));
       
-      console.log('Export completed successfully');
+      
       
     } catch (err) {
       console.error('Error during export:', err);
@@ -358,7 +358,7 @@ const ExportPanel: React.FC = () => {
                   <button
                     onClick={() => {
                       // Could implement re-export functionality here
-                      console.log('Re-export:', entry);
+              
                     }}
                     className="btn-outline text-sm"
                   >

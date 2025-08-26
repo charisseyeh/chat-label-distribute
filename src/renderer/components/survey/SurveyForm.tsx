@@ -122,12 +122,10 @@ const SurveyForm: React.FC = () => {
 
       if (completedPositions >= 3) {
         // All positions completed
-        console.log('Survey completed for all positions');
         // Could navigate to results or show completion message
       }
 
       setError(null);
-      console.log('Response saved successfully');
       
     } catch (err) {
       setError('Failed to save response');

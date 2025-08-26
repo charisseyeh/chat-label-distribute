@@ -63,7 +63,6 @@ const ConversationViewer: React.FC = () => {
             const data = JSON.parse(localStorage.getItem(key) || '{}');
             if (data.timestamp && (now - data.timestamp) > maxAge) {
               localStorage.removeItem(key);
-              console.log(`Cleaned up old cache entry: ${key}`);
             }
           } catch (error) {
             // Remove invalid cache entries
@@ -122,12 +121,8 @@ const ConversationViewer: React.FC = () => {
   useEffect(() => {
     if (id) {
       const loadData = async () => {
-        console.log(`🚀 Starting to load conversation ${id} at ${new Date().toISOString()}`);
-        
         await loadConversation();
         await loadMessages();
-        
-        console.log(`🎯 Total conversation load time: ${performance.now() - performance.now()}ms`);
       };
       loadData();
     }
@@ -138,43 +133,27 @@ const ConversationViewer: React.FC = () => {
     if (messages.length > 0) {
       const limit = showAllMessages ? messages.length : Math.min(messageLimit, messages.length);
       setDisplayedMessages(messages.slice(0, limit));
-      console.log(`📝 Displaying ${limit} of ${messages.length} messages (lazy loading: ${!showAllMessages})`);
     }
   }, [messages, messageLimit, showAllMessages]);
 
   const loadConversation = async () => {
-    console.log('🔄 Starting loadConversation...');
-    
     try {
       if (!id) return;
       
-      console.log('📋 Loading conversation with ID:', id);
-      console.log('📚 Available conversations from store:', conversations.length);
-      console.log('🎯 Selected conversations from store:', storeSelectedConversations.length);
-      console.log('📁 Current source file:', currentSourceFile);
-      
       // First try to get from conversation store
       let found = getConversationById(id);
-      console.log('🔍 Found in conversation store:', found ? 'YES' : 'NO');
       
       // If not found there, check store selected conversations
       if (!found && storeSelectedConversations.length > 0) {
-        console.log('🔍 Checking store selected conversations...');
         const storeConversation = storeSelectedConversations.find(conv => conv.id === id);
-        console.log('🎯 Found in store selected conversations:', storeConversation ? 'YES' : 'NO');
-        
         if (storeConversation && storeConversation.sourceFilePath) {
           // Load the conversation data from the source file using the new method
           try {
-            console.log('📖 Loading conversation from source file:', storeConversation.sourceFilePath);
-            
             // Use the new single conversation reader
             if (window.electronAPI && window.electronAPI.readSingleConversation) {
-              console.log('🎯 Using single conversation read method...');
               const result = await window.electronAPI.readSingleConversation(storeConversation.sourceFilePath, id);
               
               if (result.success && result.found && result.data) {
-                console.log('✅ Found conversation using single read method');
                 const rawConversation = result.data;
                 
                 // Convert raw conversation to expected format
@@ -197,17 +176,15 @@ const ConversationViewer: React.FC = () => {
                       const firstPart = message.content.parts[0];
                       return firstPart && typeof firstPart === 'string' && firstPart.trim() !== '';
                     }).length;
-                    console.log(`📊 Message count: ${filteredMessages} (filtered) out of ${totalMessages} (total)`);
                     return filteredMessages;
                   })(),
                   filePath: storeConversation.sourceFilePath
                 };
-                console.log('✅ Converted conversation from single read:', found);
               } else {
-                console.log('❌ Conversation not found in source file');
+                // Conversation not found in source file
               }
             } else {
-              console.log('⚠️ Single conversation read not available');
+              // Single conversation read not available
             }
           } catch (fileError) {
             console.warn('⚠️ Failed to load from source file:', fileError);
@@ -217,9 +194,7 @@ const ConversationViewer: React.FC = () => {
       
       // If still not found, check navigation store (fallback)
       if (!found) {
-        console.log('🔍 Checking navigation store...');
         const navConversation = selectedConversations.find(conv => conv.id === id);
-        console.log('🎯 Found in navigation store:', navConversation ? 'YES' : 'NO');
         if (navConversation) {
           // Convert navigation store format to expected format
           found = {
@@ -230,31 +205,24 @@ const ConversationViewer: React.FC = () => {
             filePath: '',
             modelVersion: 'Unknown'
           };
-          console.log('✅ Converted conversation from navigation store:', found);
         }
       }
       
       if (found) {
         setCurrentConversation(found);
         setLoading(false);
-        console.log('✅ Conversation loaded successfully');
       } else {
         setError('Conversation not found');
         setLoading(false);
-        console.log('❌ Conversation not found in any store');
       }
     } catch (err) {
       console.error('❌ Error loading conversation:', err);
       setError('Failed to load conversation');
       setLoading(false);
     }
-    
-    console.log('✅ loadConversation completed');
   };
 
   const loadMessages = async () => {
-    console.log('🔄 Starting loadMessages...');
-    
     try {
       if (!id) return;
       
@@ -262,16 +230,12 @@ const ConversationViewer: React.FC = () => {
       const storeConversation = storeSelectedConversations.find(conv => conv.id === id);
       if (storeConversation && storeConversation.sourceFilePath) {
         try {
-          console.log('📖 Loading messages from source file...');
-          
           if (window.electronAPI && window.electronAPI.readSingleConversation) {
             const result = await window.electronAPI.readSingleConversation(storeConversation.sourceFilePath, id);
             
             if (result.success && result.found && result.data && result.data.mapping) {
-              console.log('✅ Found conversation with mapping, extracting messages...');
               const messages = extractMessagesFromMapping(result.data.mapping);
               setMessages(messages);
-              console.log(`✅ Set ${messages.length} messages to state`);
               
               // Cache messages in localStorage for faster subsequent loads
               try {
@@ -298,7 +262,6 @@ const ConversationViewer: React.FC = () => {
           const data = JSON.parse(savedData);
           // Check if cache is still valid (same source file)
           if (data.sourceFile === currentSourceFile && data.messages) {
-            console.log('✅ Loading messages from localStorage cache');
             setMessages(data.messages);
             return;
           }
@@ -309,20 +272,15 @@ const ConversationViewer: React.FC = () => {
       
       // Last resort: try to extract from current conversation
       if (currentConversation && currentConversation.mapping) {
-        console.log('🔍 Trying to extract messages from current conversation mapping...');
         const extractedMessages = readJsonFile(currentConversation);
         setMessages(extractedMessages);
-        console.log(`📝 Extracted ${extractedMessages.length} messages from current conversation`);
       } else {
-        console.log('❌ No messages available from any source');
         setMessages([]);
       }
     } catch (err) {
       console.error('❌ Error in loadMessages:', err);
       setMessages([]);
     }
-    
-    console.log('✅ loadMessages completed');
   };
 
   const getSurveyCompletionStatus = () => {

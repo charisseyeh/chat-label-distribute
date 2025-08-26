@@ -53,7 +53,6 @@ export class FileManager {
         originalPath: filePath
       };
 
-      console.log(`File stored successfully: ${originalName} -> ${storedPath}`);
       return storedFile;
 
     } catch (error) {
@@ -107,7 +106,6 @@ export class FileManager {
       }
 
       await fs.remove(fileToDelete.storedPath);
-      console.log(`Deleted stored file: ${fileToDelete.originalName}`);
       return true;
     } catch (error) {
       console.error('Failed to delete stored file:', error);
@@ -162,7 +160,6 @@ export class FileManager {
             await fs.remove(fileToRemove.storedPath);
             removed++;
             savedSpace += fileToRemove.fileSize;
-            console.log(`Removed duplicate: ${fileToRemove.originalName}`);
           }
         }
       }

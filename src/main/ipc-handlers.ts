@@ -98,43 +98,47 @@ export class IPCHandlers {
         
         let conversations: any[] = [];
         
+        // Handle different data structures
         if (Array.isArray(jsonData)) {
+          // Direct array of conversations
           conversations = jsonData;
         } else if (jsonData.conversations && Array.isArray(jsonData.conversations)) {
+          // Nested conversations array
           conversations = jsonData.conversations;
-        } else if (jsonData.conversation_id) {
-          conversations = [jsonData];
+        } else if (jsonData.conversation) {
+          // Single conversation
+          conversations = [jsonData.conversation];
+        } else {
+          // Unexpected data structure
+          throw new Error('Unexpected data structure in conversation file');
         }
         
-        // Extract only the metadata we need for the list (ALL conversations)
+        // Create a lightweight index with only essential data
         const conversationIndex = conversations.map(conv => ({
-          id: conv.conversation_id || conv.id || `conv_${Date.now()}`,
+          id: conv.conversation_id || conv.id || `conv_${Date.now()}_${Math.random()}`,
           title: conv.title || 'Untitled Conversation',
-          createTime: conv.create_time || Date.now(),
-          messageCount: conv.mapping ? Object.keys(conv.mapping).filter(key => {
-            const message = conv.mapping[key].message;
-            if (!message || !message.content || !message.content.parts || !Array.isArray(message.content.parts)) {
-              return false;
-            }
-            const firstPart = message.content.parts[0];
-            return firstPart && typeof firstPart === 'string' && firstPart.trim() !== '';
-          }).length : 0,
-          model: conv.model || 'Unknown'
+          modelVersion: conv.model || 'Unknown',
+          conversationLength: conv.mapping ? Object.keys(conv.mapping).length * 100 : 0,
+          createdAt: new Date((conv.create_time || Date.now()) * 1000).toISOString(),
+          messageCount: (() => {
+            if (!conv.mapping) return 0;
+            return Object.keys(conv.mapping).filter(key => {
+              const message = conv.mapping[key].message;
+              if (!message || !message.content || !message.content.parts || !Array.isArray(message.content.parts)) {
+                return false;
+              }
+              const firstPart = message.content.parts[0];
+              return firstPart && typeof firstPart === 'string' && firstPart.trim() !== '';
+            }).length;
+          })(),
+          sourceFilePath: filePath
         }));
         
-        return { 
-          success: true, 
-          data: conversationIndex,
-          total: conversations.length,
-          returned: conversationIndex.length
-        };
+        return { success: true, data: conversationIndex };
       } catch (error) {
         return { 
           success: false, 
-          error: error instanceof Error ? error.message : 'Unknown error occurred',
-          data: [],
-          total: 0,
-          returned: 0
+          error: error instanceof Error ? error.message : 'Failed to get conversation index' 
         };
       }
     });
