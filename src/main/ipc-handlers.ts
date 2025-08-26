@@ -91,14 +91,7 @@ export class IPCHandlers {
 
     // Get conversation index (titles only) for selection list
     ipcMain.handle('conversations:get-index', async (event, filePath: string) => {
-      const startTime = performance.now();
-      console.log(`📋 IPC: Getting conversation index from: ${filePath}`);
-      
       try {
-        const stats = await fs.stat(filePath);
-        const fileSizeMB = stats.size / (1024 * 1024);
-        console.log(`📊 IPC: File size: ${fileSizeMB.toFixed(2)}MB`);
-        
         // Simple approach: read file and extract only what we need
         const fileContent = await fs.readFile(filePath, 'utf-8');
         const jsonData = JSON.parse(fileContent);
@@ -113,30 +106,25 @@ export class IPCHandlers {
           conversations = [jsonData];
         }
         
-        const totalConversations = conversations.length;
-        console.log(`📚 IPC: Total conversations in file: ${totalConversations}`);
-        
         // Extract only the metadata we need for the list (ALL conversations)
         const conversationIndex = conversations.map(conv => ({
           id: conv.conversation_id || conv.id || `conv_${Date.now()}`,
           title: conv.title || 'Untitled Conversation',
           createTime: conv.create_time || Date.now(),
-          messageCount: conv.mapping ? Object.keys(conv.mapping).filter(key => conv.mapping[key].message).length : 0,
+          messageCount: conv.mapping ? Object.keys(conv.mapping).filter(key => 
+            conv.mapping[key].message && 
+            conv.mapping[key].message.content?.parts?.[0]?.trim() !== ''
+          ).length : 0,
           model: conv.model || 'Unknown'
         }));
-        
-        const totalTime = performance.now() - startTime;
-        console.log(`✅ IPC: Indexed ALL ${conversationIndex.length} conversations in ${totalTime.toFixed(2)}ms`);
         
         return { 
           success: true, 
           data: conversationIndex,
-          total: totalConversations,
+          total: conversations.length,
           returned: conversationIndex.length
         };
       } catch (error) {
-        const totalTime = performance.now() - startTime;
-        console.error(`❌ IPC: Indexing failed after ${totalTime.toFixed(2)}ms:`, error);
         return { 
           success: false, 
           error: error instanceof Error ? error.message : 'Unknown error occurred',
@@ -149,9 +137,6 @@ export class IPCHandlers {
 
     // Read a single conversation by ID from file
     ipcMain.handle('conversations:read-single-conversation', async (event, filePath: string, conversationId: string) => {
-      const startTime = performance.now();
-      console.log(`🎯 IPC: Reading single conversation ${conversationId} from: ${filePath}`);
-      
       try {
         const fileContent = await fs.readFile(filePath, 'utf-8');
         const jsonData = JSON.parse(fileContent);
@@ -171,17 +156,66 @@ export class IPCHandlers {
           foundConversation = jsonData;
         }
         
-        const totalTime = performance.now() - startTime;
-        console.log(`🎯 IPC: Single conversation read took ${totalTime.toFixed(2)}ms`);
-        
         return { 
           success: true, 
           data: foundConversation,
           found: !!foundConversation
         };
       } catch (error) {
-        const totalTime = performance.now() - startTime;
-        console.error(`❌ IPC: Single conversation read failed after ${totalTime.toFixed(2)}ms:`, error);
+        return { 
+          success: false, 
+          error: error instanceof Error ? error.message : 'Unknown error occurred',
+          found: false
+        };
+      }
+    });
+
+    // Store selected conversation IDs permanently
+    ipcMain.handle('conversations:store-selected', async (event, selectedConversations: any[]) => {
+      try {
+        const storageDir = this.fileManager.getStorageDirectory();
+        const selectedFile = `${storageDir}/selected-conversations.json`;
+        
+        // Save selected conversations with metadata
+        const dataToStore = {
+          selectedConversations,
+          lastUpdated: new Date().toISOString(),
+          totalSelected: selectedConversations.length
+        };
+        
+        await fs.ensureDir(storageDir);
+        await fs.writeFile(selectedFile, JSON.stringify(dataToStore, null, 2));
+        
+        return { success: true, data: { saved: true } };
+      } catch (error) {
+        return { 
+          success: false, 
+          error: error instanceof Error ? error.message : 'Unknown error occurred' 
+        };
+      }
+    });
+
+    // Retrieve selected conversation IDs
+    ipcMain.handle('conversations:get-selected', async () => {
+      try {
+        const storageDir = this.fileManager.getStorageDirectory();
+        const selectedFile = `${storageDir}/selected-conversations.json`;
+        
+        if (!(await fs.pathExists(selectedFile))) {
+          return { success: true, data: [], found: false };
+        }
+        
+        const content = await fs.readFile(selectedFile, 'utf-8');
+        const data = JSON.parse(content);
+        
+        return { 
+          success: true, 
+          data: data.selectedConversations || [],
+          found: true,
+          lastUpdated: data.lastUpdated,
+          totalSelected: data.totalSelected
+        };
+      } catch (error) {
         return { 
           success: false, 
           error: error instanceof Error ? error.message : 'Unknown error occurred',

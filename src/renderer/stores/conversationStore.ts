@@ -85,6 +85,11 @@ interface ConversationActions {
   // Bulk operations
   setConversations: (conversations: Conversation[]) => void;
   clearConversations: () => void;
+
+  // Permanent storage operations
+  loadSelectedConversationsFromStorage: () => Promise<boolean>;
+  saveSelectedConversationsToStorage: () => Promise<boolean>;
+  clearAllSelectedAndSave: () => Promise<boolean>;
 }
 
 type ConversationStore = ConversationState & ConversationActions;
@@ -169,10 +174,80 @@ export const useConversationStore = create<ConversationStore>()(
 
       // File management
       setCurrentSourceFile: (filePath) => set({ currentSourceFile: filePath }), // New
-
+      
       // Bulk operations
       setConversations: (conversations) => set({ conversations }),
       clearConversations: () => set({ conversations: [], currentConversation: null }),
+
+      // Permanent storage operations
+      loadSelectedConversationsFromStorage: async () => {
+        try {
+          console.log('🔄 Loading selected conversations from permanent storage...');
+          if (window.electronAPI && window.electronAPI.getSelectedConversations) {
+            const result = await window.electronAPI.getSelectedConversations();
+            if (result.success && result.found && result.data) {
+              console.log(`✅ Loaded ${result.data.length} selected conversations from storage`);
+              set({ 
+                selectedConversations: result.data,
+                selectedConversationIds: result.data.map((conv: any) => conv.id)
+              });
+              return true;
+            } else {
+              console.log('ℹ️ No selected conversations found in storage');
+            }
+          } else {
+            console.warn('⚠️ Electron API not available for loading selected conversations');
+          }
+          return false;
+        } catch (error) {
+          console.error('❌ Failed to load selected conversations from storage:', error);
+          return false;
+        }
+      },
+
+      saveSelectedConversationsToStorage: async () => {
+        try {
+          const { selectedConversations } = get();
+          console.log(`💾 Saving ${selectedConversations.length} selected conversations to permanent storage...`);
+          if (window.electronAPI && window.electronAPI.storeSelectedConversations) {
+            const result = await window.electronAPI.storeSelectedConversations(selectedConversations);
+            if (result.success) {
+              console.log('✅ Successfully saved selected conversations to permanent storage');
+            } else {
+              console.error('❌ Failed to save selected conversations:', result.error);
+            }
+            return result.success;
+          } else {
+            console.warn('⚠️ Electron API not available for saving selected conversations');
+          }
+          return false;
+        } catch (error) {
+          console.error('❌ Failed to save selected conversations to storage:', error);
+          return false;
+        }
+      },
+
+      clearAllSelectedAndSave: async () => {
+        try {
+          console.log('🗑️ Clearing all selected conversations and saving to storage...');
+          set({ selectedConversations: [], selectedConversationIds: [] });
+          if (window.electronAPI && window.electronAPI.storeSelectedConversations) {
+            const result = await window.electronAPI.storeSelectedConversations([]);
+            if (result.success) {
+              console.log('✅ Successfully cleared and saved empty selection to storage');
+            } else {
+              console.error('❌ Failed to save empty selection:', result.error);
+            }
+            return result.success;
+          } else {
+            console.warn('⚠️ Electron API not available for clearing selected conversations');
+          }
+          return false;
+        } catch (error) {
+          console.error('❌ Failed to clear and save selected conversations:', error);
+          return false;
+        }
+      },
     }),
     {
       name: 'conversation-storage',

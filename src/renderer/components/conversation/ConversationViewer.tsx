@@ -21,7 +21,8 @@ const ConversationViewer: React.FC = () => {
     selectedConversations: storeSelectedConversations,
     currentSourceFile,
     loading: conversationsLoading,
-    error: conversationsError 
+    error: conversationsError,
+    loadSelectedConversationsFromStorage
   } = useConversationStore();
   
   const { selectedConversations } = useNavigationStore();
@@ -35,38 +36,64 @@ const ConversationViewer: React.FC = () => {
   const [messageLimit, setMessageLimit] = useState(50); // Start with first 50 messages
   const [showAllMessages, setShowAllMessages] = useState(false);
 
-  // Performance tracking
-  const [loadStartTime, setLoadStartTime] = useState<number>(0);
-  const [loadEndTime, setLoadEndTime] = useState<number>(0);
-  const [performanceMetrics, setPerformanceMetrics] = useState<{
-    conversationLoad: number;
-    messageLoad: number;
-    total: number;
-    usedSlowMethod: boolean;
-  }>({ conversationLoad: 0, messageLoad: 0, total: 0, usedSlowMethod: false });
+  // Load selected conversations from permanent storage on mount
+  useEffect(() => {
+    const loadFromStorage = async () => {
+      try {
+        await loadSelectedConversationsFromStorage();
+      } catch (error) {
+        console.warn('Failed to load selected conversations from storage:', error);
+      }
+    };
+    loadFromStorage();
+    
+    // Clean up old cache entries
+    cleanupOldCache();
+  }, [loadSelectedConversationsFromStorage]);
+
+  // Clean up old localStorage cache entries
+  const cleanupOldCache = () => {
+    try {
+      const now = Date.now();
+      const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+      
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('conversation_')) {
+          try {
+            const data = JSON.parse(localStorage.getItem(key) || '{}');
+            if (data.timestamp && (now - data.timestamp) > maxAge) {
+              localStorage.removeItem(key);
+              console.log(`Cleaned up old cache entry: ${key}`);
+            }
+          } catch (error) {
+            // Remove invalid cache entries
+            localStorage.removeItem(key);
+          }
+        }
+      });
+    } catch (error) {
+      console.warn('Failed to cleanup cache:', error);
+    }
+  };
 
   // Helper function to extract messages from conversation mapping
   const extractMessagesFromMapping = (mapping: Record<string, any>): Message[] => {
-    const startTime = performance.now();
-    console.log('🔍 Starting message extraction from mapping...');
-    
     try {
       const messages: Message[] = [];
       
       // Convert mapping to array and sort by create_time if available
       const messageEntries = Object.entries(mapping)
-        .filter(([_, msg]) => msg.message) // Only include entries with actual messages
+        .filter(([_, msg]) => msg.message && msg.message.content?.parts?.[0]?.trim() !== '') // Only include entries with actual messages and non-empty content
         .sort((a, b) => {
           const timeA = a[1].message?.create_time || 0;
           const timeB = b[1].message?.create_time || 0;
           return timeA - timeB;
         });
       
-      console.log(`📊 Processing ${messageEntries.length} message entries...`);
-      
       messageEntries.forEach(([id, msg], index) => {
         if (msg.message) {
-          const content = msg.message.content?.parts?.[0]?.text || '';
+          // Fix: Get content from parts array directly, not from .text property
+          const content = msg.message.content?.parts?.[0] || '';
           const role = msg.message.author?.role || 'user';
           const createTime = msg.message.create_time || Date.now() / 1000;
           
@@ -79,13 +106,9 @@ const ConversationViewer: React.FC = () => {
         }
       });
       
-      const endTime = performance.now();
-      console.log(`✅ Message extraction completed in ${(endTime - startTime).toFixed(2)}ms`);
-      console.log(`📝 Extracted ${messages.length} messages`);
-      
       return messages;
     } catch (error) {
-      console.error('❌ Error extracting messages from mapping:', error);
+      console.error('Error extracting messages from mapping:', error);
       return [];
     }
   };
@@ -93,16 +116,12 @@ const ConversationViewer: React.FC = () => {
   useEffect(() => {
     if (id) {
       const loadData = async () => {
-        setLoadStartTime(performance.now());
         console.log(`🚀 Starting to load conversation ${id} at ${new Date().toISOString()}`);
         
         await loadConversation();
         await loadMessages();
         
-        setLoadEndTime(performance.now());
-        const totalLoadTime = performance.now() - loadStartTime;
-        console.log(`🎯 Total conversation load time: ${totalLoadTime.toFixed(2)}ms`);
-        setPerformanceMetrics(prev => ({ ...prev, total: totalLoadTime }));
+        console.log(`🎯 Total conversation load time: ${performance.now() - performance.now()}ms`);
       };
       loadData();
     }
@@ -118,7 +137,6 @@ const ConversationViewer: React.FC = () => {
   }, [messages, messageLimit, showAllMessages]);
 
   const loadConversation = async () => {
-    const startTime = performance.now();
     console.log('🔄 Starting loadConversation...');
     
     try {
@@ -143,7 +161,6 @@ const ConversationViewer: React.FC = () => {
           // Load the conversation data from the source file using the new method
           try {
             console.log('📖 Loading conversation from source file:', storeConversation.sourceFilePath);
-            const fileLoadStart = performance.now();
             
             // Use the new single conversation reader
             if (window.electronAPI && window.electronAPI.readSingleConversation) {
@@ -161,9 +178,18 @@ const ConversationViewer: React.FC = () => {
                   modelVersion: rawConversation.model || 'Unknown',
                   conversationLength: rawConversation.mapping ? Object.keys(rawConversation.mapping).length * 100 : 0,
                   createdAt: new Date((rawConversation.create_time || Date.now()) * 1000).toISOString(),
-                  messageCount: rawConversation.mapping ? Object.keys(rawConversation.mapping).filter(key => 
-                    rawConversation.mapping[key].message
-                  ).length : 0,
+                  messageCount: (() => {
+                    if (!rawConversation.mapping) return 0;
+                    const totalMessages = Object.keys(rawConversation.mapping).filter(key => 
+                      rawConversation.mapping[key].message
+                    ).length;
+                    const filteredMessages = Object.keys(rawConversation.mapping).filter(key => 
+                      rawConversation.mapping[key].message && 
+                      rawConversation.mapping[key].message.content?.parts?.[0]?.trim() !== ''
+                    ).length;
+                    console.log(`📊 Message count: ${filteredMessages} (filtered) out of ${totalMessages} (total)`);
+                    return filteredMessages;
+                  })(),
                   filePath: storeConversation.sourceFilePath
                 };
                 console.log('✅ Converted conversation from single read:', found);
@@ -213,100 +239,80 @@ const ConversationViewer: React.FC = () => {
       setLoading(false);
     }
     
-    const endTime = performance.now();
-    const loadTime = endTime - startTime;
-    console.log(`⏱️ loadConversation took ${loadTime.toFixed(2)}ms`);
-    setPerformanceMetrics(prev => ({ ...prev, conversationLoad: loadTime }));
+    console.log('✅ loadConversation completed');
   };
 
   const loadMessages = async () => {
-    const startTime = performance.now();
     console.log('🔄 Starting loadMessages...');
     
     try {
       if (!id) return;
       
-      // Try to load messages from localStorage first
-      console.log('🔍 Checking localStorage for saved messages...');
-      const savedConversationData = localStorage.getItem(`conversation_${id}`);
-      if (savedConversationData) {
-        console.log('✅ Found messages in localStorage');
-        const data = JSON.parse(savedConversationData);
-        const extractedMessages = readJsonFile(data);
-        setMessages(extractedMessages);
-        console.log(`📝 Loaded ${extractedMessages.length} messages from localStorage`);
-        return;
-      } else {
-        console.log('❌ No messages found in localStorage');
-      }
-      
-      // Try to load messages from the source file if available
+      // Try to load messages from the source file first (most reliable)
       const storeConversation = storeSelectedConversations.find(conv => conv.id === id);
       if (storeConversation && storeConversation.sourceFilePath) {
         try {
           console.log('📖 Loading messages from source file...');
-          const fileReadStart = performance.now();
           
-          // Use the new single conversation read method
           if (window.electronAPI && window.electronAPI.readSingleConversation) {
-            console.log('🎯 Using single conversation read for messages...');
             const result = await window.electronAPI.readSingleConversation(storeConversation.sourceFilePath, id);
             
-            const fileReadEnd = performance.now();
-            console.log(`📊 Single conversation read took ${(fileReadEnd - fileReadStart).toFixed(2)}ms`);
-            
-            if (result.success && result.found && result.data) {
-              console.log('✅ Found conversation using single read method');
-              const rawConversation = result.data;
+            if (result.success && result.found && result.data && result.data.mapping) {
+              console.log('✅ Found conversation with mapping, extracting messages...');
+              const messages = extractMessagesFromMapping(result.data.mapping);
+              setMessages(messages);
+              console.log(`✅ Set ${messages.length} messages to state`);
               
-              if (rawConversation.mapping) {
-                console.log('✅ Found conversation with mapping, extracting messages...');
-                const extractStart = performance.now();
-                
-                // Extract messages from the mapping
-                const messages = extractMessagesFromMapping(rawConversation.mapping);
-                
-                const extractEnd = performance.now();
-                console.log(`📝 Message extraction took ${(extractEnd - extractStart).toFixed(2)}ms`);
-                
-                setMessages(messages);
-                console.log(`✅ Set ${messages.length} messages to state`);
-                return;
-              } else {
-                console.log('❌ No mapping found in raw conversation');
+              // Cache messages in localStorage for faster subsequent loads
+              try {
+                localStorage.setItem(`conversation_${id}`, JSON.stringify({
+                  messages,
+                  timestamp: Date.now(),
+                  sourceFile: storeConversation.sourceFilePath
+                }));
+              } catch (cacheError) {
+                console.warn('Failed to cache messages:', cacheError);
               }
-            } else {
-              console.log('❌ File read failed or conversation not found');
+              return;
             }
           }
         } catch (fileError) {
           console.warn('⚠️ Failed to load messages from source file:', fileError);
         }
-      } else {
-        console.log('❌ No source file path available');
       }
       
-      // If no saved messages, try to find in the current conversation data
+      // Fallback: try to load from localStorage cache
+      try {
+        const savedData = localStorage.getItem(`conversation_${id}`);
+        if (savedData) {
+          const data = JSON.parse(savedData);
+          // Check if cache is still valid (same source file)
+          if (data.sourceFile === currentSourceFile && data.messages) {
+            console.log('✅ Loading messages from localStorage cache');
+            setMessages(data.messages);
+            return;
+          }
+        }
+      } catch (cacheError) {
+        console.warn('Failed to load from cache:', cacheError);
+      }
+      
+      // Last resort: try to extract from current conversation
       if (currentConversation && currentConversation.mapping) {
         console.log('🔍 Trying to extract messages from current conversation mapping...');
-        // This is an imported conversation format
         const extractedMessages = readJsonFile(currentConversation);
         setMessages(extractedMessages);
         console.log(`📝 Extracted ${extractedMessages.length} messages from current conversation`);
       } else {
-        console.log('❌ No mapping found in current conversation');
-        // No messages available
+        console.log('❌ No messages available from any source');
         setMessages([]);
       }
     } catch (err) {
-      console.warn('⚠️ Could not load messages:', err);
+      console.error('❌ Error in loadMessages:', err);
       setMessages([]);
     }
     
-    const endTime = performance.now();
-    const loadTime = endTime - startTime;
-    console.log(`⏱️ loadMessages took ${loadTime.toFixed(2)}ms`);
-    setPerformanceMetrics(prev => ({ ...prev, messageLoad: loadTime }));
+    console.log('✅ loadMessages completed');
   };
 
   const getSurveyCompletionStatus = () => {
@@ -354,6 +360,16 @@ const ConversationViewer: React.FC = () => {
 
   const handleBackToLabeling = () => {
     navigate('/label-conversations');
+  };
+
+  const handleRefreshMessages = async () => {
+    // Clear cache and reload messages
+    try {
+      localStorage.removeItem(`conversation_${id}`);
+      await loadMessages();
+    } catch (error) {
+      console.error('Failed to refresh messages:', error);
+    }
   };
 
   if (loading || conversationsLoading) {
@@ -448,67 +464,7 @@ const ConversationViewer: React.FC = () => {
           </div>
           
           {/* Performance Metrics */}
-          {performanceMetrics.total > 0 && (
-            <div className="card">
-              <div className="card-content">
-                <div className="text-sm text-blue-800">
-                  <div className="font-medium mb-2">Performance Metrics:</div>
-                  <div className="grid grid-cols-3 gap-4 text-xs">
-                    <div>
-                      <span className="font-medium">Conversation Load:</span> {performanceMetrics.conversationLoad.toFixed(2)}ms
-                    </div>
-                    <div>
-                      <span className="font-medium">Message Load:</span> {performanceMetrics.messageLoad.toFixed(2)}ms
-                    </div>
-                    <div>
-                      <span className="font-medium">Total Time:</span> {performanceMetrics.total.toFixed(2)}ms
-                    </div>
-                  </div>
-                  
-                  {/* Performance Warning */}
-                  {performanceMetrics.usedSlowMethod && (
-                    <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-800">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-yellow-600">⚠️</span>
-                        <span className="text-xs font-medium">Performance Warning:</span>
-                      </div>
-                      <div className="text-xs mt-1">
-                        Used slow file reading method. Consider splitting large conversation files for better performance.
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Cache Management */}
-                  <div className="mt-3 pt-3 border-t border-blue-200">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs">Cache Status:</span>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => {
-                            // conversationService.clearCache(); // This line is removed as per the new_code
-                            console.log('🗑️ Cache cleared by user');
-                          }}
-                          className="px-2 py-1 text-xs bg-blue-200 hover:bg-blue-300 rounded transition-colors"
-                        >
-                          Clear Cache
-                        </button>
-                        <button
-                          onClick={() => {
-                            // const stats = conversationService.getCacheStats(); // This line is removed as per the new_code
-                            console.log('📊 Cache stats:', {}); // Placeholder for new cache stats
-                            alert('Cache management is not implemented in this simplified version.');
-                          }}
-                          className="px-2 py-1 text-xs bg-blue-200 hover:bg-blue-300 rounded transition-colors"
-                        >
-                          Show Cache Info
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Removed performance metrics as per edit hint */}
         </div>
       </div>
 
@@ -566,8 +522,17 @@ const ConversationViewer: React.FC = () => {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium text-foreground">Conversation Messages</h3>
             {messages.length > 0 && (
-              <div className="text-sm text-muted-foreground">
-                Showing {displayedMessages.length} of {messages.length} messages
+              <div className="flex items-center gap-4">
+                <div className="text-sm text-muted-foreground">
+                  Showing {displayedMessages.length} of {messages.length} messages
+                </div>
+                <button
+                  onClick={handleRefreshMessages}
+                  className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
+                  title="Refresh messages from source"
+                >
+                  ↻ Refresh
+                </button>
               </div>
             )}
           </div>
@@ -633,52 +598,7 @@ const ConversationViewer: React.FC = () => {
       </div>
 
       {/* File Optimization Recommendations */}
-      {performanceMetrics.usedSlowMethod && (
-        <div className="card">
-          <div className="card-content">
-            <div className="flex items-center space-x-2 mb-3">
-              <span className="text-yellow-600 text-lg">⚡</span>
-              <h3 className="text-lg font-medium text-foreground">Performance Optimization</h3>
-            </div>
-            
-            <div className="space-y-3 text-sm text-muted-foreground">
-              <p>
-                Your conversation file contains <strong>1,636 conversations</strong>, which is causing slow loading times.
-                Here are some recommendations to improve performance:
-              </p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="font-medium text-blue-800 mb-2">Immediate Solutions:</div>
-                  <ul className="text-xs space-y-1 text-blue-700">
-                    <li>• Use the cache (already implemented)</li>
-                    <li>• Load conversations one at a time</li>
-                    <li>• Close unused conversations</li>
-                  </ul>
-                </div>
-                
-                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="font-medium text-green-800 mb-2">Long-term Solutions:</div>
-                  <ul className="text-xs space-y-1 text-green-700">
-                    <li>• Split large files into smaller chunks</li>
-                    <li>• Use database storage instead of JSON</li>
-                    <li>• Implement conversation indexing</li>
-                  </ul>
-                </div>
-              </div>
-              
-              <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                <div className="font-medium text-gray-800 mb-2">Current File Stats:</div>
-                <div className="text-xs text-gray-600">
-                  <div>📁 File: {currentConversation?.filePath?.split('/').pop() || 'Unknown'}</div>
-                  <div>📊 Size: ~{(performanceMetrics.conversationLoad / 1000).toFixed(1)}s read time</div>
-                  <div>💾 Cache: (Inactive - Cache management not implemented)</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Removed performance metrics as per edit hint */}
 
       {/* Action Buttons */}
       <div className="flex justify-center space-x-4">

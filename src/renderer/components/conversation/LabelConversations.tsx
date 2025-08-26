@@ -1,12 +1,29 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useConversationStore } from '../../stores/conversationStore';
 import { useNavigationStore } from '../../stores/navigationStore';
 
 const LabelConversations: React.FC = () => {
-  const { selectedConversationIds } = useConversationStore();
+  const { 
+    selectedConversationIds, 
+    selectedConversations: storeSelectedConversations,
+    loadSelectedConversationsFromStorage,
+    clearAllSelectedAndSave
+  } = useConversationStore();
   const { selectedConversations } = useNavigationStore();
   const navigate = useNavigate();
+
+  // Load selected conversations from permanent storage on mount
+  useEffect(() => {
+    const loadFromStorage = async () => {
+      try {
+        await loadSelectedConversationsFromStorage();
+      } catch (error) {
+        console.warn('Failed to load selected conversations from storage:', error);
+      }
+    };
+    loadFromStorage();
+  }, [loadSelectedConversationsFromStorage]);
 
   const handleConversationClick = (conversationId: string) => {
     navigate(`/conversation/${conversationId}`);
@@ -50,6 +67,17 @@ const LabelConversations: React.FC = () => {
             className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
           >
             Back to Selection
+          </button>
+          <button
+            onClick={async () => {
+              if (window.confirm('Are you sure you want to clear all selected conversations? This action cannot be undone.')) {
+                await clearAllSelectedAndSave();
+                navigate('/select-conversations');
+              }
+            }}
+            className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+          >
+            Clear All
           </button>
         </div>
       </div>

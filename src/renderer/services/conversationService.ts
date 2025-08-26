@@ -24,9 +24,6 @@ export interface RawConversationData {
 export class ConversationService {
   // Simple method to get conversation index (titles only) for selection list
   async getConversationIndex(filePath: string): Promise<ConversationData[]> {
-    const startTime = performance.now();
-    console.log(`📋 ConversationService: Getting index from: ${filePath}`);
-    
     try {
       if (!window.electronAPI) {
         throw new Error('Electron API not available');
@@ -37,22 +34,16 @@ export class ConversationService {
       if (!result.success || !result.data) {
         throw new Error(result.error || 'Failed to get conversation index');
       }
-
-      const totalTime = performance.now() - startTime;
-      console.log(`✅ ConversationService: Got ALL ${result.data.length} conversations in ${totalTime.toFixed(2)}ms`);
       
       return result.data;
     } catch (error) {
-      console.error('❌ ConversationService: Error getting conversation index:', error);
+      console.error('Error getting conversation index:', error);
       throw new Error(`Failed to get conversation index: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   // Simple method to get a single conversation
   async getSingleConversation(filePath: string, conversationId: string): Promise<RawConversationData | null> {
-    const startTime = performance.now();
-    console.log(`🎯 ConversationService: Getting single conversation ${conversationId} from: ${filePath}`);
-    
     try {
       if (!window.electronAPI) {
         throw new Error('Electron API not available');
@@ -63,13 +54,10 @@ export class ConversationService {
       if (!result.success) {
         throw new Error(result.error || 'Failed to read single conversation');
       }
-
-      const totalTime = performance.now() - startTime;
-      console.log(`✅ ConversationService: Got single conversation in ${totalTime.toFixed(2)}ms`);
       
       return result.found ? result.data : null;
     } catch (error) {
-      console.error('❌ ConversationService: Error getting single conversation:', error);
+      console.error('Error getting single conversation:', error);
       throw new Error(`Failed to get single conversation: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }

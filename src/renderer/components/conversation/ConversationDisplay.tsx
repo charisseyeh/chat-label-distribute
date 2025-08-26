@@ -445,7 +445,7 @@ const ConversationDisplay: React.FC = () => {
                   </div>
                 </div>
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     // Update conversation store with selected conversations and file path
                     const selectedConvs = filteredConversations
                       .filter(conv => selectedConversationIds.includes(conv.id))
@@ -458,6 +458,9 @@ const ConversationDisplay: React.FC = () => {
                     // Store in conversation store for persistence
                     useConversationStore.getState().setSelectedConversationsWithFile(selectedConvs);
                     useConversationStore.getState().setCurrentSourceFile(selectedFile || '');
+                    
+                    // Save to permanent storage
+                    await useConversationStore.getState().saveSelectedConversationsToStorage();
                     
                     // Also update navigation store for backward compatibility
                     useNavigationStore.getState().setSelectedConversations(selectedConvs.map(conv => ({
