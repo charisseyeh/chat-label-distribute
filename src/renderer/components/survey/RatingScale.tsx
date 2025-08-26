@@ -27,9 +27,9 @@ const RatingScale: React.FC<RatingScaleProps> = ({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {/* Rating Buttons */}
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-1">
         {Array.from({ length: scale }, (_, i) => {
           const rating = i + 1;
           const isSelected = currentRating === rating;
@@ -66,7 +66,7 @@ const RatingScale: React.FC<RatingScaleProps> = ({
       
       {/* Label - Show below the entire rating selector */}
       {(hoveredRating || currentRating) ? (
-        <div className="text-left pt-2">
+        <div className="text-left">
           <div className={`
             text-sm italic text-gray-600 transition-all duration-200
             ${currentRating ? 'text-blue-600' : 'text-gray-600'}
@@ -75,7 +75,7 @@ const RatingScale: React.FC<RatingScaleProps> = ({
           </div>
         </div>
       ) : (
-        <div className="text-left pt-2">
+        <div className="text-left">
           <div className="text-sm italic text-gray-500">
             Select a rating
           </div>

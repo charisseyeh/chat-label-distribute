@@ -70,13 +70,13 @@ const SurveySection: React.FC<SurveySectionProps> = ({
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6">
       {/* Simple Question Display */}
-      <div className="space-y-6">
+      <div className="space-y-2">
         {/* Question Header */}
         <div className="text-left">
           <div className="text-sm text-gray-500 mb-2">
             Question {currentQuestionIndex + 1} of {totalQuestions}
           </div>
-          <h3 className="text-lg font-medium text-gray-900 leading-relaxed">
+          <h3 className="text-lg font-medium text-gray-900 leading-tight">
             {currentQuestion.text}
           </h3>
         </div>
@@ -94,22 +94,26 @@ const SurveySection: React.FC<SurveySectionProps> = ({
 
         {/* Navigation */}
         {totalQuestions > 1 && (
-          <div className="flex items-center justify-start space-x-4">
-            <button
-              onClick={goToPreviousQuestion}
-              disabled={currentQuestionIndex === 0}
-              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Previous
-            </button>
+          <div className="flex items-center justify-start space-x-2">
+            {/* Show Previous button only when not on first question */}
+            {currentQuestionIndex > 0 && (
+              <button
+                onClick={goToPreviousQuestion}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                Previous
+              </button>
+            )}
             
-            <button
-              onClick={goToNextQuestion}
-              disabled={currentQuestionIndex === totalQuestions - 1}
-              className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Next
-            </button>
+            {/* Show Next button only when not on last question */}
+            {currentQuestionIndex < totalQuestions - 1 && (
+              <button
+                onClick={goToNextQuestion}
+                className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
+              >
+                Next
+              </button>
+            )}
           </div>
         )}
       </div>
