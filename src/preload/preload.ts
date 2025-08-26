@@ -8,6 +8,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   storeJsonFile: (filePath: string) => ipcRenderer.invoke('file:store-json', filePath),
   getStoredFiles: () => ipcRenderer.invoke('file:get-stored-files'),
   deleteStoredFile: (fileId: string) => ipcRenderer.invoke('file:delete-stored-file', fileId),
+  getStorageStats: () => ipcRenderer.invoke('file:get-storage-stats'),
+  cleanupDuplicateFiles: () => ipcRenderer.invoke('file:cleanup-duplicates'),
   // Conversation operations
   readConversationsFromFile: (filePath: string) => ipcRenderer.invoke('conversations:read-from-file', filePath),
 });
@@ -20,6 +22,8 @@ declare global {
       storeJsonFile: (filePath: string) => Promise<{ success: boolean; data?: any; error?: string }>;
       getStoredFiles: () => Promise<{ success: boolean; data?: any; error?: string }>;
       deleteStoredFile: (fileId: string) => Promise<{ success: boolean; data?: any; error?: string }>;
+      getStorageStats: () => Promise<{ success: boolean; data?: any; error?: string }>;
+      cleanupDuplicateFiles: () => Promise<{ success: boolean; data?: any; error?: string }>;
       readConversationsFromFile: (filePath: string) => Promise<{ success: boolean; data?: any; error?: string }>;
     };
   }

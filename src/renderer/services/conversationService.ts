@@ -5,6 +5,21 @@ export interface ConversationData {
   updateTime: number;
   model?: string;
   messageCount: number;
+  firstMessage?: string;
+  aiRelevancy?: {
+    category: 'relevant' | 'not-relevant';
+    explanation: string;
+  };
+}
+
+export interface RawConversationData {
+  conversation_id?: string;
+  id?: string;
+  title?: string;
+  create_time?: number;
+  update_time?: number;
+  model?: string;
+  mapping?: Record<string, any>;
 }
 
 export class ConversationService {
@@ -27,13 +42,13 @@ export class ConversationService {
       
       if (Array.isArray(jsonData)) {
         // If it's an array of conversations
-        conversations = jsonData.map(conv => this.extractConversationData(conv));
+        conversations = jsonData.map((conv: RawConversationData) => this.extractConversationData(conv));
       } else if (jsonData.conversations && Array.isArray(jsonData.conversations)) {
         // If it's wrapped in a conversations property
-        conversations = jsonData.conversations.map(conv => this.extractConversationData(conv));
+        conversations = jsonData.conversations.map((conv: RawConversationData) => this.extractConversationData(conv));
       } else if (jsonData.conversation_id) {
         // If it's a single conversation
-        conversations = [this.extractConversationData(jsonData)];
+        conversations = [this.extractConversationData(jsonData as RawConversationData)];
       } else {
         throw new Error('Unsupported conversation file format');
       }
@@ -45,7 +60,7 @@ export class ConversationService {
     }
   }
 
-  private extractConversationData(conv: Record<string, any>): ConversationData {
+  private extractConversationData(conv: RawConversationData): ConversationData {
     // Extract basic conversation information
     const id = conv.conversation_id || conv.id || `conv_${Date.now()}`;
     const title = conv.title || 'Untitled Conversation';
@@ -55,8 +70,16 @@ export class ConversationService {
     
     // Count messages if mapping exists
     let messageCount = 0;
+    let firstMessage = '';
     if (conv.mapping) {
-      messageCount = Object.values(conv.mapping).filter((msg: any) => msg.message).length;
+      const messages = Object.values(conv.mapping).filter((msg: any) => msg.message);
+      messageCount = messages.length;
+      
+      // Extract first user message if available
+      const firstUserMessage = messages.find((msg: any) => msg.message?.author?.role === 'user');
+      if (firstUserMessage?.message?.content?.parts?.[0]?.text) {
+        firstMessage = firstUserMessage.message.content.parts[0].text;
+      }
     }
     
     return {
@@ -65,7 +88,8 @@ export class ConversationService {
       createTime,
       updateTime,
       model,
-      messageCount
+      messageCount,
+      firstMessage
     };
   }
 
@@ -86,5 +110,27 @@ export class ConversationService {
   // Helper method to format timestamp
   formatTimestamp(timestamp: number): string {
     return new Date(timestamp * 1000).toLocaleDateString();
+  }
+
+  // Filter conversations by AI relevancy
+  filterByAIRelevancy(conversations: ConversationData[], relevancyResults: Array<{category: 'relevant' | 'not-relevant', explanation: string}>): ConversationData[] {
+    if (!relevancyResults || relevancyResults.length === 0) {
+      return conversations;
+    }
+
+    return conversations.map((conv, index) => ({
+      ...conv,
+      aiRelevancy: relevancyResults[index] || undefined
+    })).filter(conv => conv.aiRelevancy?.category === 'relevant');
+  }
+
+  // Get only relevant conversations
+  getRelevantConversations(conversations: ConversationData[]): ConversationData[] {
+    return conversations.filter(conv => conv.aiRelevancy?.category === 'relevant');
+  }
+
+  // Get only non-relevant conversations
+  getNonRelevantConversations(conversations: ConversationData[]): ConversationData[] {
+    return conversations.filter(conv => conv.aiRelevancy?.category === 'not-relevant');
   }
 }

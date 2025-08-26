@@ -115,6 +115,65 @@ export class FileManager {
     }
   }
 
+  async getStorageStats(): Promise<{ totalFiles: number; totalSize: number; averageSize: number }> {
+    try {
+      const files = await this.getStoredFiles();
+      const totalFiles = files.length;
+      const totalSize = files.reduce((sum, file) => sum + file.fileSize, 0);
+      const averageSize = totalFiles > 0 ? totalSize / totalFiles : 0;
+      
+      return {
+        totalFiles,
+        totalSize,
+        averageSize
+      };
+    } catch (error) {
+      console.error('Failed to get storage stats:', error);
+      return { totalFiles: 0, totalSize: 0, averageSize: 0 };
+    }
+  }
+
+  async cleanupDuplicateFiles(): Promise<{ removed: number; savedSpace: number }> {
+    try {
+      const files = await this.getStoredFiles();
+      const duplicates = new Map<string, StoredFile[]>();
+      
+      // Group files by size (simple duplicate detection)
+      files.forEach(file => {
+        const key = `${file.fileSize}_${file.originalName}`;
+        if (!duplicates.has(key)) {
+          duplicates.set(key, []);
+        }
+        duplicates.get(key)!.push(file);
+      });
+      
+      let removed = 0;
+      let savedSpace = 0;
+      
+      // Remove duplicates, keeping the most recent
+      for (const [key, fileGroup] of duplicates) {
+        if (fileGroup.length > 1) {
+          // Sort by import date, keep the most recent
+          fileGroup.sort((a, b) => new Date(b.importDate).getTime() - new Date(a.importDate).getTime());
+          
+          // Remove all but the first (most recent) file
+          for (let i = 1; i < fileGroup.length; i++) {
+            const fileToRemove = fileGroup[i];
+            await fs.remove(fileToRemove.storedPath);
+            removed++;
+            savedSpace += fileToRemove.fileSize;
+            console.log(`Removed duplicate: ${fileToRemove.originalName}`);
+          }
+        }
+      }
+      
+      return { removed, savedSpace };
+    } catch (error) {
+      console.error('Failed to cleanup duplicate files:', error);
+      return { removed: 0, savedSpace: 0 };
+    }
+  }
+
   private generateUniqueId(): string {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }

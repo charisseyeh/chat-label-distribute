@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useConversations } from '../../hooks/useConversations';
-import { useSurveyResponses } from '../../hooks/useSurveyResponses';
+import { useSurveyStore } from '../../stores/surveyStore';
 import { readJsonFile } from '../../utils/conversationUtils';
 
 interface Message {
@@ -15,14 +15,14 @@ const ConversationViewer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { 
     conversations, 
-    currentConversation, 
-    setCurrentConversation,
+    getConversationById,
     loading: conversationsLoading,
     error: conversationsError 
   } = useConversations();
   
-  const { responses: surveyResponses } = useSurveyResponses();
+  const { responses: surveyResponses } = useSurveyStore();
   
+  const [currentConversation, setCurrentConversation] = useState<ReturnType<typeof getConversationById>>(undefined);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +36,8 @@ const ConversationViewer: React.FC = () => {
 
   const loadConversation = () => {
     try {
-      const found = conversations.find(c => c.id === id);
+      if (!id) return;
+      const found = getConversationById(id);
       if (found) {
         setCurrentConversation(found);
         setLoading(false);
@@ -69,10 +70,10 @@ const ConversationViewer: React.FC = () => {
   const getSurveyCompletionStatus = () => {
     if (!id) return { completed: 0, total: 3, positions: [] };
     
-    const positions = ['beginning', 'turn6', 'end'];
-    const conversationResponses = surveyResponses.filter(r => r.conversationId === id);
+    const positions = ['beginning', 'turn6', 'end'] as const;
+    const conversationResponses = surveyResponses.filter((r: any) => r.conversationId === id);
     const completed = positions.filter(pos => 
-      conversationResponses.some(r => r.position === pos)
+      conversationResponses.some((r: any) => r.position === pos)
     );
     
     return {
@@ -206,7 +207,7 @@ const ConversationViewer: React.FC = () => {
           
           <div className="grid grid-cols-3 gap-2">
             {['beginning', 'turn6', 'end'].map((position) => {
-              const isCompleted = surveyResponses.some(r => r.position === position && r.conversationId === id);
+              const isCompleted = surveyResponses.some((r: any) => r.position === position && r.conversationId === id);
               const positionLabel = {
                 beginning: 'Beginning',
                 turn6: 'Turn 6',

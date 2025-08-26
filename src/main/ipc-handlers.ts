@@ -63,6 +63,32 @@ export class IPCHandlers {
       }
     });
 
+    // Get storage statistics
+    ipcMain.handle('file:get-storage-stats', async () => {
+      try {
+        const stats = await this.fileManager.getStorageStats();
+        return { success: true, data: stats };
+      } catch (error) {
+        return { 
+          success: false, 
+          error: error instanceof Error ? error.message : 'Unknown error occurred' 
+        };
+      }
+    });
+
+    // Cleanup duplicate files
+    ipcMain.handle('file:cleanup-duplicates', async () => {
+      try {
+        const result = await this.fileManager.cleanupDuplicateFiles();
+        return { success: true, data: result };
+      } catch (error) {
+        return { 
+          success: false, 
+          error: error instanceof Error ? error.message : 'Unknown error occurred' 
+        };
+      }
+    });
+
     // Read conversations from stored file
     ipcMain.handle('conversations:read-from-file', async (event, filePath: string) => {
       try {
