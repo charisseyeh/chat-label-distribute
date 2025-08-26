@@ -8,6 +8,7 @@ interface StoredFile {
   storedPath: string;
   importDate: string;
   fileSize: number;
+  originalPath: string;
 }
 
 export class FileManager {
@@ -15,8 +16,8 @@ export class FileManager {
 
   constructor() {
     // Set up storage directory in user's documents folder
-    const userDocumentsPath = path.join(os.homedir(), 'Documents', 'JSONFileReader');
-    this.storageDir = path.join(userDocumentsPath, 'stored-files');
+    const userDocumentsPath = path.join(os.homedir(), 'Documents', 'ChatLabelingApp');
+    this.storageDir = path.join(userDocumentsPath, 'conversations');
     
     // Ensure the directory exists
     fs.ensureDirSync(this.storageDir);
@@ -48,7 +49,8 @@ export class FileManager {
         originalName,
         storedPath,
         importDate: new Date().toISOString(),
-        fileSize
+        fileSize,
+        originalPath: filePath
       };
 
       console.log(`File stored successfully: ${originalName} -> ${storedPath}`);
@@ -57,6 +59,59 @@ export class FileManager {
     } catch (error) {
       console.error('Failed to store file:', error);
       throw error;
+    }
+  }
+
+  async getStoredFiles(): Promise<StoredFile[]> {
+    try {
+      const files = await fs.readdir(this.storageDir);
+      const storedFiles: StoredFile[] = [];
+
+      for (const file of files) {
+        if (file.endsWith('.json')) {
+          const filePath = path.join(this.storageDir, file);
+          const stats = await fs.stat(filePath);
+          
+          // Extract ID and original name from filename
+          const parts = file.split('_');
+          const id = parts[0];
+          const originalName = parts.slice(1).join('_');
+          
+          storedFiles.push({
+            id,
+            originalName,
+            storedPath: filePath,
+            importDate: stats.birthtime.toISOString(),
+            fileSize: stats.size,
+            originalPath: '' // We don't store this anymore
+          });
+        }
+      }
+
+      return storedFiles.sort((a, b) => 
+        new Date(b.importDate).getTime() - new Date(a.importDate).getTime()
+      );
+    } catch (error) {
+      console.error('Failed to get stored files:', error);
+      return [];
+    }
+  }
+
+  async deleteStoredFile(id: string): Promise<boolean> {
+    try {
+      const files = await this.getStoredFiles();
+      const fileToDelete = files.find(f => f.id === id);
+      
+      if (!fileToDelete) {
+        return false;
+      }
+
+      await fs.remove(fileToDelete.storedPath);
+      console.log(`Deleted stored file: ${fileToDelete.originalName}`);
+      return true;
+    } catch (error) {
+      console.error('Failed to delete stored file:', error);
+      return false;
     }
   }
 

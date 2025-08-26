@@ -1,7 +1,7 @@
 import React from 'react';
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
-import ConversationList from './components/conversation/ConversationList';
+import ConversationDisplay from './components/conversation/ConversationDisplay';
 
 function App() {
   return (
@@ -10,7 +10,7 @@ function App() {
       <div className="flex-1 flex flex-col">
         <Header />
         <main className="flex-1 overflow-auto p-6">
-          <ConversationList />
+          <ConversationDisplay />
         </main>
       </div>
     </div>

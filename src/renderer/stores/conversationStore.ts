@@ -46,6 +46,7 @@ export interface Message {
 interface ConversationState {
   conversations: Conversation[];
   currentConversation: Conversation | null;
+  selectedConversationIds: string[];
   loading: boolean;
   error: string | null;
 }
@@ -63,6 +64,11 @@ interface ConversationActions {
   setCurrentConversation: (conversation: Conversation | null) => void;
   getConversationById: (id: string) => Conversation | undefined;
   
+  // Selection management
+  toggleConversationSelection: (id: string) => void;
+  setSelectedConversations: (ids: string[]) => void;
+  clearSelection: () => void;
+  
   // Bulk operations
   setConversations: (conversations: Conversation[]) => void;
   clearConversations: () => void;
@@ -76,6 +82,7 @@ export const useConversationStore = create<ConversationStore>()(
       // Initial state
       conversations: [],
       currentConversation: null,
+      selectedConversationIds: [],
       loading: false,
       error: null,
 
@@ -126,6 +133,22 @@ export const useConversationStore = create<ConversationStore>()(
         const { conversations } = get();
         return conversations.find(c => c.id === id);
       },
+
+      // Selection management
+      toggleConversationSelection: (id) => {
+        const { selectedConversationIds } = get();
+        const isSelected = selectedConversationIds.includes(id);
+        
+        if (isSelected) {
+          set({ selectedConversationIds: selectedConversationIds.filter(selectedId => selectedId !== id) });
+        } else {
+          set({ selectedConversationIds: [...selectedConversationIds, id] });
+        }
+      },
+
+      setSelectedConversations: (ids) => set({ selectedConversationIds: ids }),
+
+      clearSelection: () => set({ selectedConversationIds: [] }),
 
       // Bulk operations
       setConversations: (conversations) => set({ conversations }),
