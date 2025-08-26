@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSurveyQuestions } from '../../hooks/useSurveyQuestions';
 import { useSurveyResponses } from '../../hooks/useSurveyResponses';
-import { useSurveyExport } from '../../hooks/useSurveyExport';
+
 import { useScrollTracking } from '../../hooks/useScrollTracking';
 import { SurveySection as SurveySectionType } from '../../types/survey';
 import SurveySection from './SurveySection';
@@ -19,7 +19,7 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages 
     getPositionProgress,
     autoSaveResponse 
   } = useSurveyResponses(conversationId);
-  const { exportConversationData, hasExportableData } = useSurveyExport();
+
 
   // Track visible survey sections
   const [visibleSections, setVisibleSections] = useState({
@@ -142,14 +142,7 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages 
     }
   };
 
-  // Handle export
-  const handleExport = async () => {
-    try {
-      await exportConversationData(conversationId, 'full');
-    } catch (error) {
-      console.error('Failed to export survey data:', error);
-    }
-  };
+
 
   // Update visible sections when scroll tracking changes
   useEffect(() => {
@@ -190,23 +183,7 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages 
         ))}
       </div>
 
-      {/* Footer with Export */}
-      <div className="p-4 border-t border-gray-200 bg-white">
-        {hasExportableData(conversationId) && (
-          <button
-            onClick={handleExport}
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Export Survey Data
-          </button>
-        )}
-        
-        {!hasExportableData(conversationId) && (
-          <div className="text-center text-sm text-gray-500">
-            Complete surveys to enable export
-          </div>
-        )}
-      </div>
+
     </div>
   );
 };

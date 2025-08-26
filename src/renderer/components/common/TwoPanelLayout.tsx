@@ -14,16 +14,16 @@ const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
   className = ""
 }) => {
   return (
-    <div className={`flex h-screen`}>
+    <div className={`flex h-screen max-h-screen overflow-hidden`}>
       {/* Main Content Panel - Flexible width */}
-      <div className="flex-1 flex flex-col">
-        <div className="h-full p-6 w-full overflow-y-auto">
+      <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 p-6 w-full overflow-y-auto">
           {children}
         </div>
       </div>
 
       {/* Right Sidebar Panel - Fixed width */}
-      <div className={`${sidebarWidth} flex flex-col h-full overflow-y-auto`}>
+      <div className={`${sidebarWidth} flex flex-col h-full`}>
         {sidebarContent}
       </div>
     </div>

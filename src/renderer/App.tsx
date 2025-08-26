@@ -84,7 +84,7 @@ function App() {
         <Sidebar isOpen={isSidebarOpen} />
         <div className="flex-1 flex flex-col">
           <Header isSidebarOpen={isSidebarOpen} onToggleSidebar={toggleSidebar} />
-          <main className="flex-1 overflow-auto p-6">
+          <main className="flex-1 overflow-hidden p-6">
             <NavigationSync />
             <Routes>
               <Route path="/" element={<ConversationSelectorPage />} />
