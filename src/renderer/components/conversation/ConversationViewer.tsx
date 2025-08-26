@@ -83,7 +83,13 @@ const ConversationViewer: React.FC = () => {
       
       // Convert mapping to array and sort by create_time if available
       const messageEntries = Object.entries(mapping)
-        .filter(([_, msg]) => msg.message && msg.message.content?.parts?.[0]?.trim() !== '') // Only include entries with actual messages and non-empty content
+        .filter(([_, msg]) => {
+          if (!msg.message || !msg.message.content || !msg.message.content.parts || !Array.isArray(msg.message.content.parts)) {
+            return false;
+          }
+          const firstPart = msg.message.content.parts[0];
+          return firstPart && typeof firstPart === 'string' && firstPart.trim() !== '';
+        })
         .sort((a, b) => {
           const timeA = a[1].message?.create_time || 0;
           const timeB = b[1].message?.create_time || 0;
@@ -183,10 +189,14 @@ const ConversationViewer: React.FC = () => {
                     const totalMessages = Object.keys(rawConversation.mapping).filter(key => 
                       rawConversation.mapping[key].message
                     ).length;
-                    const filteredMessages = Object.keys(rawConversation.mapping).filter(key => 
-                      rawConversation.mapping[key].message && 
-                      rawConversation.mapping[key].message.content?.parts?.[0]?.trim() !== ''
-                    ).length;
+                    const filteredMessages = Object.keys(rawConversation.mapping).filter(key => {
+                      const message = rawConversation.mapping[key].message;
+                      if (!message || !message.content || !message.content.parts || !Array.isArray(message.content.parts)) {
+                        return false;
+                      }
+                      const firstPart = message.content.parts[0];
+                      return firstPart && typeof firstPart === 'string' && firstPart.trim() !== '';
+                    }).length;
                     console.log(`📊 Message count: ${filteredMessages} (filtered) out of ${totalMessages} (total)`);
                     return filteredMessages;
                   })(),

@@ -181,4 +181,11 @@ export class FileManager {
   getStorageDirectory(): string {
     return this.storageDir;
   }
+
+  getSelectedConversationsDirectory(): string {
+    // Create a separate directory for selected conversations
+    const selectedDir = path.join(this.storageDir, 'selected-conversations');
+    fs.ensureDirSync(selectedDir);
+    return selectedDir;
+  }
 }

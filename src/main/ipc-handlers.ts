@@ -111,10 +111,14 @@ export class IPCHandlers {
           id: conv.conversation_id || conv.id || `conv_${Date.now()}`,
           title: conv.title || 'Untitled Conversation',
           createTime: conv.create_time || Date.now(),
-          messageCount: conv.mapping ? Object.keys(conv.mapping).filter(key => 
-            conv.mapping[key].message && 
-            conv.mapping[key].message.content?.parts?.[0]?.trim() !== ''
-          ).length : 0,
+          messageCount: conv.mapping ? Object.keys(conv.mapping).filter(key => {
+            const message = conv.mapping[key].message;
+            if (!message || !message.content || !message.content.parts || !Array.isArray(message.content.parts)) {
+              return false;
+            }
+            const firstPart = message.content.parts[0];
+            return firstPart && typeof firstPart === 'string' && firstPart.trim() !== '';
+          }).length : 0,
           model: conv.model || 'Unknown'
         }));
         
@@ -173,8 +177,8 @@ export class IPCHandlers {
     // Store selected conversation IDs permanently
     ipcMain.handle('conversations:store-selected', async (event, selectedConversations: any[]) => {
       try {
-        const storageDir = this.fileManager.getStorageDirectory();
-        const selectedFile = `${storageDir}/selected-conversations.json`;
+        const selectedDir = this.fileManager.getSelectedConversationsDirectory();
+        const selectedFile = `${selectedDir}/selected-conversations.json`;
         
         // Save selected conversations with metadata
         const dataToStore = {
@@ -183,7 +187,7 @@ export class IPCHandlers {
           totalSelected: selectedConversations.length
         };
         
-        await fs.ensureDir(storageDir);
+        await fs.ensureDir(selectedDir);
         await fs.writeFile(selectedFile, JSON.stringify(dataToStore, null, 2));
         
         return { success: true, data: { saved: true } };
@@ -198,8 +202,8 @@ export class IPCHandlers {
     // Retrieve selected conversation IDs
     ipcMain.handle('conversations:get-selected', async () => {
       try {
-        const storageDir = this.fileManager.getStorageDirectory();
-        const selectedFile = `${storageDir}/selected-conversations.json`;
+        const selectedDir = this.fileManager.getSelectedConversationsDirectory();
+        const selectedFile = `${selectedDir}/selected-conversations.json`;
         
         if (!(await fs.pathExists(selectedFile))) {
           return { success: true, data: [], found: false };

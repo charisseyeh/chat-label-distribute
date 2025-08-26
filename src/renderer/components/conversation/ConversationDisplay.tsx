@@ -27,7 +27,6 @@ const ConversationDisplay: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [storedFiles, setStoredFiles] = useState<StoredFile[]>([]);
-  const [showFileManager, setShowFileManager] = useState(false);
   const [storageStats, setStorageStats] = useState<StorageStats | null>(null);
   
   const { 
@@ -57,12 +56,8 @@ const ConversationDisplay: React.FC = () => {
         const files = result.data as StoredFile[];
         setStoredFiles(files);
         
-        // If there are stored files, automatically load the most recent one
-        if (files.length > 0) {
-          const mostRecentFile = files[0]; // Files are already sorted by date
-          await loadConversationsFromStoredFile(mostRecentFile.storedPath);
-          setSelectedFile(mostRecentFile.storedPath);
-        }
+        // Don't automatically load conversations - just show the file list
+        // User must manually select which file to load conversations from
       }
 
       // Load storage statistics
@@ -181,32 +176,6 @@ const ConversationDisplay: React.FC = () => {
     }
   };
 
-  // Cleanup duplicate files
-  const handleCleanupDuplicates = async () => {
-    try {
-      if (!window.electronAPI) {
-        setError('Electron API not available');
-        return;
-      }
-
-      const result = await window.electronAPI.cleanupDuplicateFiles();
-      if (result.success) {
-        const { removed, savedSpace } = result.data;
-        if (removed > 0) {
-          alert(`Cleaned up ${removed} duplicate file(s) and saved ${formatFileSize(savedSpace)} of space!`);
-          // Reload files and stats
-          await loadStoredFiles();
-        } else {
-          alert('No duplicate files found.');
-        }
-      } else {
-        setError(`Failed to cleanup duplicates: ${result.error}`);
-      }
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to cleanup duplicates');
-    }
-  };
-
   const handleSelectAll = () => {
     const allIds = filteredConversations.map(conv => conv.id);
     setSelectedConversations(allIds);
@@ -238,66 +207,6 @@ const ConversationDisplay: React.FC = () => {
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Conversation Selection</h2>
         
-        {/* File Management Section */}
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold text-gray-800">Stored Files</h3>
-            <div className="flex items-center gap-2">
-              {storageStats && (
-                <div className="text-sm text-gray-600">
-                  {storageStats.totalFiles} file(s) • {formatFileSize(storageStats.totalSize)} total
-                </div>
-              )}
-              <button
-                onClick={handleCleanupDuplicates}
-                className="text-orange-600 hover:text-orange-700 text-sm underline"
-                title="Remove duplicate files to save space"
-              >
-                Cleanup Duplicates
-              </button>
-              <button
-                onClick={() => setShowFileManager(!showFileManager)}
-                className="text-blue-600 hover:text-blue-700 text-sm underline"
-              >
-                {showFileManager ? 'Hide' : 'Manage Files'}
-              </button>
-            </div>
-          </div>
-          
-          {showFileManager && (
-            <div className="space-y-3">
-              {storedFiles.length === 0 ? (
-                <p className="text-gray-500 text-sm">No files stored yet.</p>
-              ) : (
-                storedFiles.map((file) => (
-                  <div key={file.id} className="flex items-center justify-between p-3 bg-white rounded border">
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900">{file.originalName}</div>
-                      <div className="text-sm text-gray-500">
-                        {formatFileSize(file.fileSize)} • {new Date(file.importDate).toLocaleDateString()}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => loadConversationsFromStoredFile(file.storedPath)}
-                        className="text-blue-600 hover:text-blue-700 text-sm underline"
-                      >
-                        Load
-                      </button>
-                      <button
-                        onClick={() => handleDeleteFile(file.id)}
-                        className="text-red-600 hover:text-red-700 text-sm underline"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-        </div>
-
         {/* Upload Button - Only show if no files are stored */}
         {storedFiles.length === 0 && (
           <button
@@ -306,6 +215,47 @@ const ConversationDisplay: React.FC = () => {
           >
             Select Conversations File
           </button>
+        )}
+
+        {/* Show file list when files exist */}
+        {storedFiles.length > 0 && (
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-gray-800">Available Files</h3>
+              <button
+                onClick={handleFileSelect}
+                className="text-blue-600 hover:text-blue-700 text-sm underline"
+              >
+                Upload New File
+              </button>
+            </div>
+            <div className="space-y-2">
+              {storedFiles.map((file) => (
+                <div key={file.id} className="flex items-center justify-between p-3 bg-white rounded border">
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">{file.originalName}</div>
+                    <div className="text-sm text-gray-500">
+                      {formatFileSize(file.fileSize)} • {new Date(file.importDate).toLocaleDateString()}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => loadConversationsFromStoredFile(file.storedPath)}
+                      className="text-blue-600 hover:text-blue-700 text-sm underline"
+                    >
+                      Load Conversations
+                    </button>
+                    <button
+                      onClick={() => handleDeleteFile(file.id)}
+                      className="text-red-600 hover:text-red-700 text-sm underline"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Current File Display */}
@@ -337,6 +287,24 @@ const ConversationDisplay: React.FC = () => {
             />
           </div>
         )}
+
+        {/* Show message when no file is selected */}
+        {!selectedFile && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="text-center">
+              <h3 className="text-lg font-medium text-blue-800 mb-2">No File Selected</h3>
+              <p className="text-blue-600 mb-4">
+                Please select a conversations.json file to view and select conversations for labeling.
+              </p>
+              <button
+                onClick={handleFileSelect}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+              >
+                Select Conversations File
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {error && (
@@ -345,7 +313,7 @@ const ConversationDisplay: React.FC = () => {
         </div>
       )}
 
-      {conversations.length > 0 && (
+      {selectedFile && conversations.length > 0 && (
         <div className="bg-white rounded-lg border border-gray-200">
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">
@@ -482,13 +450,13 @@ const ConversationDisplay: React.FC = () => {
         </div>
       )}
 
-      {conversations.length === 0 && selectedFile && (
+      {selectedFile && conversations.length === 0 && (
         <div className="text-center py-8 text-gray-500">
           No conversations found in the selected file.
         </div>
       )}
 
-      {conversations.length > 0 && filteredConversations.length === 0 && (
+      {selectedFile && conversations.length > 0 && filteredConversations.length === 0 && (
         <div className="text-center py-8 text-gray-500">
           <div className="text-lg font-medium mb-2">No conversations meet the display criteria</div>
           <div className="text-sm">
