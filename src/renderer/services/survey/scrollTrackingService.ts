@@ -3,7 +3,13 @@ export interface ScrollTracker {
   trackConversationEnd: () => void;
   onTurn6Reached: (callback: () => void) => void;
   onEndReached: (callback: () => void) => void;
+  startTracking: () => void;
+  stopTracking: () => void;
+  reset: () => void;
+  triggerTurn6: () => void;
+  triggerEnd: () => void;
   destroy: () => void;
+  getState: () => any;
 }
 
 export interface ScrollTrackingOptions {
@@ -22,6 +28,7 @@ export class ScrollTrackingService implements ScrollTracker {
   private scrollElement: Element | null = null;
   private messageCount = 0;
   private currentMessageIndex = 0;
+  private scrollPercentage = 0; // New property for scroll percentage
 
   constructor(options: ScrollTrackingOptions = {}) {
     this.options = {
@@ -60,6 +67,12 @@ export class ScrollTrackingService implements ScrollTracker {
 
     const { scrollTop, scrollHeight, clientHeight } = scrollElement;
     const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+    
+    // Calculate scroll percentage for progressive disclosure
+    const scrollPercentage = (scrollTop / (scrollHeight - clientHeight)) * 100;
+    
+    // Update scroll percentage in state
+    this.scrollPercentage = Math.min(100, Math.max(0, scrollPercentage));
 
     if (distanceFromBottom <= this.options.endThreshold) {
       this.triggerEnd();
@@ -132,9 +145,11 @@ export class ScrollTrackingService implements ScrollTracker {
    * Reset tracking state
    */
   reset(): void {
+    console.log('🔄 ScrollTrackingService: Resetting tracking state');
     this.turn6Reached = false;
     this.endReached = false;
     this.currentMessageIndex = 0;
+    this.scrollPercentage = 0; // Reset scroll percentage
     // Removed excessive logging
   }
 
@@ -174,13 +189,25 @@ export class ScrollTrackingService implements ScrollTracker {
    * Get the scrollable element
    */
   private getScrollElement(): Element | null {
-    // Try to find the main scrollable container in the conversation viewer
+    // The main scrollable area is the main content panel from TwoPanelLayout
+    // Look for the flex-1 div that contains the conversation content
+    const mainContentPanel = document.querySelector('.flex-1.flex.flex-col > div');
+    
+    if (mainContentPanel && this.isScrollable(mainContentPanel)) {
+      return mainContentPanel;
+    }
+
+    // Fallback: try to find the messages-container specifically
+    const messagesContainer = document.querySelector('.messages-container');
+    if (messagesContainer && this.isScrollable(messagesContainer)) {
+      return messagesContainer;
+    }
+
+    // Additional fallback: look for any scrollable element with overflow
     const selectors = [
-      'main', // Main content area
-      '.overflow-auto', // Tailwind overflow class
-      '[class*="overflow"]', // Any element with overflow
-      '.conversation-container',
-      '.messages-container'
+      '.overflow-auto',
+      '[class*="overflow"]',
+      'main'
     ];
 
     for (const selector of selectors) {
@@ -192,7 +219,6 @@ export class ScrollTrackingService implements ScrollTracker {
       }
     }
 
-    // Fallback to window
     return null;
   }
 
@@ -228,7 +254,8 @@ export class ScrollTrackingService implements ScrollTracker {
       endReached: this.endReached,
       currentMessageIndex: this.currentMessageIndex,
       messageCount: this.messageCount,
-      options: this.options
+      options: this.options,
+      scrollPercentage: this.scrollPercentage // Add scroll percentage to state
     };
   }
 }

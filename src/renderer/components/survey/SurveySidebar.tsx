@@ -41,6 +41,7 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages 
   const { 
     turn6Reached, 
     endReached, 
+    scrollPercentage,
     trackMessageVisibility,
     startTracking,
     stopTracking,
@@ -65,54 +66,40 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages 
 
   // Reset tracking when conversation changes
   useEffect(() => {
+    console.log('🔄 SurveySidebar: Conversation changed, resetting tracking for:', conversationId);
     resetTracking();
-  }, [conversationId, resetTracking]);
+    // Reset visible sections when switching conversations
+    setVisibleSections({
+      beginning: true, // Always visible
+      turn6: false,    // Hidden until scroll threshold
+      end: false       // Hidden until scroll threshold
+    });
+    
+    // Restart tracking for the new conversation after a short delay
+    const timer = setTimeout(() => {
+      console.log('🔄 SurveySidebar: Restarting tracking for conversation:', conversationId);
+      startTracking();
+    }, 150); // Slightly longer delay to ensure DOM is ready
+    
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [conversationId, resetTracking, startTracking]);
 
-  // Track scroll position for turn 6 detection
-  const [scrollPercentage, setScrollPercentage] = useState(0);
-
+  // Update visible sections based on scroll percentage
   useEffect(() => {
     if (messages.length === 0) return;
 
-    const handleScroll = () => {
-      // Find the specific messages container within LabelingPage
-      // This is the div with "messages-container" class
-      const messagesContainer = document.querySelector('.labeling-page .messages-container') || 
-                               document.querySelector('.messages-container') ||
-                               document.querySelector('[class*="overflow-y-auto"]');
-      
-      if (!messagesContainer) {
-        return;
-      }
-
-      const { scrollTop, scrollHeight, clientHeight } = messagesContainer;
-      const percentage = (scrollTop / (scrollHeight - clientHeight)) * 100;
-      setScrollPercentage(percentage);
-      
-      // Turn 6 should appear around 30-40% through the conversation
-      if (percentage >= 30 && !visibleSections.turn6) {
-        setVisibleSections(prev => ({ ...prev, turn6: true }));
-      }
-      
-      // End should appear when near the bottom (90%+)
-      if (percentage >= 90 && !visibleSections.end) {
-        setVisibleSections(prev => ({ ...prev, end: true }));
-      }
-    };
-
-    // Add scroll listener to the messages container
-    const messagesContainer = document.querySelector('.labeling-page .messages-container') || 
-                             document.querySelector('.messages-container') ||
-                             document.querySelector('[class*="overflow-y-auto"]');
-    
-    if (messagesContainer) {
-      messagesContainer.addEventListener('scroll', handleScroll, { passive: true });
-      
-      return () => {
-        messagesContainer.removeEventListener('scroll', handleScroll);
-      };
+    // Turn 6 should appear around 30-40% through the conversation
+    if (scrollPercentage >= 30 && !visibleSections.turn6) {
+      setVisibleSections(prev => ({ ...prev, turn6: true }));
     }
-  }, [messages.length, visibleSections.turn6, visibleSections.end]);
+    
+    // End should appear when near the bottom (90%+)
+    if (scrollPercentage >= 90 && !visibleSections.end) {
+      setVisibleSections(prev => ({ ...prev, end: true }));
+    }
+  }, [messages.length, scrollPercentage, visibleSections.turn6, visibleSections.end]);
 
   // Create survey sections data
   const surveySections: SurveySectionType[] = [

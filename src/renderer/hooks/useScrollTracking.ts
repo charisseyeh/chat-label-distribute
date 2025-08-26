@@ -11,6 +11,7 @@ export interface ScrollTrackingState {
   turn6Reached: boolean;
   endReached: boolean;
   isTracking: boolean;
+  scrollPercentage: number;
 }
 
 export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
@@ -32,7 +33,8 @@ export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
   const [state, setState] = useState<ScrollTrackingState>({
     turn6Reached: false,
     endReached: false,
-    isTracking: false
+    isTracking: false,
+    scrollPercentage: 0
   });
 
   // Create scroll tracker
@@ -58,8 +60,21 @@ export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
       });
     }
 
+    // Set up interval to update scroll percentage
+    const intervalId = setInterval(() => {
+      if (trackerRef.current) {
+        const trackerState = trackerRef.current.getState();
+        if (trackerState && trackerState.scrollPercentage !== state.scrollPercentage) {
+          setState(prev => ({ ...prev, scrollPercentage: trackerState.scrollPercentage }));
+        }
+      }
+    }, 100); // Update every 100ms
+
+    // Store interval ID for cleanup
+    (trackerRef.current as any)._intervalId = intervalId;
+
     return trackerRef.current;
-  }, [trackingOptions]); // Only depend on trackingOptions, not callbacks
+  }, [trackingOptions, state.scrollPercentage]); // Only depend on trackingOptions, not callbacks
 
   // Start tracking
   const startTracking = useCallback(() => {
@@ -83,15 +98,17 @@ export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
 
   // Reset tracking state
   const resetTracking = useCallback(() => {
+    console.log('🔄 useScrollTracking: Resetting tracking state');
     if (trackerRef.current) {
       trackerRef.current.reset();
-      setState({
+      setState(prev => ({
         turn6Reached: false,
         endReached: false,
-        isTracking: state.isTracking
-      });
+        isTracking: prev.isTracking, // Preserve current tracking state
+        scrollPercentage: 0
+      }));
     }
-  }, [state.isTracking]);
+  }, []); // Remove dependency on state.isTracking
 
   // Manually trigger turn 6
   const triggerTurn6 = useCallback(() => {
@@ -137,6 +154,11 @@ export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
 
     return () => {
       if (trackerRef.current) {
+        // Clean up interval
+        const intervalId = (trackerRef.current as any)._intervalId;
+        if (intervalId) {
+          clearInterval(intervalId);
+        }
         trackerRef.current.destroy();
         trackerRef.current = null;
       }
