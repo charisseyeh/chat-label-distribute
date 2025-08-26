@@ -163,9 +163,7 @@ export const DateFilteringSection: React.FC<DateFilteringSectionProps> = ({
   };
 
   return (
-    <div className="mb-6">
-      <h4 className="text-md font-medium text-gray-900 mb-3">Date Filtering</h4>
-      
+    <div>
       {/* Model Era Dropdown */}
       <div className="mb-4">
         <FloatingLabelSelect

@@ -225,7 +225,7 @@ export const AIFilteringSection: React.FC<AIFilteringSectionProps> = ({
               <span>Analyzing {analysisProgress.current > 0 ? `${analysisProgress.current}/${analysisProgress.total}` : '...'}</span>
             </div>
           ) : (
-            `Analyze ${getConversationsToAnalyzeCount()} Conversations`
+            'Find relevant conversations with AI'
           )}
         </button>
       </div>
