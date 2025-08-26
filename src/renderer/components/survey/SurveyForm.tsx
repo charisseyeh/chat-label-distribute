@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useConversationStore } from '../../stores/conversationStore';
 import { useSurveyStore } from '../../stores/surveyStore';
+import { FloatingLabelTextarea } from '../common/FloatingLabelTextarea';
 
 const POSITIONS = [
   { id: 'beginning', label: 'Beginning', description: 'Pre-conversation state' },
@@ -263,14 +264,11 @@ const SurveyForm: React.FC = () => {
 
           {/* Notes */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">
-              Additional Notes (Optional)
-            </label>
-            <textarea
+            <FloatingLabelTextarea
+              label="Additional Notes (Optional)"
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={setNotes}
               placeholder="Add any additional observations or notes..."
-              className="w-full p-3 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
               rows={3}
             />
           </div>

@@ -1,5 +1,7 @@
 import React from 'react';
 import { SurveyTemplate } from '../../types/survey';
+import { FloatingLabelInput } from '../common/FloatingLabelInput';
+import { FloatingLabelSelect } from '../common/FloatingLabelSelect';
 
 interface AIConfigurationPanelProps {
   apiKey: string;
@@ -25,28 +27,27 @@ const AIConfigurationPanel: React.FC<AIConfigurationPanelProps> = ({
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">OpenAI API key</label>
-        <input
-          type="password"
+        <FloatingLabelInput
+          label="OpenAI API Key"
           value={apiKey}
-          onChange={(e) => onApiKeyChange(e.target.value)}
+          onChange={onApiKeyChange}
+          type="password"
           placeholder="sk-..."
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
         />
         <p className="text-xs text-gray-500 mt-1">Your OpenAI API key (stored locally)</p>
       </div>
       
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Model selection</label>
-        <select
+        <FloatingLabelSelect
+          label="AI Model"
           value={model}
-          onChange={(e) => onModelChange(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-        >
-          <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Cheapest)</option>
-          <option value="gpt-4">GPT-4 (More Accurate)</option>
-          <option value="gpt-4o">GPT-4o (Balanced)</option>
-        </select>
+          onChange={onModelChange}
+          options={[
+            { value: "gpt-3.5-turbo", label: "GPT-3.5 Turbo (Cheapest)" },
+            { value: "gpt-4", label: "GPT-4 (More Accurate)" },
+            { value: "gpt-4o", label: "GPT-4o (Balanced)" }
+          ]}
+        />
         <p className="text-xs text-gray-500 mt-1">Choose based on accuracy vs. cost</p>
       </div>
 

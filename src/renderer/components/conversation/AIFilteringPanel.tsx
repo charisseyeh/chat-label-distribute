@@ -57,33 +57,11 @@ export const AIFilteringPanel: React.FC<AIFilteringPanelProps> = ({
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4">
         <h3 className="text-lg font-semibold text-gray-900">AI Conversation Filtering</h3>
-        <label className="flex items-center">
-          <input
-            type="checkbox"
-            checked={ai.enableAIFiltering}
-            onChange={(e) => handleEnableAIFiltering(e.target.checked)}
-            className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-          />
-          <span className="text-sm text-gray-700">Enable AI filtering</span>
-        </label>
       </div>
       
-      {/* Warning about limited content */}
-      {conversations.some(conv => !conv.conversationPreview || conv.conversationPreview.length < 100) && (
-        <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-md">
-          <div className="flex items-start">
-            <span className="text-orange-600 mr-2">⚠️</span>
-            <div className="text-sm text-orange-800">
-              <p className="font-medium">Limited Content Warning</p>
-              <p>Some conversations have limited content for AI analysis. This may result in less accurate filtering results.</p>
-              <p className="text-xs mt-1">Consider reviewing these conversations manually for better accuracy.</p>
-            </div>
-          </div>
-        </div>
-      )}
-      </div>
+
 
       {/* Date Filtering Section */}
       <DateFilteringSection
@@ -94,24 +72,14 @@ export const AIFilteringPanel: React.FC<AIFilteringPanelProps> = ({
       />
 
       {/* AI Filtering Section */}
-      {ai.enableAIFiltering && (
-        <AIFilteringSection
-          conversations={conversations}
-          onFilteredConversations={onFilteredConversations}
-          onRelevancyResults={onRelevancyResults}
-          dateFilterOptions={dateFilterOptions}
-        />
-      )}
+      <AIFilteringSection
+        conversations={conversations}
+        onFilteredConversations={onFilteredConversations}
+        onRelevancyResults={onRelevancyResults}
+        dateFilterOptions={dateFilterOptions}
+      />
 
-      {/* Reset All Button */}
-      <div className="mt-4 pt-4 border-t border-gray-200">
-        <button
-          onClick={resetAllFiltering}
-          className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-md transition-colors"
-        >
-          Reset All Filtering
-        </button>
-      </div>
+
     </div>
   );
 };

@@ -11,10 +11,76 @@ export class IPCHandlers {
     this.setupHandlers();
   }
 
+  // Helper method to analyze conversation content quality
+  private analyzeContentQuality(conversation: any): any {
+    try {
+      if (!conversation.mapping) {
+        return { hasMapping: false, totalNodes: 0, validMessages: 0, contentIssues: ['No mapping found'] };
+      }
+
+      const totalNodes = Object.keys(conversation.mapping).length;
+      let validMessages = 0;
+      const contentIssues: string[] = [];
+      const messageSamples: string[] = [];
+
+      Object.entries(conversation.mapping).forEach(([nodeId, msg]: [string, any]) => {
+        if (!msg.message) {
+          contentIssues.push(`Node ${nodeId}: No message object`);
+          return;
+        }
+
+        if (!msg.message.content) {
+          contentIssues.push(`Node ${nodeId}: No content object`);
+          return;
+        }
+
+        if (!msg.message.content.parts || !Array.isArray(msg.message.content.parts)) {
+          contentIssues.push(`Node ${nodeId}: Invalid parts array`);
+          return;
+        }
+
+        const firstPart = msg.message.content.parts[0];
+        if (!firstPart) {
+          contentIssues.push(`Node ${nodeId}: Empty first part`);
+          return;
+        }
+
+        if (typeof firstPart !== 'string') {
+          contentIssues.push(`Node ${nodeId}: First part is not string (type: ${typeof firstPart})`);
+          return;
+        }
+
+        if (firstPart.trim() === '') {
+          contentIssues.push(`Node ${nodeId}: First part is whitespace only`);
+          return;
+        }
+
+        validMessages++;
+        if (messageSamples.length < 3) {
+          const role = msg.message.author?.role || 'unknown';
+          const truncated = firstPart.length > 100 ? firstPart.substring(0, 100) + '...' : firstPart;
+          messageSamples.push(`${role}: ${truncated}`);
+        }
+      });
+
+      return {
+        hasMapping: true,
+        totalNodes,
+        validMessages,
+        contentIssues,
+        messageSamples,
+        qualityScore: validMessages > 0 ? Math.round((validMessages / totalNodes) * 100) : 0
+      };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  }
+
   // Helper method to extract conversation preview content
   private extractConversationPreview(conversation: any): string {
     try {
       if (!conversation.mapping) {
+        console.log(`🔍 No mapping found for conversation: ${conversation.title}`);
         return 'No conversation content available';
       }
 
@@ -23,10 +89,15 @@ export class IPCHandlers {
       const messageEntries = Object.entries(conversation.mapping)
         .filter(([_, msg]: [string, any]) => {
           if (!msg.message || !msg.message.content || !msg.message.content.parts || !Array.isArray(msg.message.content.parts)) {
+            console.log(`🔍 Filtered out message in ${conversation.title}: missing content structure`);
             return false;
           }
           const firstPart = msg.message.content.parts[0];
-          return firstPart && typeof firstPart === 'string' && firstPart.trim() !== '';
+          const isValid = firstPart && typeof firstPart === 'string' && firstPart.trim() !== '';
+          if (!isValid) {
+            console.log(`🔍 Filtered out message in ${conversation.title}: invalid content - type: ${typeof firstPart}, length: ${firstPart?.length}, trimmed: "${firstPart?.trim()}"`);
+          }
+          return isValid;
         })
         .sort((a, b) => {
           const timeA = (a[1] as any).message?.create_time || 0;
@@ -34,6 +105,8 @@ export class IPCHandlers {
           return timeA - timeB;
         })
         .slice(0, 3); // Take first 3 messages for preview
+
+      console.log(`🔍 ${conversation.title}: Found ${messageEntries.length} valid messages out of ${Object.keys(conversation.mapping).length} total nodes`);
 
       for (const [_, msg] of messageEntries) {
         const messageData = msg as any;
@@ -48,12 +121,15 @@ export class IPCHandlers {
       }
 
       if (messages.length === 0) {
+        console.log(`🔍 ${conversation.title}: No readable message content found after processing`);
         return 'No readable message content found';
       }
 
-      return messages.join('\n\n');
+      const preview = messages.join('\n\n');
+      console.log(`🔍 ${conversation.title}: Generated preview with ${preview.length} characters`);
+      return preview;
     } catch (error) {
-      console.error('Error extracting conversation preview:', error);
+      console.error(`Error extracting conversation preview for ${conversation.title}:`, error);
       return 'Error extracting conversation content';
     }
   }
@@ -162,26 +238,33 @@ export class IPCHandlers {
         }
         
         // Create a lightweight index with only essential data
-        const conversationIndex = conversations.map(conv => ({
-          id: conv.conversation_id || conv.id || `conv_${Date.now()}_${Math.random()}`,
-          title: conv.title || 'Untitled Conversation',
-          modelVersion: conv.model || 'Unknown',
-          conversationLength: conv.mapping ? Object.keys(conv.mapping).length * 100 : 0,
-          createdAt: new Date((conv.create_time || Date.now()) * 1000).toISOString(),
-          messageCount: (() => {
-            if (!conv.mapping) return 0;
-            return Object.keys(conv.mapping).filter(key => {
-              const message = conv.mapping[key].message;
-              if (!message || !message.content || !message.content.parts || !Array.isArray(message.content.parts)) {
-                return false;
-              }
-              const firstPart = message.content.parts[0];
-              return firstPart && typeof firstPart === 'string' && firstPart.trim() !== '';
-            }).length;
-          })(),
-          conversationPreview: this.extractConversationPreview(conv),
-          sourceFilePath: filePath
-        }));
+        const conversationIndex = conversations.map(conv => {
+          // Analyze content quality for debugging
+          const qualityAnalysis = this.analyzeContentQuality(conv);
+          console.log(`🔍 Content Quality Analysis for "${conv.title}":`, qualityAnalysis);
+          
+          return {
+            id: conv.conversation_id || conv.id || `conv_${Date.now()}_${Math.random()}`,
+            title: conv.title || 'Untitled Conversation',
+            modelVersion: conv.model || 'Unknown',
+            conversationLength: conv.mapping ? Object.keys(conv.mapping).length * 100 : 0,
+            createdAt: new Date((conv.create_time || Date.now()) * 1000).toISOString(),
+            messageCount: (() => {
+              if (!conv.mapping) return 0;
+              return Object.keys(conv.mapping).filter(key => {
+                const message = conv.mapping[key].message;
+                if (!message || !message.content || !message.content.parts || !Array.isArray(message.content.parts)) {
+                  return false;
+                }
+                const firstPart = message.content.parts[0];
+                return firstPart && typeof firstPart === 'string' && firstPart.trim() !== '';
+              }).length;
+            })(),
+            conversationPreview: this.extractConversationPreview(conv),
+            sourceFilePath: filePath,
+            contentQuality: qualityAnalysis
+          };
+        });
         
         return { success: true, data: conversationIndex };
       } catch (error) {

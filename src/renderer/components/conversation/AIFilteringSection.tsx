@@ -3,6 +3,8 @@ import { useSettingsStore } from '../../stores/settingsStore';
 import { AIService, AIConversationSample, AIRelevancyResult } from '../../services/ai-service';
 import { ConversationData } from '../../services/conversationService';
 import { DateFilterService } from '../../services/dateFilterService';
+import { FloatingLabelInput } from '../common/FloatingLabelInput';
+import { FloatingLabelSelect } from '../common/FloatingLabelSelect';
 
 interface AIFilteringSectionProps {
   conversations: ConversationData[];
@@ -194,82 +196,22 @@ export const AIFilteringSection: React.FC<AIFilteringSectionProps> = ({
 
   return (
     <>
-      {/* API Key Input */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          OpenAI API Key
-        </label>
-        <div className="flex gap-2">
-          <input
-            type={showApiKeyInput ? 'text' : 'password'}
+              {/* API Key Input */}
+        <div className="mb-4">
+          <FloatingLabelInput
+            label="OpenAI API Key"
             value={ai.apiKey}
-            onChange={(e) => handleApiKeyChange(e.target.value)}
+            onChange={handleApiKeyChange}
+            type="password"
             placeholder="sk-..."
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            showToggleButton={true}
+            onToggleVisibility={() => setShowApiKeyInput(!showApiKeyInput)}
+            isVisible={showApiKeyInput}
           />
-          <button
-            type="button"
-            onClick={() => setShowApiKeyInput(!showApiKeyInput)}
-            className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800"
-          >
-            {showApiKeyInput ? 'Hide' : 'Show'}
-          </button>
-        </div>
-        <p className="text-xs text-gray-500 mt-1">
-          Your API key is stored locally and never sent to our servers
-        </p>
-        
-        {/* Debug Info */}
-        {ai.apiKey && (
-          <div className="mt-2 p-2 bg-gray-100 rounded text-xs">
-            <p><strong>Debug Info:</strong></p>
-            <p>Key length: {ai.apiKey.length} characters</p>
-            <p>Starts with: {ai.apiKey.substring(0, 10)}...</p>
-            <p>Ends with: ...{ai.apiKey.substring(ai.apiKey.length - 10)}</p>
-            <p>Contains 'sk-proj': {ai.apiKey.includes('sk-proj') ? '✅ Yes' : '❌ No'}</p>
-            <p>First 20 chars: "{ai.apiKey.substring(0, 20)}"</p>
-            <p>Last 20 chars: "{ai.apiKey.substring(ai.apiKey.length - 20)}"</p>
-            <p>Contains spaces: {ai.apiKey.includes(' ') ? '❌ Yes' : '✅ No'}</p>
-            <p>Contains newlines: {ai.apiKey.includes('\n') ? '❌ Yes' : '✅ No'}</p>
-            
-            {/* Reset Button for Corrupted Keys */}
-            {ai.apiKey.length !== 164 && (
-              <div className="mt-2 pt-2 border-t border-gray-300">
-                <p className="text-red-600 font-medium">⚠️ Key length mismatch detected!</p>
-                <p className="text-gray-600">Expected: 164 characters, Found: {ai.apiKey.length} characters</p>
-                <button
-                  onClick={() => {
-                    updateAISettings({ apiKey: '' });
-                    setError(null);
-                  }}
-                  className="mt-2 px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded transition-colors"
-                >
-                  Clear Corrupted Key
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
 
-      {/* Model Selection */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          AI Model
-        </label>
-        <select
-          value={ai.model}
-          onChange={(e) => handleModelChange(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
-          <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Cheapest)</option>
-          <option value="gpt-4">GPT-4 (More Accurate)</option>
-          <option value="gpt-4-turbo">GPT-4 Turbo (Balanced)</option>
-        </select>
-        <p className="text-xs text-gray-500 mt-1">
-          GPT-3.5 Turbo is recommended for cost-effectiveness
-        </p>
-      </div>
+        </div>
+
+      
 
       {/* Action Buttons */}
       <div className="flex gap-3">
