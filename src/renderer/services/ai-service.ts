@@ -90,14 +90,36 @@ export class AIService {
       console.log('🔑 API Key length:', this.config.apiKey?.length);
       console.log('🤖 Model:', this.config.model);
       console.log('📝 Prompt length:', prompt.length);
+      console.log('💬 Conversation Title:', sample.title);
+      console.log('💬 Conversation Preview:', sample.conversationPreview);
+      console.log('💬 First Message:', sample.firstMessage);
+      console.log('📋 Full Prompt:', prompt);
       
-      if (!this.config.apiKey || typeof this.config.apiKey !== 'string') {
+      // Extract API key - handle both string and object cases
+      let apiKey: string;
+      let model: string;
+      
+      if (typeof this.config.apiKey === 'string') {
+        apiKey = this.config.apiKey;
+        model = this.config.model;
+      } else if (this.config.apiKey && typeof this.config.apiKey === 'object' && 'apiKey' in this.config.apiKey) {
+        // Handle case where config.apiKey is an object with apiKey property
+        apiKey = (this.config.apiKey as any).apiKey;
+        model = (this.config.apiKey as any).model || this.config.model;
+      } else {
         throw new Error(`Invalid API key configuration. Type: ${typeof this.config.apiKey}, Value: ${this.config.apiKey}`);
       }
       
+      if (!apiKey || typeof apiKey !== 'string') {
+        throw new Error(`Invalid API key. Type: ${typeof apiKey}, Value: ${apiKey}`);
+      }
+      
+      console.log('🔑 Extracted API Key:', apiKey.substring(0, 20) + '...');
+      console.log('🔑 Extracted Model:', model);
+      
       const response = await (window as any).electronAPI.callOpenAIAPI({
-        apiKey: this.config.apiKey,
-        model: this.config.model,
+        apiKey: apiKey,
+        model: model,
         prompt: prompt
       });
 
@@ -111,7 +133,7 @@ export class AIService {
         const results = JSON.parse(content);
         if (Array.isArray(results)) {
           return {
-            category: 'relevant', // Default category
+            category: results[0]?.category || 'not_relevant', // Use AI's category, default to not_relevant
             explanation: results[0]?.reasoning || 'No reasoning provided',
             conversationId: sample.title,
             relevancyScore: results[0]?.relevancyScore || 0,
@@ -131,16 +153,26 @@ export class AIService {
   }
 
   private buildAnalysisPrompt(sample: AIConversationSample): string {
-    return `Please analyze the following conversation excerpt and provide a JSON response with:
-1. relevancyScore (0-10): How relevant is this conversation for research purposes?
+    // Get the conversation content - prefer conversationPreview, fallback to firstMessage
+    const conversationContent = sample.conversationPreview || sample.firstMessage || 'No conversation content available';
+    
+    return `Please analyze the following conversation excerpt and determine if it contains RELATIONAL, EMOTIONAL, or PERSONAL REFLECTION content.
+
+CONVERSATION TITLE: ${sample.title}
+CONVERSATION CONTENT: ${conversationContent}
+
+ANALYSIS CRITERIA:
+- RELEVANT: Contains discussions about feelings, emotions, personal experiences, relationships, self-reflection, psychological insights, or meaningful human experiences
+- NOT RELEVANT: Purely tactical, technical, factual, or surface-level exchanges without emotional depth
+
+Please provide a JSON response with:
+1. relevancyScore (0-10): How relevant is this conversation for understanding human experiences and emotions?
 2. qualityScore (0-10): How well-structured and coherent is this conversation?
 3. reasoning: Brief explanation for your scores
-
-Conversation excerpt:
-${sample.conversationPreview || sample.firstMessage}
+4. category: "relevant" if relevancyScore >= 6, "not_relevant" if < 6
 
 Please respond with only valid JSON in this format:
-[{"relevancyScore": number, "qualityScore": number, "reasoning": "string"}]`;
+[{"relevancyScore": number, "qualityScore": number, "reasoning": "string", "category": "relevant"|"not_relevant"}]`;
   }
 
   updateConfig(newConfig: Partial<AIServiceConfig>): void {

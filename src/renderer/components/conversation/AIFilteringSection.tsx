@@ -117,10 +117,20 @@ export const AIFilteringSection: React.FC<AIFilteringSectionProps> = ({
       setAnalysisProgress(prev => ({ ...prev, status: 'analyzing' }));
 
       // Prepare conversation samples for AI analysis
-      const conversationSamples: AIConversationSample[] = conversationsToAnalyze.map(conv => ({
-        title: conv.title,
-        firstMessage: conv.conversationPreview || 'No message content available'
-      }));
+      const conversationSamples: AIConversationSample[] = conversationsToAnalyze.map(conv => {
+        // Get the best available conversation content
+        let content = conv.conversationPreview;
+        if (!content || content.length < 50) {
+          // If preview is too short, try to get more content
+          content = `Title: ${conv.title}\nMessage Count: ${conv.messageCount}\nContent: ${conv.conversationPreview || 'No detailed content available'}`;
+        }
+        
+        return {
+          title: conv.title,
+          firstMessage: content,
+          conversationPreview: content
+        };
+      });
 
       // Analyze conversations for relevancy with progress updates
       const relevancyResults: AIRelevancyResult[] = [];
@@ -253,54 +263,17 @@ export const AIFilteringSection: React.FC<AIFilteringSectionProps> = ({
         <button
           onClick={analyzeConversations}
           disabled={isAnalyzing || !ai.apiKey || getConversationsToAnalyzeCount() === 0}
-          className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition-colors disabled:cursor-not-allowed"
+          className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition-colors disabled:cursor-not-allowed min-w-[200px]"
         >
-          {isAnalyzing ? 'Analyzing...' : `Analyze ${getConversationsToAnalyzeCount()} Conversations`}
+          {isAnalyzing ? (
+            <div className="flex items-center justify-center gap-2">
+              <span>Analyzing {analysisProgress.current > 0 ? `${analysisProgress.current}/${analysisProgress.total}` : '...'}</span>
+            </div>
+          ) : (
+            `Analyze ${getConversationsToAnalyzeCount()} Conversations`
+          )}
         </button>
       </div>
-
-      {/* Progress and Status Display */}
-      {isAnalyzing && (
-        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-medium text-blue-800">
-              {analysisProgress.status === 'connecting' && '🔌 Connecting to OpenAI...'}
-              {analysisProgress.status === 'analyzing' && '🤖 Analyzing conversations...'}
-              {analysisProgress.status === 'processing' && '⚙️ Processing results...'}
-              {analysisProgress.status === 'complete' && '✅ Analysis complete!'}
-            </h4>
-            <span className="text-xs text-blue-600">
-              {analysisProgress.current > 0 && `${analysisProgress.current}/${analysisProgress.total}`}
-            </span>
-          </div>
-          
-          {/* Progress Bar */}
-          {analysisProgress.total > 0 && (
-            <div className="w-full bg-blue-200 rounded-full h-2 mb-2">
-              <div 
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
-                style={{ width: `${(analysisProgress.current / analysisProgress.total) * 100}%` }}
-              ></div>
-            </div>
-          )}
-          
-          {/* Status Messages */}
-          <div className="text-xs text-blue-700 space-y-1">
-            {analysisProgress.status === 'connecting' && (
-              <p>Establishing connection to OpenAI API...</p>
-            )}
-            {analysisProgress.status === 'analyzing' && (
-              <p>Analyzing conversation {analysisProgress.current} of {analysisProgress.total}...</p>
-            )}
-            {analysisProgress.status === 'processing' && (
-              <p>Processing analysis results and updating interface...</p>
-            )}
-            {analysisProgress.status === 'complete' && (
-              <p>Analysis completed successfully! {analysisProgress.total} conversations processed.</p>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Error Display */}
       {error && (

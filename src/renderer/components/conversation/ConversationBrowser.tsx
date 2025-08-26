@@ -111,6 +111,28 @@ const ConversationBrowser: React.FC = () => {
               }}
               onRelevancyResults={(results) => {
                 setAiRelevancyResults(results);
+                
+                // Merge AI relevancy results with conversations
+                const updatedFilteredConversations = filteredConversations.map(conv => {
+                  const relevancyResult = results.find(result => result.conversationId === conv.title);
+                  if (relevancyResult) {
+                    return {
+                      ...conv,
+                      aiRelevancy: {
+                        category: relevancyResult.category,
+                        explanation: relevancyResult.explanation,
+                        relevancyScore: relevancyResult.relevancyScore,
+                        qualityScore: relevancyResult.qualityScore,
+                        reasoning: relevancyResult.reasoning,
+                        timestamp: relevancyResult.timestamp
+                      }
+                    };
+                  }
+                  return conv;
+                });
+                
+                // Update filtered conversations with AI relevancy data
+                setFilteredConversations(updatedFilteredConversations);
               }}
             />
           ) : (
@@ -157,25 +179,27 @@ const ConversationBrowser: React.FC = () => {
 
       {currentSourceFile && loadedConversations.length > 0 && (
         <div className="bg-white rounded-lg border border-gray-200 h-full flex flex-col">
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Conversations ({filteredConversations.length} of {loadedConversations.length})
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Conversations ({filteredConversations.length} of {loadedConversations.length})
+              </h2>
               {aiRelevancyResults.length > 0 && (
-                <span className="ml-2 text-sm font-normal text-green-600">
-                  ({aiRelevancyResults.filter(r => r.category === 'relevant').length} relevant)
-                </span>
+                <div className="text-sm text-green-600 mt-1">
+                  ({aiRelevancyResults.filter(r => r.category === 'relevant').length} AI-relevant)
+                </div>
               )}
-            </h3>
+            </div>
             <div className="flex gap-2">
               <button
                 onClick={handleSelectAll}
-                className="text-sm text-blue-600 hover:text-blue-700 underline"
+                className="text-sm text-blue-600 hover:text-blue-800 underline"
               >
                 Select All
               </button>
               <button
                 onClick={handleDeselectAll}
-                className="text-sm text-gray-600 hover:text-gray-700 underline"
+                className="text-sm text-blue-600 hover:text-blue-800 underline"
               >
                 Reset AI Filter
               </button>
@@ -196,6 +220,22 @@ const ConversationBrowser: React.FC = () => {
             <div className="px-4 py-2 bg-blue-50 border-b border-blue-200">
               <div className="text-sm text-blue-800">
                 <span className="font-medium">Filtering:</span> Only showing conversations with more than 8 messages (user + bot exchanges)
+              </div>
+            </div>
+          )}
+
+          {/* AI Analysis Results Summary */}
+          {aiRelevancyResults.length > 0 && (
+            <div className="px-4 py-2 bg-green-50 border-b border-green-200">
+              <div className="text-sm text-green-800">
+                <span className="font-medium">AI Analysis Complete:</span> 
+                {aiRelevancyResults.filter(r => r.category === 'relevant').length} relevant, 
+                {aiRelevancyResults.filter(r => r.category !== 'relevant').length} not relevant
+                {aiRelevancyResults.length > 0 && (
+                  <span className="ml-2 text-xs">
+                    (Avg Relevancy: {(aiRelevancyResults.reduce((sum, r) => sum + (r.relevancyScore || 0), 0) / aiRelevancyResults.length).toFixed(1)}/10)
+                  </span>
+                )}
               </div>
             </div>
           )}
