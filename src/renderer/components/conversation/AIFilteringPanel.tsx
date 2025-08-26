@@ -69,6 +69,21 @@ export const AIFilteringPanel: React.FC<AIFilteringPanelProps> = ({
           <span className="text-sm text-gray-700">Enable AI filtering</span>
         </label>
       </div>
+      
+      {/* Warning about limited content */}
+      {conversations.some(conv => !conv.conversationPreview || conv.conversationPreview.length < 100) && (
+        <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-md">
+          <div className="flex items-start">
+            <span className="text-orange-600 mr-2">⚠️</span>
+            <div className="text-sm text-orange-800">
+              <p className="font-medium">Limited Content Warning</p>
+              <p>Some conversations have limited content for AI analysis. This may result in less accurate filtering results.</p>
+              <p className="text-xs mt-1">Consider reviewing these conversations manually for better accuracy.</p>
+            </div>
+          </div>
+        </div>
+      )}
+      </div>
 
       {/* Date Filtering Section */}
       <DateFilteringSection

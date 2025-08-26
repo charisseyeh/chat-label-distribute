@@ -7,6 +7,7 @@ export interface ConversationData {
   model?: string;
   modelVersion?: string;
   conversationPreview?: string;
+  sourceFilePath?: string;
   aiRelevancy?: {
     category: 'relevant' | 'not-relevant';
     explanation: string;

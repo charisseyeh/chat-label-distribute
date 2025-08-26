@@ -117,10 +117,26 @@ export const AIFilteringSection: React.FC<AIFilteringSectionProps> = ({
       const conversationSamples: AIConversationSample[] = conversationsToAnalyze.map(conv => {
         // Get the best available conversation content
         let content = conv.conversationPreview;
-        if (!content || content.length < 50) {
-          // If preview is too short, try to get more content
-          content = `Title: ${conv.title}\nMessage Count: ${conv.messageCount}\nContent: ${conv.conversationPreview || 'No detailed content available'}`;
+        
+        // If preview is too short or doesn't exist, create a more informative fallback
+        if (!content || content.length < 100) {
+          const fallbackContent = [
+            `Title: ${conv.title}`,
+            `Message Count: ${conv.messageCount}`,
+            `Model: ${conv.modelVersion || 'Unknown'}`,
+            `Created: ${conv.createdAt || 'Unknown'}`,
+            `Content: ${content || 'No conversation preview available'}`,
+            `Note: This conversation may have limited content for analysis. Consider reviewing manually.`
+          ].join('\n');
+          
+          content = fallbackContent;
         }
+        
+        // Debug logging to see what content we're sending
+        console.log(`🔍 AI Filtering Debug - Conversation: ${conv.title}`);
+        console.log(`📝 Preview length: ${conv.conversationPreview?.length || 0}`);
+        console.log(`📝 Preview content: ${conv.conversationPreview?.substring(0, 200)}...`);
+        console.log(`📝 Final content length: ${content.length}`);
         
         return {
           title: conv.title,

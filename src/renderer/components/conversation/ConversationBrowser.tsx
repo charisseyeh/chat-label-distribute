@@ -284,6 +284,11 @@ const ConversationBrowser: React.FC = () => {
                     {conversation.conversationPreview && (
                       <div className="mt-2 text-xs text-gray-600 bg-blue-50 p-2 rounded">
                         <strong>Preview:</strong> {conversation.conversationPreview}
+                        {conversation.conversationPreview.length < 100 && (
+                          <span className="ml-2 text-orange-600 font-medium">
+                            ⚠️ Limited content for AI analysis
+                          </span>
+                        )}
                       </div>
                     )}
                   </div>

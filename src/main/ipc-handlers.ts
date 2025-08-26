@@ -11,6 +11,53 @@ export class IPCHandlers {
     this.setupHandlers();
   }
 
+  // Helper method to extract conversation preview content
+  private extractConversationPreview(conversation: any): string {
+    try {
+      if (!conversation.mapping) {
+        return 'No conversation content available';
+      }
+
+      // Extract first few messages to create a preview
+      const messages: string[] = [];
+      const messageEntries = Object.entries(conversation.mapping)
+        .filter(([_, msg]: [string, any]) => {
+          if (!msg.message || !msg.message.content || !msg.message.content.parts || !Array.isArray(msg.message.content.parts)) {
+            return false;
+          }
+          const firstPart = msg.message.content.parts[0];
+          return firstPart && typeof firstPart === 'string' && firstPart.trim() !== '';
+        })
+        .sort((a, b) => {
+          const timeA = (a[1] as any).message?.create_time || 0;
+          const timeB = (b[1] as any).message?.create_time || 0;
+          return timeA - timeB;
+        })
+        .slice(0, 3); // Take first 3 messages for preview
+
+      for (const [_, msg] of messageEntries) {
+        const messageData = msg as any;
+        if (messageData.message && messageData.message.content && messageData.message.content.parts) {
+          const content = messageData.message.content.parts[0];
+          if (content && typeof content === 'string' && content.trim() !== '') {
+            const role = messageData.message.author?.role || 'unknown';
+            const truncatedContent = content.length > 200 ? content.substring(0, 200) + '...' : content;
+            messages.push(`${role}: ${truncatedContent}`);
+          }
+        }
+      }
+
+      if (messages.length === 0) {
+        return 'No readable message content found';
+      }
+
+      return messages.join('\n\n');
+    } catch (error) {
+      console.error('Error extracting conversation preview:', error);
+      return 'Error extracting conversation content';
+    }
+  }
+
   private setupHandlers() {
     // File selection dialog
     ipcMain.handle('file:select-conversation', async () => {
@@ -132,6 +179,7 @@ export class IPCHandlers {
               return firstPart && typeof firstPart === 'string' && firstPart.trim() !== '';
             }).length;
           })(),
+          conversationPreview: this.extractConversationPreview(conv),
           sourceFilePath: filePath
         }));
         

@@ -162,13 +162,15 @@ CONVERSATION TITLE: ${sample.title}
 CONVERSATION CONTENT: ${conversationContent}
 
 ANALYSIS CRITERIA:
-- RELEVANT: Contains discussions about feelings, emotions, personal experiences, relationships, self-reflection, psychological insights, or meaningful human experiences
-- NOT RELEVANT: Purely tactical, technical, factual, or surface-level exchanges without emotional depth
+- RELEVANT: Contains discussions about feelings, emotions, personal experiences, relationships, self-reflection, psychological insights, personal challenges, life events, or meaningful human experiences that reveal emotional depth or personal growth
+- NOT RELEVANT: Purely tactical, technical, factual, or surface-level exchanges without emotional depth, personal reflection, or relationship content
+
+IMPORTANT: Look for any signs of personal experience, emotional expression, relationship dynamics, or self-reflection. Even brief mentions of personal feelings or experiences can make a conversation relevant.
 
 Please provide a JSON response with:
 1. relevancyScore (0-10): How relevant is this conversation for understanding human experiences and emotions?
 2. qualityScore (0-10): How well-structured and coherent is this conversation?
-3. reasoning: Brief explanation for your scores
+3. reasoning: Brief explanation for your scores, specifically mentioning what content you found or why it lacks personal/emotional content
 4. category: "relevant" if relevancyScore >= 6, "not_relevant" if < 6
 
 Please respond with only valid JSON in this format:
