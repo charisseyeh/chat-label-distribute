@@ -1,0 +1,97 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Conversation {
+  id                  String            @id @default(cuid())
+  title               String
+  modelVersion        String?
+  conversationLength  Int
+  metadata            String?           // JSON stored as TEXT in SQLite
+  filePath            String
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  messages            Message[]
+  surveyResponses     SurveyResponse[]
+  aiLabels            AILabel[]
+
+  @@map("conversations")
+}
+
+model Message {
+  id              String        @id @default(cuid())
+  conversationId  String
+  role            String        // 'user', 'assistant', 'system'
+  content         String
+  sequenceOrder   Int
+  createdAt       DateTime      @default(now())
+
+  conversation    Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, sequenceOrder])
+  @@map("messages")
+}
+
+model SurveyDimension {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  options     String    // JSON stored as TEXT
+  scale       Int       @default(7)
+  orderIndex  Int
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+
+  @@map("survey_dimensions")
+}
+
+model SurveyResponse {
+  id             String    @id @default(cuid())
+  conversationId String
+  position       String    // 'beginning', 'turn6', 'end'
+  ratings        String    // JSON stored as TEXT
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, position])
+  @@map("survey_responses")
+}
+
+model AILabel {
+  id                String    @id @default(cuid())
+  conversationId    String
+  position          String    // 'beginning', 'turn6', 'end'
+  modelUsed         String
+  ratings           String    // JSON stored as TEXT
+  confidenceScores  String?   // JSON stored as TEXT
+  promptUsed        String?
+  createdAt         DateTime  @default(now())
+
+  conversation      Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, position, modelUsed])
+  @@map("ai_labels")
+}
+
+model ExportHistory {
+  id           String    @id @default(cuid())
+  exportType   String
+  filters      String?   // JSON stored as TEXT
+  filePath     String?
+  recordCount  Int
+  createdAt    DateTime  @default(now())
+
+  @@map("export_history")
+}
