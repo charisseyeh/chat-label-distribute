@@ -90,18 +90,6 @@ const ConversationBrowser: React.FC = () => {
     <TwoPanelLayout
       sidebarContent={
         <>
-          {/* File List moved to sidebar */}
-          {storedFiles.length > 0 && (
-            <div className="p-4 border-b border-gray-200">
-              <FileList
-                storedFiles={storedFiles}
-                currentSourceFile={currentSourceFile}
-                onLoadFile={loadConversationsFromStoredFile}
-                onDeleteFile={handleDeleteFile}
-                onUploadNew={handleFileSelect}
-              />
-            </div>
-          )}
           
           {currentSourceFile && loadedConversations.length > 0 ? (
             <AIFilteringPanel
@@ -141,6 +129,19 @@ const ConversationBrowser: React.FC = () => {
                 <p className="text-sm">No file loaded</p>
                 <p className="text-xs">Load a conversations file to see filtering options</p>
               </div>
+            </div>
+          )}
+
+          {/* File List moved to sidebar */}
+          {storedFiles.length > 0 && (
+            <div>
+              <FileList
+                storedFiles={storedFiles}
+                currentSourceFile={currentSourceFile}
+                onLoadFile={loadConversationsFromStoredFile}
+                onDeleteFile={handleDeleteFile}
+                onUploadNew={handleFileSelect}
+              />
             </div>
           )}
         </>

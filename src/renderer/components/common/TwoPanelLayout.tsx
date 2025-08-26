@@ -10,11 +10,11 @@ interface TwoPanelLayoutProps {
 const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
   children,
   sidebarContent,
-  sidebarWidth = "w-80",
+  sidebarWidth = "w-[30%]",
   className = ""
 }) => {
   return (
-    <div className={`flex h-screen bg-background ${className}`}>
+    <div className={`flex h-screen`}>
       {/* Main Content Panel - Flexible width */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="h-full p-6 w-full">
@@ -23,7 +23,7 @@ const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
       </div>
 
       {/* Right Sidebar Panel - Fixed width */}
-      <div className={`${sidebarWidth} bg-gray-50 border-l border-gray-200 flex flex-col h-full overflow-y-auto`}>
+      <div className={`${sidebarWidth} flex flex-col h-full overflow-y-auto`}>
         {sidebarContent}
       </div>
     </div>
