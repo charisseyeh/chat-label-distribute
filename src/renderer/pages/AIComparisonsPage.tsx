@@ -4,6 +4,7 @@ import { useSurveyQuestionStore } from '../stores/surveyQuestionStore';
 import { useConversationStore } from '../stores/conversationStore';
 import { useAIPrompt } from '../hooks/useAIPrompt';
 import { AIService } from '../services/ai-service';
+import { TwoPanelLayout } from '../components/common';
 import {
   AIConfigurationPanel,
   ConversationSelector,
@@ -294,53 +295,115 @@ const AIComparisonsPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <TwoPanelLayout
+      sidebarContent={
+        <div className="p-6 space-y-6">
+          {/* Chat Selection */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Chat Conversations</h3>
+            <ConversationSelector
+              conversations={conversationsWithData}
+              selectedConversations={selectedConversations}
+              onConversationToggle={handleConversationToggle}
+            />
+          </div>
 
-      {/* OpenAI API Configuration */}
-      <AIConfigurationPanel
-        apiKey={apiKey}
-        model={model}
-        onApiKeyChange={setApiKey}
-        onModelChange={setModel}
-        onGenerate={generateAIResponses}
-        isGenerating={isGeneratingAI}
-        hasSelectedConversations={selectedConversations.length > 0}
-        currentTemplate={currentTemplate}
-      />
+          {/* AI Configuration */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">AI Comparison</h3>
+            <AIConfigurationPanel
+              apiKey={apiKey}
+              model={model}
+              onApiKeyChange={setApiKey}
+              onModelChange={setModel}
+              onGenerate={generateAIResponses}
+              isGenerating={isGeneratingAI}
+              hasSelectedConversations={selectedConversations.length > 0}
+              currentTemplate={currentTemplate}
+            />
+          </div>
 
-      {/* Prompt Preview */}
-      <PromptPreview
-        currentTemplate={currentTemplate}
-        selectedConversations={selectedConversations}
-        storeConversations={storeConversations}
-        generateOpenAIPrompt={generateOpenAIPrompt}
-      />
+          {/* Prompt Preview */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Prompt Configuration</h3>
+            <PromptPreview
+              currentTemplate={currentTemplate}
+              selectedConversations={selectedConversations}
+              storeConversations={storeConversations}
+              generateOpenAIPrompt={generateOpenAIPrompt}
+            />
+          </div>
 
-      {/* Progress and Status Display */}
-      {isGeneratingAI && (
-        <ProgressTracker
-          progress={generationProgress}
-          storeConversations={storeConversations}
-          selectedConversations={selectedConversations}
-        />
-      )}
+          {/* Global Actions */}
+          <div className="mt-auto pt-6 border-t border-gray-200">
+            <button className="w-full bg-gray-700 hover:bg-gray-800 text-white py-3 px-4 rounded-md transition-colors">
+              Share Results
+            </button>
+          </div>
+        </div>
+      }
+    >
+      {/* Main Content Area - AI Comparison Results */}
+      <div className="space-y-6">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">AI Comparison</h1>
+          <p className="text-lg text-gray-600">
+            Select reflective or therapy-like chats that you had with ChatGPT below to label it
+          </p>
+        </div>
 
-      {/* Conversation Selection */}
-      <ConversationSelector
-        conversations={conversationsWithData}
-        selectedConversations={selectedConversations}
-        onConversationToggle={handleConversationToggle}
-      />
+        {/* Progress and Status Display */}
+        {isGeneratingAI && (
+          <ProgressTracker
+            progress={generationProgress}
+            storeConversations={storeConversations}
+            selectedConversations={selectedConversations}
+          />
+        )}
 
-      {/* Results */}
-      <ComparisonResults
-        comparisonData={comparisonData}
-        trialComparisons={trialComparisons}
-        currentTemplate={currentTemplate}
-        model={model}
-        accuracy={accuracy}
-      />
-    </div>
+        {/* AI Comparison Results Tables */}
+        {comparisonData.length > 0 && (
+          <div className="space-y-6">
+            {comparisonData.map((comparison, index) => (
+              <div key={comparison.conversationId} className="bg-white rounded-lg border border-gray-200 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-semibold text-gray-900">{comparison.conversationTitle}</h3>
+                  <div className="text-right">
+                    <div className="text-sm text-gray-500">AI model {model}</div>
+                    <div className="text-lg font-bold text-blue-600">
+                      Accuracy {Math.round(comparison.agreement * 100)}%
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Comparison Table */}
+                <ComparisonResults
+                  comparisonData={[comparison]}
+                  trialComparisons={trialComparisons}
+                  currentTemplate={currentTemplate}
+                  model={model}
+                  accuracy={comparison.agreement * 100}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Empty State */}
+        {comparisonData.length === 0 && !isGeneratingAI && (
+          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Comparison Results Yet</h3>
+            <p className="text-gray-600 mb-4">
+              Select conversations from the sidebar and run AI comparison to see results here.
+            </p>
+            <div className="text-sm text-gray-500">
+              The comparison will show your ratings vs. AI ratings across different psychological dimensions.
+            </div>
+          </div>
+        )}
+      </div>
+    </TwoPanelLayout>
   );
 };
 

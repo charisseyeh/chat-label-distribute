@@ -83,6 +83,18 @@ export class AIService {
     try {
       const prompt = this.buildAnalysisPrompt(sample);
       
+      // Debug logging
+      console.log('🔍 AI Service Debug:');
+      console.log('🔑 API Key type:', typeof this.config.apiKey);
+      console.log('🔑 API Key value:', this.config.apiKey);
+      console.log('🔑 API Key length:', this.config.apiKey?.length);
+      console.log('🤖 Model:', this.config.model);
+      console.log('📝 Prompt length:', prompt.length);
+      
+      if (!this.config.apiKey || typeof this.config.apiKey !== 'string') {
+        throw new Error(`Invalid API key configuration. Type: ${typeof this.config.apiKey}, Value: ${this.config.apiKey}`);
+      }
+      
       const response = await (window as any).electronAPI.callOpenAIAPI({
         apiKey: this.config.apiKey,
         model: this.config.model,
