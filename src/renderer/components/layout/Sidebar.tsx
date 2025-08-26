@@ -8,8 +8,8 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
-  const { currentPage, setCurrentPage, selectedConversations } = useNavigationStore();
-  const { selectedConversationIds } = useConversationStore();
+  const { currentPage, setCurrentPage, selectedConversations, removeSelectedConversation, currentConversationId } = useNavigationStore();
+  const { selectedConversationIds, removeSelectedConversation: removeFromStore, saveSelectedConversationsToStorage } = useConversationStore();
   const navigate = useNavigate();
 
   const getPageTitle = (page: string) => {
@@ -48,6 +48,42 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
 
   const handleConversationClick = (conversationId: string) => {
     navigate(`/conversation/${conversationId}`);
+  };
+
+  const handleRemoveConversation = async (conversationId: string) => {
+    try {
+      // Get conversation title for confirmation
+      const conversation = selectedConversations.find(conv => conv.id === conversationId);
+      const title = conversation?.title || 'this conversation';
+      
+      // Ask for confirmation
+      if (!window.confirm(`Are you sure you want to remove "${title}" from your selection? This action cannot be undone.`)) {
+        return;
+      }
+      
+      // Check if user is currently viewing this conversation
+      const currentPath = window.location.pathname;
+      if (currentPath === `/conversation/${conversationId}`) {
+        // Redirect to label conversations page if viewing the removed conversation
+        navigate('/label-conversations');
+      }
+      
+      // Remove from navigation store
+      removeSelectedConversation(conversationId);
+      
+      // Remove from conversation store
+      removeFromStore(conversationId);
+      
+      // Save updated selection to permanent storage
+      await saveSelectedConversationsToStorage();
+      
+      // If no conversations left and user is on labeling page, redirect to selection page
+      if (selectedConversations.length === 1 && currentPage === 'label-conversations') {
+        navigate('/select-conversations');
+      }
+    } catch (error) {
+      console.error('Failed to remove conversation:', error);
+    }
   };
 
   const navigationItems = [
@@ -97,7 +133,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
               <button
                 onClick={item.onClick}
                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors duration-200 text-left ${
-                  currentPage === item.id
+                  currentPage === item.id || (item.id === 'label-conversations' && currentConversationId)
                     ? 'bg-primary-100 text-primary-900 border border-primary-200'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
                 }`}
@@ -108,17 +144,33 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
               
               {/* Sub-items for label conversations */}
               {item.id === 'label-conversations' && item.subItems && item.subItems.length > 0 && (
-                <div className="ml-8 mt-2 space-y-1">
+                <div className="mt-2 space-y-1">
                   {item.subItems.map((subItem) => (
-                    <button
-                      key={subItem.id}
-                      onClick={subItem.onClick}
-                      className="w-full flex items-center space-x-2 px-3 py-2 rounded text-sm text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors duration-200 text-left cursor-pointer group"
-                      title={`Click to view: ${subItem.label}`}
-                    >
-                      <span className="text-xs text-blue-500 group-hover:text-blue-600">•</span>
-                      <span className="truncate group-hover:text-blue-600 transition-colors">{subItem.label}</span>
-                    </button>
+                    <div key={subItem.id} className="group">
+                      <button
+                        onClick={subItem.onClick}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded text-sm transition-colors duration-200 text-left cursor-pointer group ${
+                          currentConversationId === subItem.id
+                            ? 'text-blue-600 bg-blue-50 border border-blue-200 font-medium'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                        }`}
+                        title={`Click to view: ${subItem.label}`}
+                      >
+                        <span className="truncate transition-colors">
+                          {subItem.label}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveConversation(subItem.id);
+                          }}
+                          className="px-2 py-1 text-xs text-red-500 hover:text-red-700 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-all duration-200 ml-2"
+                          title={`Remove ${subItem.label} from selection`}
+                        >
+                          ✕
+                        </button>
+                      </button>
+                    </div>
                   ))}
                   
                   {getSelectedConversationTitles().length > 3 && (

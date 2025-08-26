@@ -33,7 +33,7 @@ const ConversationBrowser: React.FC = () => {
   // Check if we have loaded conversations on mount and restore them
   useEffect(() => {
     if (currentSourceFile && loadedConversations.length > 0) {
-      console.log('🔄 Restoring loaded conversations from store:', loadedConversations.length, 'conversations');
+      // Restoring loaded conversations from store
     }
   }, [currentSourceFile, loadedConversations]);
 

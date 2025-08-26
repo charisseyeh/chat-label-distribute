@@ -26,7 +26,7 @@ const ConversationViewer: React.FC = () => {
     loadSelectedConversationsFromStorage
   } = useConversationStore();
   
-  const { selectedConversations } = useNavigationStore();
+  const { selectedConversations, setSelectedConversations, setCurrentConversationId } = useNavigationStore();
   const { responses: surveyResponses } = useSurveyStore();
   
   const [currentConversation, setCurrentConversation] = useState<any>(undefined);
@@ -37,17 +37,24 @@ const ConversationViewer: React.FC = () => {
   const [messageLimit, setMessageLimit] = useState(50); // Start with first 50 messages
   const [showAllMessages, setShowAllMessages] = useState(false);
 
+  // Set current conversation ID in navigation store
+  useEffect(() => {
+    if (id) {
+      setCurrentConversationId(id);
+    }
+    
+    return () => {
+      // Clear current conversation ID when component unmounts
+      setCurrentConversationId(null);
+    };
+  }, [id, setCurrentConversationId]);
+
   // Memoize the loadMessages function to prevent it from changing on every render
   const loadMessages = useCallback(async (conversation: any) => {
     if (!conversation || !id) return;
     
     // Get the source file path from the conversation or fall back to currentSourceFile
     const sourceFilePath = conversation.filePath || currentSourceFile;
-    console.log('📂 Source file path resolution:', {
-      conversationFilePath: conversation.filePath,
-      currentSourceFile,
-      finalSourceFilePath: sourceFilePath
-    });
     
     if (!sourceFilePath) {
       setError('No source file path available for this conversation');
@@ -63,7 +70,6 @@ const ConversationViewer: React.FC = () => {
         try {
           const cachedData = JSON.parse(cached);
           if (cachedData.timestamp && (Date.now() - cachedData.timestamp) < 24 * 60 * 60 * 1000) {
-            console.log('📦 Using cached messages for conversation:', id);
             setMessages(cachedData.messages);
             setDisplayedMessages(cachedData.messages.slice(0, messageLimit));
             return;
@@ -73,15 +79,12 @@ const ConversationViewer: React.FC = () => {
         }
       }
       
-      console.log('🔄 Loading messages from file:', sourceFilePath);
-      
       // Load from file using Electron API
       if (!window.electronAPI || !window.electronAPI.readSingleConversation) {
         throw new Error('Electron API not available');
       }
       
       const result = await window.electronAPI.readSingleConversation(sourceFilePath, id);
-      console.log('📖 File read result:', result);
       
       if (!result.success || !result.found) {
         throw new Error('Conversation not found in file');
@@ -96,8 +99,6 @@ const ConversationViewer: React.FC = () => {
       } else if (conversationData.messages) {
         messages = conversationData.messages;
       }
-      
-      console.log('💬 Extracted messages count:', messages.length);
       
       setMessages(messages);
       setDisplayedMessages(messages.slice(0, messageLimit));
@@ -146,10 +147,7 @@ const ConversationViewer: React.FC = () => {
   useEffect(() => {
     const loadFromStorage = async () => {
       try {
-        console.log('🔄 Loading selected conversations from storage...');
         const result = await loadSelectedConversationsFromStorage();
-        console.log('✅ Loaded selected conversations result:', result);
-        console.log('📋 Selected conversations after loading:', storeSelectedConversations);
       } catch (error) {
         console.warn('Failed to load selected conversations from storage:', error);
       }
@@ -160,6 +158,19 @@ const ConversationViewer: React.FC = () => {
     cleanupOldCache();
   }, []); // Empty dependency array - only run once on mount
 
+  // Synchronize navigation store with conversation store when storeSelectedConversations change
+  useEffect(() => {
+    if (storeSelectedConversations.length > 0) {
+      setSelectedConversations(storeSelectedConversations.map(conv => ({
+        id: conv.id,
+        title: conv.title
+      })));
+    } else {
+      // Clear the navigation store if there are no selected conversations
+      setSelectedConversations([]);
+    }
+  }, [storeSelectedConversations, setSelectedConversations]);
+
   // Load conversation and messages - only run when id changes
   useEffect(() => {
     const loadConversation = async () => {
@@ -169,14 +180,8 @@ const ConversationViewer: React.FC = () => {
         setLoading(true);
         setError(null);
         
-        console.log('🔍 Loading conversation with ID:', id);
-        console.log('📁 Available conversations in store:', conversations);
-        console.log('🎯 Selected conversations in store:', storeSelectedConversations);
-        console.log('📂 Current source file in store:', currentSourceFile);
-        
         // Get conversation from store
         const conversation = getConversationById(id);
-        console.log('✅ Found conversation:', conversation);
         
         if (!conversation) {
           setError('Conversation not found');
@@ -341,35 +346,9 @@ const ConversationViewer: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border bg-white">
           <div className="flex items-center space-x-4">
-            <button
-              onClick={handleBackToLabeling}
-              className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-            >
-              ← Back to Labeling
-            </button>
             <div>
               <h1 className="text-3xl font-bold text-foreground">{currentConversation.title}</h1>
-              <p className="text-muted-foreground mt-2">
-                Conversation details and analysis
-              </p>
             </div>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            {/* Survey Link */}
-            <Link 
-              to={`/survey?conversationId=${id}`}
-              className="btn-primary"
-            >
-              {surveyStatus.completed > 0 ? 'Continue Survey' : 'Start Survey'}
-            </Link>
-            {/* AI Analysis Link */}
-            <Link 
-              to="/ai-analysis"
-              className="btn-secondary"
-            >
-              AI Analysis
-            </Link>
           </div>
         </div>
 
@@ -377,16 +356,8 @@ const ConversationViewer: React.FC = () => {
         <div className="p-6 bg-white border-b border-border">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <div className="text-sm text-muted-foreground">Model</div>
-              <div className="font-medium">{currentConversation.modelVersion || 'Unknown'}</div>
-            </div>
-            <div>
               <div className="text-sm text-muted-foreground">Messages</div>
               <div className="font-medium">{currentConversation.messageCount}</div>
-            </div>
-            <div>
-              <div className="text-sm text-muted-foreground">Length</div>
-              <div className="font-medium">{currentConversation.conversationLength}</div>
             </div>
             <div>
               <div className="text-sm text-muted-foreground">Created</div>
@@ -406,10 +377,6 @@ const ConversationViewer: React.FC = () => {
               <div className="space-y-4">
                 {displayedMessages.map((message, index) => (
                   <div key={message.id} className="flex space-x-3">
-                    {/* Message Number */}
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
-                      {index + 1}
-                    </div>
                     
                     {/* Message Content */}
                     <div className="flex-1">

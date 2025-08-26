@@ -31,18 +31,6 @@ const SurveySection: React.FC<SurveySectionProps> = ({
       const currentQuestion = section.questions[currentQuestionIndex];
       // Removed debug logging
     }
-    
-    // Debug logging for rating issues
-    if (isVisible && currentQuestion) {
-      console.log('🔍 SurveySection Debug:', {
-        sectionPosition: section.position,
-        questionId: currentQuestion?.id,
-        questionText: currentQuestion?.text,
-        sectionResponses,
-        currentRating: sectionResponses.find((r: SurveyResponse) => r.questionId === currentQuestion?.id)?.rating || 0,
-        storeResponses: storeResponses.length
-      });
-    }
   }, [isVisible, section.questions, currentQuestionIndex, sectionResponses, storeResponses, section.position]);
 
   if (!isVisible) {

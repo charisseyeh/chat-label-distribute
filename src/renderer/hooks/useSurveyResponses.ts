@@ -55,7 +55,6 @@ export const useSurveyResponses = (conversationId?: string) => {
     }
 
     try {
-      console.log('🔍 Hook: handleAddResponse called:', { questionId, position, rating, conversationId });
       setLoading(true);
       clearError();
 
@@ -68,9 +67,7 @@ export const useSurveyResponses = (conversationId?: string) => {
         timestamp: new Date().toISOString()
       };
 
-      console.log('🔍 Hook: Created response object:', response);
       addResponse(response);
-      console.log('🔍 Hook: Called addResponse, checking store state...');
 
       // Wait a bit for the store to update, then check if section is completed
       setTimeout(() => {
@@ -181,7 +178,6 @@ export const useSurveyResponses = (conversationId?: string) => {
         await handleAddResponse(questionId, position, rating);
       }
     } catch (err) {
-      console.error('Auto-save failed:', err);
       // Don't throw error for auto-save failures
     }
   }, [currentConversationResponses, handleUpdateResponse, handleAddResponse, conversationId]);

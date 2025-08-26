@@ -13,7 +13,7 @@ import { useNavigationStore } from './stores/navigationStore';
 // Component to sync navigation store with route changes
 const NavigationSync: React.FC = () => {
   const location = useLocation();
-  const { setCurrentPage } = useNavigationStore();
+  const { setCurrentPage, setCurrentConversationId } = useNavigationStore();
 
   useEffect(() => {
     const path = location.pathname;
@@ -21,24 +21,31 @@ const NavigationSync: React.FC = () => {
     // Map routes to page types
     if (path === '/' || path === '/select-conversations') {
       setCurrentPage('select-conversations');
+      setCurrentConversationId(null);
     } else if (path === '/label-conversations') {
       setCurrentPage('label-conversations');
+      setCurrentConversationId(null);
     } else if (path === '/ai-comparisons') {
       setCurrentPage('ai-comparisons');
+      setCurrentConversationId(null);
     } else if (path === '/survey-questions') {
       setCurrentPage('survey-questions');
+      setCurrentConversationId(null);
     } else if (path.startsWith('/conversation/')) {
-      // Keep current page for conversation viewer
-      // Don't change navigation state
+      // Extract conversation ID from path
+      const conversationId = path.split('/conversation/')[1];
+      setCurrentConversationId(conversationId);
+      // Keep current page as 'label-conversations' for breadcrumb context
     }
-  }, [location.pathname, setCurrentPage]);
+  }, [location.pathname, setCurrentPage, setCurrentConversationId]);
 
   return null;
 };
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { loadSelectedConversationsFromStorage } = useConversationStore();
+  const { loadSelectedConversationsFromStorage, selectedConversations } = useConversationStore();
+  const { setSelectedConversations } = useNavigationStore();
 
   // Load selected conversations from permanent storage on app startup
   useEffect(() => {
@@ -51,6 +58,20 @@ function App() {
     };
     loadOnStartup();
   }, [loadSelectedConversationsFromStorage]);
+
+  // Synchronize navigation store with conversation store when selected conversations change
+  useEffect(() => {
+    if (selectedConversations.length > 0) {
+      // Sync the navigation store with the conversation store
+      setSelectedConversations(selectedConversations.map(conv => ({
+        id: conv.id,
+        title: conv.title
+      })));
+    } else {
+      // Clear the navigation store if there are no selected conversations
+      setSelectedConversations([]);
+    }
+  }, [selectedConversations, setSelectedConversations]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);

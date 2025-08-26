@@ -96,6 +96,7 @@ interface ConversationActions {
   toggleConversationSelection: (id: string) => void;
   setSelectedConversations: (ids: string[]) => void;
   setSelectedConversationsWithFile: (conversations: SelectedConversation[]) => void; // New
+  removeSelectedConversation: (id: string) => void; // New: remove individual selected conversation
   clearSelection: () => void;
   
   // File management
@@ -218,6 +219,13 @@ export const useConversationStore = create<ConversationStore>()(
       setSelectedConversations: (ids) => set({ selectedConversationIds: ids }),
 
       setSelectedConversationsWithFile: (conversations) => set({ selectedConversations: conversations }), // New
+
+      removeSelectedConversation: (id) => {
+        const { selectedConversations } = get();
+        const updated = selectedConversations.filter(conv => conv.id !== id);
+        set({ selectedConversations: updated });
+        set({ selectedConversationIds: updated.map(conv => conv.id) });
+      },
 
       clearSelection: () => set({ selectedConversationIds: [], selectedConversations: [] }), // Updated
 

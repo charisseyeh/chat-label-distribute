@@ -8,16 +8,19 @@ export interface NavigationState {
     id: string;
     title: string;
   }>;
+  currentConversationId: string | null;
   setCurrentPage: (page: Page) => void;
   setSelectedConversations: (conversations: Array<{ id: string; title: string }>) => void;
   addSelectedConversation: (conversation: { id: string; title: string }) => void;
   removeSelectedConversation: (id: string) => void;
   clearSelectedConversations: () => void;
+  setCurrentConversationId: (id: string | null) => void;
 }
 
 export const useNavigationStore = create<NavigationState>((set) => ({
   currentPage: 'select-conversations',
   selectedConversations: [],
+  currentConversationId: null,
   
   setCurrentPage: (page) => set({ currentPage: page }),
   
@@ -32,4 +35,6 @@ export const useNavigationStore = create<NavigationState>((set) => ({
   })),
   
   clearSelectedConversations: () => set({ selectedConversations: [] }),
+  
+  setCurrentConversationId: (id) => set({ currentConversationId: id }),
 }));

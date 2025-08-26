@@ -15,18 +15,7 @@ const RatingScale: React.FC<RatingScaleProps> = ({
 }) => {
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
 
-  // Debug logging
-  useEffect(() => {
-    console.log('🔍 RatingScale Debug:', {
-      scale,
-      currentRating,
-      labels,
-      hoveredRating
-    });
-  }, [scale, currentRating, labels, hoveredRating]);
-
   const handleRatingClick = (rating: number) => {
-    console.log('🎯 Rating clicked:', rating, 'Current rating was:', currentRating);
     onRatingChange(rating);
   };
 

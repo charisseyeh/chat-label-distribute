@@ -82,7 +82,10 @@ export const useSurveyResponseStore = create<SurveyResponseStore>()(
           lastUpdated: new Date().toISOString()
         };
         
-        const updatedResponses = existingData.responses.filter(r => r.questionId !== response.questionId);
+        // Filter by both questionId AND position to avoid clearing responses from other sections
+        const updatedResponses = existingData.responses.filter(r => 
+          !(r.questionId === response.questionId && r.position === response.position)
+        );
         updatedResponses.push(response);
         
         const updatedData: ConversationSurveyData = {
@@ -117,7 +120,10 @@ export const useSurveyResponseStore = create<SurveyResponseStore>()(
             lastUpdated: new Date().toISOString()
           };
           
-          const updatedResponses = existingData.responses.filter(r => r.questionId !== response.questionId);
+          // Filter by both questionId AND position to avoid clearing responses from other sections
+          const updatedResponses = existingData.responses.filter(r => 
+            !(r.questionId === response.questionId && r.position === response.position)
+          );
           updatedResponses.push(response);
           
           const updatedData: ConversationSurveyData = {

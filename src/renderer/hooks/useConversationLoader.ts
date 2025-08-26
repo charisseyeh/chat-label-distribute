@@ -21,8 +21,6 @@ export const useConversationLoader = () => {
       setLoading(true);
       setError(null);
       
-      console.log('Loading conversations from stored file:', filePath);
-      
       const conversationData = await conversationService.getConversationIndex(filePath);
       
       if (!Array.isArray(conversationData)) {

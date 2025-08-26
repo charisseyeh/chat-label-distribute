@@ -72,7 +72,6 @@ export const useConversations = () => {
       }
     } catch (err) {
       setError('Failed to load conversations');
-      console.error('Error loading conversations:', err);
     } finally {
       setLoading(false);
     }

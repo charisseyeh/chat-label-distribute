@@ -82,7 +82,6 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages 
                                document.querySelector('[class*="overflow-y-auto"]');
       
       if (!messagesContainer) {
-        console.log('🔍 Scroll tracking: Messages container not found');
         return;
       }
 
@@ -92,13 +91,11 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages 
       
       // Turn 6 should appear around 30-40% through the conversation
       if (percentage >= 30 && !visibleSections.turn6) {
-        console.log('🎯 Scroll-based turn 6 detection:', percentage.toFixed(1) + '%');
         setVisibleSections(prev => ({ ...prev, turn6: true }));
       }
       
       // End should appear when near the bottom (90%+)
       if (percentage >= 90 && !visibleSections.end) {
-        console.log('🏁 Scroll-based end detection:', percentage.toFixed(1) + '%');
         setVisibleSections(prev => ({ ...prev, end: true }));
       }
     };
@@ -109,14 +106,11 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages 
                              document.querySelector('[class*="overflow-y-auto"]');
     
     if (messagesContainer) {
-      console.log('🎯 Scroll tracking: Found messages container:', messagesContainer);
       messagesContainer.addEventListener('scroll', handleScroll, { passive: true });
       
       return () => {
         messagesContainer.removeEventListener('scroll', handleScroll);
       };
-    } else {
-      console.warn('⚠️ Scroll tracking: Messages container not found, scroll tracking disabled');
     }
   }, [messages.length, visibleSections.turn6, visibleSections.end]);
 
@@ -155,16 +149,9 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages 
     rating: number
   ) => {
     try {
-      console.log('🎯 Survey response:', { questionId, position, rating });
-      console.log('📊 Current responses before save:', responses);
-      
       await autoSaveResponse(questionId, position, rating);
-      
-      console.log('✅ Response saved successfully');
-      console.log('📊 Current responses after save:', responses);
-      
     } catch (error) {
-      console.error('❌ Failed to save survey response:', error);
+      console.error('Failed to save survey response:', error);
     }
   };
 

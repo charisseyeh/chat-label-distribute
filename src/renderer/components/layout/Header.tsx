@@ -1,6 +1,8 @@
 import React from 'react';
-import { List, X } from '@phosphor-icons/react';
+import { List, X, CaretRight } from '@phosphor-icons/react';
 import { useNavigationStore } from '../../stores/navigationStore';
+import { useConversationStore } from '../../stores/conversationStore';
+import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
   isSidebarOpen: boolean;
@@ -8,7 +10,9 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ isSidebarOpen, onToggleSidebar }) => {
-  const { currentPage } = useNavigationStore();
+  const { currentPage, currentConversationId } = useNavigationStore();
+  const { selectedConversations } = useConversationStore();
+  const navigate = useNavigate();
 
   const getPageTitle = (page: string) => {
     switch (page) {
@@ -40,6 +44,12 @@ const Header: React.FC<HeaderProps> = ({ isSidebarOpen, onToggleSidebar }) => {
     }
   };
 
+  const getCurrentConversationTitle = () => {
+    if (!currentConversationId) return null;
+    const conversation = selectedConversations.find(conv => conv.id === currentConversationId);
+    return conversation?.title || 'Unknown Conversation';
+  };
+
   return (
     <header className="bg-background border-b border-border px-6 py-4">
       <div className="flex items-center justify-between">
@@ -51,13 +61,47 @@ const Header: React.FC<HeaderProps> = ({ isSidebarOpen, onToggleSidebar }) => {
           >
             {isSidebarOpen ? <X size={20} /> : <List size={20} />}
           </button>
-          <h1 className="text-2xl font-bold text-foreground">{getPageTitle(currentPage)}</h1>
-          <span className="text-sm text-muted-foreground">{getPageDescription(currentPage)}</span>
+          
+          {/* Breadcrumb Navigation */}
+          <div className="flex items-center space-x-2">
+            <h1 className="text-2xl font-bold text-foreground">
+              {currentConversationId ? (
+                <button
+                  onClick={() => navigate('/label-conversations')}
+                  className="hover:text-primary transition-colors cursor-pointer"
+                  title="Click to go back to Label Conversations"
+                >
+                  Label Conversations
+                </button>
+              ) : (
+                getPageTitle(currentPage)
+              )}
+            </h1>
+            
+            {currentConversationId && (
+              <>
+                <CaretRight size={20} className="text-muted-foreground" />
+                <span className="text-xl font-semibold text-foreground">
+                  {getCurrentConversationTitle()}
+                </span>
+              </>
+            )}
+          </div>
+          
+          <span className="text-sm text-muted-foreground">
+            {currentConversationId 
+              ? `Viewing conversation: ${getCurrentConversationTitle()}`
+              : getPageDescription(currentPage)
+            }
+          </span>
         </div>
         
         <div className="flex items-center space-x-4">
           <div className="text-sm text-muted-foreground">
-            {getPageDescription(currentPage)}
+            {currentConversationId 
+              ? `Viewing conversation: ${getCurrentConversationTitle()}`
+              : getPageDescription(currentPage)
+            }
           </div>
         </div>
       </div>

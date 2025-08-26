@@ -10,7 +10,7 @@ const LabelConversations: React.FC = () => {
     loadSelectedConversationsFromStorage,
     clearAllSelectedAndSave
   } = useConversationStore();
-  const { selectedConversations } = useNavigationStore();
+  const { selectedConversations, setSelectedConversations } = useNavigationStore();
   const navigate = useNavigate();
 
   // Load selected conversations from permanent storage on mount
@@ -24,6 +24,19 @@ const LabelConversations: React.FC = () => {
     };
     loadFromStorage();
   }, [loadSelectedConversationsFromStorage]);
+
+  // Synchronize navigation store with conversation store when storeSelectedConversations change
+  useEffect(() => {
+    if (storeSelectedConversations.length > 0) {
+      setSelectedConversations(storeSelectedConversations.map(conv => ({
+        id: conv.id,
+        title: conv.title
+      })));
+    } else {
+      // Clear the navigation store if there are no selected conversations
+      setSelectedConversations([]);
+    }
+  }, [storeSelectedConversations, setSelectedConversations]);
 
   const handleConversationClick = (conversationId: string) => {
     navigate(`/conversation/${conversationId}`);
@@ -72,6 +85,8 @@ const LabelConversations: React.FC = () => {
             onClick={async () => {
               if (window.confirm('Are you sure you want to clear all selected conversations? This action cannot be undone.')) {
                 await clearAllSelectedAndSave();
+                // Also clear the navigation store
+                setSelectedConversations([]);
                 navigate('/select-conversations');
               }
             }}

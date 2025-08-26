@@ -25,7 +25,6 @@ export const useFileManager = () => {
       const result = await window.electronAPI.getStoredFiles();
       if (result.success && result.data) {
         setStoredFiles(result.data as StoredFile[]);
-        console.log('Loaded stored files:', result.data);
       }
     } catch (error) {
       console.error('Failed to load stored files:', error);
