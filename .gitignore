@@ -248,3 +248,6 @@ logs/
 
 # Archive files
 *.zip
+
+# Large distribution files
+*.dmg
