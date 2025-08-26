@@ -19,7 +19,9 @@ export class ScrollTrackingService implements ScrollTracker {
   private endReached = false;
   private options: Required<ScrollTrackingOptions>;
   private scrollThrottle: number | null = null;
-  private intersectionObserver: IntersectionObserver | null = null;
+  private scrollElement: Element | null = null;
+  private messageCount = 0;
+  private currentMessageIndex = 0;
 
   constructor(options: ScrollTrackingOptions = {}) {
     this.options = {
@@ -30,14 +32,21 @@ export class ScrollTrackingService implements ScrollTracker {
   }
 
   /**
-   * Track message visibility using Intersection Observer
+   * Set the total message count for turn 6 detection
+   */
+  setMessageCount(count: number): void {
+    this.messageCount = count;
+  }
+
+  /**
+   * Track message visibility using message index
    */
   trackMessageVisibility(messageIndex: number): void {
-    // This would be implemented by observing message elements
-    // For now, we'll use a simple approach
-    if (messageIndex >= this.options.turn6Threshold && !this.turn6Reached) {
-      this.triggerTurn6();
-    }
+    this.currentMessageIndex = messageIndex;
+    
+    // Don't automatically trigger turn 6 based on message count
+    // Instead, wait for actual scroll events to determine when to show sections
+    // Removed excessive logging
   }
 
   /**
@@ -76,7 +85,12 @@ export class ScrollTrackingService implements ScrollTracker {
    */
   startTracking(): void {
     const scrollElement = this.getScrollElement();
-    if (!scrollElement) return;
+    if (!scrollElement) {
+      console.warn('⚠️ Scroll tracking: No scrollable element found');
+      return;
+    }
+
+    this.scrollElement = scrollElement;
 
     // Throttled scroll handler
     const handleScroll = () => {
@@ -98,19 +112,20 @@ export class ScrollTrackingService implements ScrollTracker {
    * Stop tracking scroll events
    */
   stopTracking(): void {
-    const scrollElement = this.getScrollElement();
-    if (!scrollElement) return;
+    if (!this.scrollElement) return;
 
-    const handler = (scrollElement as any)._scrollHandler;
+    const handler = (this.scrollElement as any)._scrollHandler;
     if (handler) {
-      scrollElement.removeEventListener('scroll', handler);
-      delete (scrollElement as any)._scrollHandler;
+      this.scrollElement.removeEventListener('scroll', handler);
+      delete (this.scrollElement as any)._scrollHandler;
     }
 
     if (this.scrollThrottle) {
       clearTimeout(this.scrollThrottle);
       this.scrollThrottle = null;
     }
+
+    // Removed excessive logging
   }
 
   /**
@@ -119,6 +134,8 @@ export class ScrollTrackingService implements ScrollTracker {
   reset(): void {
     this.turn6Reached = false;
     this.endReached = false;
+    this.currentMessageIndex = 0;
+    // Removed excessive logging
   }
 
   /**
@@ -157,19 +174,21 @@ export class ScrollTrackingService implements ScrollTracker {
    * Get the scrollable element
    */
   private getScrollElement(): Element | null {
-    // Try to find the main scrollable container
+    // Try to find the main scrollable container in the conversation viewer
     const selectors = [
+      'main', // Main content area
+      '.overflow-auto', // Tailwind overflow class
+      '[class*="overflow"]', // Any element with overflow
       '.conversation-container',
-      '.conversation-viewer',
-      '.messages-container',
-      'main',
-      '.overflow-auto'
+      '.messages-container'
     ];
 
     for (const selector of selectors) {
-      const element = document.querySelector(selector);
-      if (element && this.isScrollable(element)) {
-        return element;
+      const elements = document.querySelectorAll(selector);
+      for (const element of elements) {
+        if (this.isScrollable(element)) {
+          return element;
+        }
       }
     }
 
@@ -183,7 +202,10 @@ export class ScrollTrackingService implements ScrollTracker {
   private isScrollable(element: Element): boolean {
     const style = window.getComputedStyle(element);
     const overflow = style.overflow + style.overflowY + style.overflowX;
-    return overflow.includes('auto') || overflow.includes('scroll');
+    const hasOverflow = overflow.includes('auto') || overflow.includes('scroll');
+    const hasHeight = element.scrollHeight > element.clientHeight;
+    
+    return hasOverflow && hasHeight;
   }
 
   /**
@@ -191,14 +213,10 @@ export class ScrollTrackingService implements ScrollTracker {
    */
   destroy(): void {
     this.stopTracking();
-    
-    if (this.intersectionObserver) {
-      this.intersectionObserver.disconnect();
-      this.intersectionObserver = null;
-    }
-
+    this.scrollElement = null;
     this.turn6Callbacks = [];
     this.endCallbacks = [];
+    // Removed excessive logging
   }
 
   /**
@@ -208,6 +226,8 @@ export class ScrollTrackingService implements ScrollTracker {
     return {
       turn6Reached: this.turn6Reached,
       endReached: this.endReached,
+      currentMessageIndex: this.currentMessageIndex,
+      messageCount: this.messageCount,
       options: this.options
     };
   }

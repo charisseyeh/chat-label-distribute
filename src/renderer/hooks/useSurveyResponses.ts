@@ -55,6 +55,7 @@ export const useSurveyResponses = (conversationId?: string) => {
     }
 
     try {
+      console.log('🔍 Hook: handleAddResponse called:', { questionId, position, rating, conversationId });
       setLoading(true);
       clearError();
 
@@ -67,20 +68,19 @@ export const useSurveyResponses = (conversationId?: string) => {
         timestamp: new Date().toISOString()
       };
 
+      console.log('🔍 Hook: Created response object:', response);
       addResponse(response);
+      console.log('🔍 Hook: Called addResponse, checking store state...');
 
-      // Check if section is completed
-      const positionResponses = getResponsesForPosition(conversationId, position);
-      const template = currentConversationData?.templateId;
-      
-      // If we have a template, check if all questions for this position are answered
-      if (template) {
-        // This would need to be implemented with template integration
-        // For now, we'll mark as completed if there are responses
+      // Wait a bit for the store to update, then check if section is completed
+      setTimeout(() => {
+        const positionResponses = getResponsesForPosition(conversationId, position);
+        
+        // For now, we'll mark as completed if it has any responses
         if (positionResponses.length > 0) {
           markSectionCompleted(conversationId, position);
         }
-      }
+      }, 100);
 
       return response;
     } catch (err) {
@@ -134,9 +134,18 @@ export const useSurveyResponses = (conversationId?: string) => {
   }, [conversationId, getResponsesForPosition]);
 
   const isPositionCompleted = useCallback((position: 'beginning' | 'turn6' | 'end') => {
-    if (!currentConversationData) return false;
-    return currentConversationData.completedSections.includes(position);
-  }, [currentConversationData]);
+    if (!conversationId) return false;
+    
+    // Get all responses for this position
+    const positionResponses = getResponsesForPosition(conversationId, position);
+    
+    // Check if we have any responses for this position
+    if (positionResponses.length === 0) return false;
+    
+    // For now, consider a position completed if it has any responses
+    // This could be enhanced to check against a template to see if all questions are answered
+    return positionResponses.some(r => r.rating > 0);
+  }, [conversationId, getResponsesForPosition]);
 
   const getPositionProgress = useCallback((position: 'beginning' | 'turn6' | 'end') => {
     const positionResponses = getResponsesForPositionInConversation(position);
@@ -156,6 +165,8 @@ export const useSurveyResponses = (conversationId?: string) => {
     position: 'beginning' | 'turn6' | 'end',
     rating: number
   ) => {
+    if (!conversationId) return;
+    
     try {
       // Find existing response for this question and position
       const existingResponse = currentConversationResponses.find(
@@ -173,7 +184,7 @@ export const useSurveyResponses = (conversationId?: string) => {
       console.error('Auto-save failed:', err);
       // Don't throw error for auto-save failures
     }
-  }, [currentConversationResponses, handleUpdateResponse, handleAddResponse]);
+  }, [currentConversationResponses, handleUpdateResponse, handleAddResponse, conversationId]);
 
   // Data export
   const handleExportConversationData = useCallback(async () => {

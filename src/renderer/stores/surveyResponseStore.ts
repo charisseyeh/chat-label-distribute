@@ -69,7 +69,8 @@ export const useSurveyResponseStore = create<SurveyResponseStore>()(
           set({ responses: updated });
         } else {
           // Add new
-          set({ responses: [...responses, response] });
+          const newResponses = [...responses, response];
+          set({ responses: newResponses });
         }
         
         // Update conversation data
@@ -99,16 +100,38 @@ export const useSurveyResponseStore = create<SurveyResponseStore>()(
       },
 
       updateResponse: (id, updates) => {
-        const { responses } = get();
+        const { responses, conversationData } = get();
         const updated = responses.map(r => 
           r.id === id ? { ...r, ...updates, timestamp: new Date().toISOString() } : r
         );
         set({ responses: updated });
         
-        // Also update conversation data
+        // Also update conversation data directly instead of calling addResponse to avoid infinite loop
         const response = updated.find(r => r.id === id);
         if (response) {
-          get().addResponse(response);
+          const conversationId = response.conversationId;
+          const existingData = conversationData[conversationId] || {
+            conversationId,
+            responses: [],
+            completedSections: [],
+            lastUpdated: new Date().toISOString()
+          };
+          
+          const updatedResponses = existingData.responses.filter(r => r.questionId !== response.questionId);
+          updatedResponses.push(response);
+          
+          const updatedData: ConversationSurveyData = {
+            ...existingData,
+            responses: updatedResponses,
+            lastUpdated: new Date().toISOString()
+          };
+          
+          set({
+            conversationData: {
+              ...conversationData,
+              [conversationId]: updatedData
+            }
+          });
         }
       },
 

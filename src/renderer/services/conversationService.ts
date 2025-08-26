@@ -1,9 +1,11 @@
 export interface ConversationData {
   id: string;
   title: string;
-  createTime: number;
+  createTime?: number;
+  createdAt?: string;
   messageCount: number;
   model?: string;
+  modelVersion?: string;
   conversationPreview?: string;
   aiRelevancy?: {
     category: 'relevant' | 'not-relevant';

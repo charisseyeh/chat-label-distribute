@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useSurveyQuestions } from '../../hooks/useSurveyQuestions';
 import { useSurveyResponses } from '../../hooks/useSurveyResponses';
 import { useSurveyExport } from '../../hooks/useSurveyExport';
 import { useScrollTracking } from '../../hooks/useScrollTracking';
 import { SurveySection as SurveySectionType } from '../../types/survey';
 import SurveySection from './SurveySection';
-import SurveyProgress from './SurveyProgress';
 
 interface SurveySidebarProps {
   conversationId: string;
@@ -22,18 +21,104 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages 
   } = useSurveyResponses(conversationId);
   const { exportConversationData, hasExportableData } = useSurveyExport();
 
-  // Scroll tracking for progressive disclosure
-  const { turn6Reached, endReached } = useScrollTracking({
-    onTurn6Reached: () => setVisibleSections(prev => ({ ...prev, turn6: true })),
-    onEndReached: () => setVisibleSections(prev => ({ ...prev, end: true }))
-  });
-
   // Track visible survey sections
   const [visibleSections, setVisibleSections] = useState({
     beginning: true, // Always visible
     turn6: false,    // Appears when turn 6 is reached
     end: false       // Appears when end is reached
   });
+
+  // Memoize the callback functions to prevent infinite re-renders
+  const handleTurn6Reached = useCallback(() => {
+    setVisibleSections(prev => ({ ...prev, turn6: true }));
+  }, []);
+
+  const handleEndReached = useCallback(() => {
+    setVisibleSections(prev => ({ ...prev, end: true }));
+  }, []);
+
+  // Scroll tracking for progressive disclosure
+  const { 
+    turn6Reached, 
+    endReached, 
+    trackMessageVisibility,
+    startTracking,
+    stopTracking,
+    resetTracking
+  } = useScrollTracking({
+    onTurn6Reached: handleTurn6Reached,
+    onEndReached: handleEndReached
+  });
+
+  // Start scroll tracking when component mounts
+  useEffect(() => {
+    // Delay starting tracking to ensure DOM is ready
+    const timer = setTimeout(() => {
+      startTracking();
+    }, 100);
+    
+    return () => {
+      clearTimeout(timer);
+      stopTracking();
+    };
+  }, [startTracking, stopTracking]);
+
+  // Reset tracking when conversation changes
+  useEffect(() => {
+    resetTracking();
+  }, [conversationId, resetTracking]);
+
+  // Track scroll position for turn 6 detection
+  const [scrollPercentage, setScrollPercentage] = useState(0);
+
+  useEffect(() => {
+    if (messages.length === 0) return;
+
+    const handleScroll = () => {
+      // Find the specific messages container within ConversationViewer
+      // This is the div with "messages-container" class
+      const messagesContainer = document.querySelector('.conversation-viewer .messages-container') || 
+                               document.querySelector('.messages-container') ||
+                               document.querySelector('[class*="overflow-y-auto"]');
+      
+      if (!messagesContainer) {
+        console.log('🔍 Scroll tracking: Messages container not found');
+        return;
+      }
+
+      const { scrollTop, scrollHeight, clientHeight } = messagesContainer;
+      const percentage = (scrollTop / (scrollHeight - clientHeight)) * 100;
+      setScrollPercentage(percentage);
+      
+      // Turn 6 should appear around 30-40% through the conversation
+      if (percentage >= 30 && !visibleSections.turn6) {
+        console.log('🎯 Scroll-based turn 6 detection:', percentage.toFixed(1) + '%');
+        setVisibleSections(prev => ({ ...prev, turn6: true }));
+      }
+      
+      // End should appear when near the bottom (90%+)
+      if (percentage >= 90 && !visibleSections.end) {
+        console.log('🏁 Scroll-based end detection:', percentage.toFixed(1) + '%');
+        setVisibleSections(prev => ({ ...prev, end: true }));
+      }
+    };
+
+    // Add scroll listener to the messages container
+    const messagesContainer = document.querySelector('.conversation-viewer .messages-container') || 
+                             document.querySelector('.messages-container') ||
+                             document.querySelector('[class*="overflow-y-auto"]');
+    
+    if (messagesContainer) {
+      console.log('🎯 Scroll tracking: Found messages container:', messagesContainer);
+      messagesContainer.addEventListener('scroll', handleScroll, { passive: true });
+      
+      return () => {
+        messagesContainer.removeEventListener('scroll', handleScroll);
+      };
+    } else {
+      console.warn('⚠️ Scroll tracking: Messages container not found, scroll tracking disabled');
+    }
+  }, [messages.length, visibleSections.turn6, visibleSections.end]);
 
   // Create survey sections data
   const surveySections: SurveySectionType[] = [
@@ -70,9 +155,16 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages 
     rating: number
   ) => {
     try {
+      console.log('🎯 Survey response:', { questionId, position, rating });
+      console.log('📊 Current responses before save:', responses);
+      
       await autoSaveResponse(questionId, position, rating);
+      
+      console.log('✅ Response saved successfully');
+      console.log('📊 Current responses after save:', responses);
+      
     } catch (error) {
-      console.error('Failed to save survey response:', error);
+      console.error('❌ Failed to save survey response:', error);
     }
   };
 
@@ -111,20 +203,6 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages 
 
   return (
     <div className="w-80 bg-gray-50 border-l border-gray-200 flex flex-col h-full">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200 bg-white">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Survey Assessment</h3>
-        <p className="text-sm text-gray-600 mb-3">
-          Rate the conversation at key points
-        </p>
-        
-        {/* Progress Overview */}
-        <SurveyProgress 
-          totalQuestions={currentTemplate.questions.length * 3}
-          answeredQuestions={responses.length}
-          completedSections={surveySections.filter(s => s.isCompleted).map(s => s.position)}
-        />
-      </div>
 
       {/* Survey Sections */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
@@ -132,9 +210,9 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages 
           <SurveySection
             key={section.position}
             section={section}
-            responses={responses.filter(r => r.position === section.position)}
             onResponse={handleSurveyResponse}
             isVisible={section.isVisible}
+            conversationId={conversationId}
           />
         ))}
       </div>

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useConversationStore } from '../../stores/conversationStore';
 import { useNavigationStore } from '../../stores/navigationStore';
 import { useSurveyStore } from '../../stores/surveyStore';
-import { readJsonFile } from '../../utils/conversationUtils';
+
+import SurveySidebar from '../survey/SurveySidebar';
 
 interface Message {
   id: string;
@@ -36,23 +37,89 @@ const ConversationViewer: React.FC = () => {
   const [messageLimit, setMessageLimit] = useState(50); // Start with first 50 messages
   const [showAllMessages, setShowAllMessages] = useState(false);
 
-  // Load selected conversations from permanent storage on mount
-  useEffect(() => {
-    const loadFromStorage = async () => {
-      try {
-        await loadSelectedConversationsFromStorage();
-      } catch (error) {
-        console.warn('Failed to load selected conversations from storage:', error);
-      }
-    };
-    loadFromStorage();
+  // Memoize the loadMessages function to prevent it from changing on every render
+  const loadMessages = useCallback(async (conversation: any) => {
+    if (!conversation || !id) return;
     
-    // Clean up old cache entries
-    cleanupOldCache();
-  }, [loadSelectedConversationsFromStorage]);
+    // Get the source file path from the conversation or fall back to currentSourceFile
+    const sourceFilePath = conversation.filePath || currentSourceFile;
+    console.log('📂 Source file path resolution:', {
+      conversationFilePath: conversation.filePath,
+      currentSourceFile,
+      finalSourceFilePath: sourceFilePath
+    });
+    
+    if (!sourceFilePath) {
+      setError('No source file path available for this conversation');
+      return;
+    }
+    
+    try {
+      // Check cache first
+      const cacheKey = `conversation_${id}`;
+      const cached = localStorage.getItem(cacheKey);
+      
+      if (cached) {
+        try {
+          const cachedData = JSON.parse(cached);
+          if (cachedData.timestamp && (Date.now() - cachedData.timestamp) < 24 * 60 * 60 * 1000) {
+            console.log('📦 Using cached messages for conversation:', id);
+            setMessages(cachedData.messages);
+            setDisplayedMessages(cachedData.messages.slice(0, messageLimit));
+            return;
+          }
+        } catch (error) {
+          console.warn('Invalid cache data, reloading...');
+        }
+      }
+      
+      console.log('🔄 Loading messages from file:', sourceFilePath);
+      
+      // Load from file using Electron API
+      if (!window.electronAPI || !window.electronAPI.readSingleConversation) {
+        throw new Error('Electron API not available');
+      }
+      
+      const result = await window.electronAPI.readSingleConversation(sourceFilePath, id);
+      console.log('📖 File read result:', result);
+      
+      if (!result.success || !result.found) {
+        throw new Error('Conversation not found in file');
+      }
+      
+      const conversationData = result.data;
+      
+      // Extract messages
+      let messages: Message[] = [];
+      if (conversationData.mapping) {
+        messages = extractMessagesFromMapping(conversationData.mapping);
+      } else if (conversationData.messages) {
+        messages = conversationData.messages;
+      }
+      
+      console.log('💬 Extracted messages count:', messages.length);
+      
+      setMessages(messages);
+      setDisplayedMessages(messages.slice(0, messageLimit));
+      
+      // Cache the messages
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify({
+          messages,
+          timestamp: Date.now()
+        }));
+      } catch (error) {
+        console.warn('Failed to cache messages:', error);
+      }
+      
+    } catch (error) {
+      console.error('Error loading messages:', error);
+      setError('Failed to load messages');
+    }
+  }, [id, currentSourceFile, messageLimit]);
 
-  // Clean up old localStorage cache entries
-  const cleanupOldCache = () => {
+  // Memoize the cleanup function
+  const cleanupOldCache = useCallback(() => {
     try {
       const now = Date.now();
       const maxAge = 24 * 60 * 60 * 1000; // 24 hours
@@ -73,7 +140,71 @@ const ConversationViewer: React.FC = () => {
     } catch (error) {
       console.warn('Failed to cleanup cache:', error);
     }
-  };
+  }, []);
+
+  // Load selected conversations from permanent storage on mount - only run once
+  useEffect(() => {
+    const loadFromStorage = async () => {
+      try {
+        console.log('🔄 Loading selected conversations from storage...');
+        const result = await loadSelectedConversationsFromStorage();
+        console.log('✅ Loaded selected conversations result:', result);
+        console.log('📋 Selected conversations after loading:', storeSelectedConversations);
+      } catch (error) {
+        console.warn('Failed to load selected conversations from storage:', error);
+      }
+    };
+    loadFromStorage();
+    
+    // Clean up old cache entries
+    cleanupOldCache();
+  }, []); // Empty dependency array - only run once on mount
+
+  // Load conversation and messages - only run when id changes
+  useEffect(() => {
+    const loadConversation = async () => {
+      if (!id) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        
+        console.log('🔍 Loading conversation with ID:', id);
+        console.log('📁 Available conversations in store:', conversations);
+        console.log('🎯 Selected conversations in store:', storeSelectedConversations);
+        console.log('📂 Current source file in store:', currentSourceFile);
+        
+        // Get conversation from store
+        const conversation = getConversationById(id);
+        console.log('✅ Found conversation:', conversation);
+        
+        if (!conversation) {
+          setError('Conversation not found');
+          return;
+        }
+        
+        setCurrentConversation(conversation);
+        
+        // Load messages
+        await loadMessages(conversation);
+        
+      } catch (error) {
+        console.error('Error loading conversation:', error);
+        setError('Failed to load conversation');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadConversation();
+  }, [id]); // Only depend on id, not on functions that change every render
+
+  // Update displayed messages when messageLimit changes
+  useEffect(() => {
+    if (messages.length > 0) {
+      setDisplayedMessages(messages.slice(0, messageLimit));
+    }
+  }, [messageLimit, messages]);
 
   // Helper function to extract messages from conversation mapping
   const extractMessagesFromMapping = (mapping: Record<string, any>): Message[] => {
@@ -98,16 +229,15 @@ const ConversationViewer: React.FC = () => {
       messageEntries.forEach(([id, msg], index) => {
         if (msg.message) {
           // Fix: Get content from parts array directly, not from .text property
-          const content = msg.message.content?.parts?.[0] || '';
-          const role = msg.message.author?.role || 'user';
-          const createTime = msg.message.create_time || Date.now() / 1000;
-          
-          messages.push({
-            id,
-            role: role as 'user' | 'assistant' | 'system',
-            content,
-            create_time: createTime
-          });
+          const content = msg.message.content.parts[0];
+          if (content && typeof content === 'string' && content.trim() !== '') {
+            messages.push({
+              id: id,
+              role: msg.message.author.role,
+              content: content,
+              create_time: msg.message.create_time || Date.now() / 1000
+            });
+          }
         }
       });
       
@@ -118,184 +248,16 @@ const ConversationViewer: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (id) {
-      const loadData = async () => {
-        await loadConversation();
-        await loadMessages();
-      };
-      loadData();
-    }
-  }, [id, conversations, selectedConversations, storeSelectedConversations, currentSourceFile]);
-
-  // Handle lazy loading of messages
-  useEffect(() => {
-    if (messages.length > 0) {
-      const limit = showAllMessages ? messages.length : Math.min(messageLimit, messages.length);
-      setDisplayedMessages(messages.slice(0, limit));
-    }
-  }, [messages, messageLimit, showAllMessages]);
-
-  const loadConversation = async () => {
-    try {
-      if (!id) return;
-      
-      // First try to get from conversation store
-      let found = getConversationById(id);
-      
-      // If not found there, check store selected conversations
-      if (!found && storeSelectedConversations.length > 0) {
-        const storeConversation = storeSelectedConversations.find(conv => conv.id === id);
-        if (storeConversation && storeConversation.sourceFilePath) {
-          // Load the conversation data from the source file using the new method
-          try {
-            // Use the new single conversation reader
-            if (window.electronAPI && window.electronAPI.readSingleConversation) {
-              const result = await window.electronAPI.readSingleConversation(storeConversation.sourceFilePath, id);
-              
-              if (result.success && result.found && result.data) {
-                const rawConversation = result.data;
-                
-                // Convert raw conversation to expected format
-                found = {
-                  id: rawConversation.conversation_id || rawConversation.id || id,
-                  title: rawConversation.title || 'Untitled Conversation',
-                  modelVersion: rawConversation.model || 'Unknown',
-                  conversationLength: rawConversation.mapping ? Object.keys(rawConversation.mapping).length * 100 : 0,
-                  createdAt: new Date((rawConversation.create_time || Date.now()) * 1000).toISOString(),
-                  messageCount: (() => {
-                    if (!rawConversation.mapping) return 0;
-                    const totalMessages = Object.keys(rawConversation.mapping).filter(key => 
-                      rawConversation.mapping[key].message
-                    ).length;
-                    const filteredMessages = Object.keys(rawConversation.mapping).filter(key => {
-                      const message = rawConversation.mapping[key].message;
-                      if (!message || !message.content || !message.content.parts || !Array.isArray(message.content.parts)) {
-                        return false;
-                      }
-                      const firstPart = message.content.parts[0];
-                      return firstPart && typeof firstPart === 'string' && firstPart.trim() !== '';
-                    }).length;
-                    return filteredMessages;
-                  })(),
-                  filePath: storeConversation.sourceFilePath
-                };
-              } else {
-                // Conversation not found in source file
-              }
-            } else {
-              // Single conversation read not available
-            }
-          } catch (fileError) {
-            console.warn('⚠️ Failed to load from source file:', fileError);
-          }
-        }
-      }
-      
-      // If still not found, check navigation store (fallback)
-      if (!found) {
-        const navConversation = selectedConversations.find(conv => conv.id === id);
-        if (navConversation) {
-          // Convert navigation store format to expected format
-          found = {
-            ...navConversation,
-            conversationLength: 0, // Default values for missing properties
-            createdAt: new Date().toISOString(),
-            messageCount: 0,
-            filePath: '',
-            modelVersion: 'Unknown'
-          };
-        }
-      }
-      
-      if (found) {
-        setCurrentConversation(found);
-        setLoading(false);
-      } else {
-        setError('Conversation not found');
-        setLoading(false);
-      }
-    } catch (err) {
-      console.error('❌ Error loading conversation:', err);
-      setError('Failed to load conversation');
-      setLoading(false);
-    }
-  };
-
-  const loadMessages = async () => {
-    try {
-      if (!id) return;
-      
-      // Try to load messages from the source file first (most reliable)
-      const storeConversation = storeSelectedConversations.find(conv => conv.id === id);
-      if (storeConversation && storeConversation.sourceFilePath) {
-        try {
-          if (window.electronAPI && window.electronAPI.readSingleConversation) {
-            const result = await window.electronAPI.readSingleConversation(storeConversation.sourceFilePath, id);
-            
-            if (result.success && result.found && result.data && result.data.mapping) {
-              const messages = extractMessagesFromMapping(result.data.mapping);
-              setMessages(messages);
-              
-              // Cache messages in localStorage for faster subsequent loads
-              try {
-                localStorage.setItem(`conversation_${id}`, JSON.stringify({
-                  messages,
-                  timestamp: Date.now(),
-                  sourceFile: storeConversation.sourceFilePath
-                }));
-              } catch (cacheError) {
-                console.warn('Failed to cache messages:', cacheError);
-              }
-              return;
-            }
-          }
-        } catch (fileError) {
-          console.warn('⚠️ Failed to load messages from source file:', fileError);
-        }
-      }
-      
-      // Fallback: try to load from localStorage cache
-      try {
-        const savedData = localStorage.getItem(`conversation_${id}`);
-        if (savedData) {
-          const data = JSON.parse(savedData);
-          // Check if cache is still valid (same source file)
-          if (data.sourceFile === currentSourceFile && data.messages) {
-            setMessages(data.messages);
-            return;
-          }
-        }
-      } catch (cacheError) {
-        console.warn('Failed to load from cache:', cacheError);
-      }
-      
-      // Last resort: try to extract from current conversation
-      if (currentConversation && currentConversation.mapping) {
-        const extractedMessages = readJsonFile(currentConversation);
-        setMessages(extractedMessages);
-      } else {
-        setMessages([]);
-      }
-    } catch (err) {
-      console.error('❌ Error in loadMessages:', err);
-      setMessages([]);
-    }
-  };
-
+  // Get survey completion status
   const getSurveyCompletionStatus = () => {
-    if (!id) return { completed: 0, total: 3, positions: [] };
+    if (!id) return { completed: 0, total: 3 };
     
-    const positions = ['beginning', 'turn6', 'end'] as const;
     const conversationResponses = surveyResponses.filter((r: any) => r.conversationId === id);
-    const completed = positions.filter(pos => 
-      conversationResponses.some((r: any) => r.position === pos)
-    );
+    const completedPositions = new Set(conversationResponses.map((r: any) => r.position));
     
     return {
-      completed: completed.length,
-      total: positions.length,
-      positions: completed
+      completed: completedPositions.size,
+      total: 3
     };
   };
 
@@ -334,7 +296,7 @@ const ConversationViewer: React.FC = () => {
     // Clear cache and reload messages
     try {
       localStorage.removeItem(`conversation_${id}`);
-      await loadMessages();
+      await loadMessages(currentConversation);
     } catch (error) {
       console.error('Failed to refresh messages:', error);
     }
@@ -373,45 +335,46 @@ const ConversationViewer: React.FC = () => {
   const surveyStatus = getSurveyCompletionStatus();
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={handleBackToLabeling}
-            className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-          >
-            ← Back to Labeling
-          </button>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">{currentConversation.title}</h1>
-            <p className="text-muted-foreground mt-2">
-              Conversation details and analysis
-            </p>
+    <div className="flex h-screen bg-background conversation-viewer">
+      {/* Main Content - 80% width */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-border bg-white">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={handleBackToLabeling}
+              className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            >
+              ← Back to Labeling
+            </button>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">{currentConversation.title}</h1>
+              <p className="text-muted-foreground mt-2">
+                Conversation details and analysis
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            {/* Survey Link */}
+            <Link 
+              to={`/survey?conversationId=${id}`}
+              className="btn-primary"
+            >
+              {surveyStatus.completed > 0 ? 'Continue Survey' : 'Start Survey'}
+            </Link>
+            {/* AI Analysis Link */}
+            <Link 
+              to="/ai-analysis"
+              className="btn-secondary"
+            >
+              AI Analysis
+            </Link>
           </div>
         </div>
-        
-        <div className="flex items-center space-x-2">
-          {/* Survey Link */}
-          <Link 
-            to={`/survey?conversationId=${id}`}
-            className="btn-primary"
-          >
-            {surveyStatus.completed > 0 ? 'Continue Survey' : 'Start Survey'}
-          </Link>
-          {/* AI Analysis Link */}
-          <Link 
-            to="/ai-analysis"
-            className="btn-secondary"
-          >
-            AI Analysis
-          </Link>
-        </div>
-      </div>
 
-      {/* Conversation Metadata */}
-      <div className="card">
-        <div className="card-content">
+        {/* Conversation Metadata */}
+        <div className="p-6 bg-white border-b border-border">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <div className="text-sm text-muted-foreground">Model</div>
@@ -430,81 +393,10 @@ const ConversationViewer: React.FC = () => {
               <div className="font-medium">{new Date(currentConversation.createdAt).toLocaleDateString()}</div>
             </div>
           </div>
-          
-          {/* Performance Metrics */}
-          {/* Removed performance metrics as per edit hint */}
         </div>
-      </div>
 
-      {/* Survey Progress */}
-      <div className="card">
-        <div className="card-content">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-foreground">Survey Progress</h3>
-            <div className="text-sm text-muted-foreground">
-              {surveyStatus.completed}/{surveyStatus.total} positions completed
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-2">
-            {['beginning', 'turn6', 'end'].map((position) => {
-              const isCompleted = surveyResponses.some((r: any) => r.position === position && r.conversationId === id);
-              const positionLabel = {
-                beginning: 'Beginning',
-                turn6: 'Turn 6',
-                end: 'End'
-              }[position];
-              
-              return (
-                <div
-                  key={position}
-                  className={`p-3 rounded-lg border-2 text-center ${
-                    isCompleted
-                      ? 'border-green-200 bg-green-50 text-green-800'
-                      : 'border-gray-200 bg-gray-50 text-gray-600'
-                  }`}
-                >
-                  <div className="font-medium">{positionLabel}</div>
-                  <div className="text-xs">
-                    {isCompleted ? 'Completed' : 'Pending'}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          
-          {surveyStatus.completed > 0 && (
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="text-sm text-blue-800">
-                <strong>Survey Progress:</strong> You've completed {surveyStatus.completed} out of {surveyStatus.total} positions. 
-                {surveyStatus.completed < surveyStatus.total ? ' Continue to complete all positions.' : ' All positions completed!'}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Messages */}
-      <div className="card">
-        <div className="card-content">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-foreground">Conversation Messages</h3>
-            {messages.length > 0 && (
-              <div className="flex items-center gap-4">
-                <div className="text-sm text-muted-foreground">
-                  Showing {displayedMessages.length} of {messages.length} messages
-                </div>
-                <button
-                  onClick={handleRefreshMessages}
-                  className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
-                  title="Refresh messages from source"
-                >
-                  ↻ Refresh
-                </button>
-              </div>
-            )}
-          </div>
-          
+        {/* Messages Container - Scrollable */}
+        <div className="flex-1 overflow-y-auto p-6 messages-container">
           {!Array.isArray(messages) || messages.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               {!Array.isArray(messages) ? 'Error: Messages not loaded properly' : 'No messages found in this conversation'}
@@ -565,32 +457,11 @@ const ConversationViewer: React.FC = () => {
         </div>
       </div>
 
-      {/* File Optimization Recommendations */}
-      {/* Removed performance metrics as per edit hint */}
-
-      {/* Action Buttons */}
-      <div className="flex justify-center space-x-4">
-        <button
-          onClick={handleBackToLabeling}
-          className="btn-outline"
-        >
-          ← Back to Labeling
-        </button>
-        
-        <Link 
-          to={`/survey?conversationId=${id}`}
-          className="btn-primary"
-        >
-          {surveyStatus.completed === 0 ? 'Start Survey' : 'Continue Survey'}
-        </Link>
-        
-        <Link 
-          to="/export"
-          className="btn-outline"
-        >
-          Export Data
-        </Link>
-      </div>
+      {/* Survey Sidebar - 20% width */}
+      <SurveySidebar 
+        conversationId={id || ''}
+        messages={messages}
+      />
     </div>
   );
 };

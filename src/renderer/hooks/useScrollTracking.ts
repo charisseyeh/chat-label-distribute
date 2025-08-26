@@ -22,6 +22,13 @@ export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
   } = options;
 
   const trackerRef = useRef<ScrollTracker | null>(null);
+  const callbacksRef = useRef({ onTurn6Reached, onEndReached });
+  
+  // Update callbacks ref when they change
+  useEffect(() => {
+    callbacksRef.current = { onTurn6Reached, onEndReached };
+  }, [onTurn6Reached, onEndReached]);
+
   const [state, setState] = useState<ScrollTrackingState>({
     turn6Reached: false,
     endReached: false,
@@ -36,23 +43,23 @@ export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
 
     trackerRef.current = createScrollTracker(trackingOptions);
 
-    // Register callbacks
-    if (onTurn6Reached) {
+    // Register callbacks using ref to avoid dependency issues
+    if (callbacksRef.current.onTurn6Reached) {
       trackerRef.current.onTurn6Reached(() => {
         setState(prev => ({ ...prev, turn6Reached: true }));
-        onTurn6Reached();
+        callbacksRef.current.onTurn6Reached?.();
       });
     }
 
-    if (onEndReached) {
+    if (callbacksRef.current.onEndReached) {
       trackerRef.current.onEndReached(() => {
         setState(prev => ({ ...prev, endReached: true }));
-        onEndReached();
+        callbacksRef.current.onEndReached?.();
       });
     }
 
     return trackerRef.current;
-  }, [trackingOptions, onTurn6Reached, onEndReached]);
+  }, [trackingOptions]); // Only depend on trackingOptions, not callbacks
 
   // Start tracking
   const startTracking = useCallback(() => {
@@ -64,7 +71,7 @@ export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
       trackerRef.current.startTracking();
       setState(prev => ({ ...prev, isTracking: true }));
     }
-  }, [createTracker]);
+  }, []); // No dependencies needed since we use refs
 
   // Stop tracking
   const stopTracking = useCallback(() => {
@@ -134,14 +141,14 @@ export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
         trackerRef.current = null;
       }
     };
-  }, [autoStart, createTracker]);
+  }, [autoStart]); // Remove createTracker dependency
 
   // Auto-start tracking when tracker is created
   useEffect(() => {
     if (trackerRef.current && autoStart) {
       startTracking();
     }
-  }, [autoStart, startTracking]);
+  }, [autoStart]); // Remove startTracking dependency
 
   return {
     // State

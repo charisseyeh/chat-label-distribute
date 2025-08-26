@@ -26,10 +26,15 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
-    strictPort: false,
+    port: 5173,
+    strictPort: true,
+    hmr: {
+      port: 5173,
+    },
   },
   optimizeDeps: {
     exclude: ['electron'],
+    force: true,
   },
+  clearScreen: false,
 });

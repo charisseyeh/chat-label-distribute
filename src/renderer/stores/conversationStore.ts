@@ -5,9 +5,11 @@ import { persist } from 'zustand/middleware';
 export interface ConversationData {
   id: string;
   title: string;
-  createTime: number;
+  createTime?: number;
+  createdAt?: string;
   messageCount: number;
   model?: string;
+  modelVersion?: string;
   conversationPreview?: string;
   aiRelevancy?: {
     category: 'relevant' | 'not-relevant';
@@ -174,8 +176,31 @@ export const useConversationStore = create<ConversationStore>()(
       setCurrentConversation: (conversation) => set({ currentConversation: conversation }),
 
       getConversationById: (id: string) => {
-        const { conversations } = get();
-        return conversations.find(c => c.id === id);
+        const { conversations, selectedConversations } = get();
+        
+        // First look in regular conversations
+        let found = conversations.find(c => c.id === id);
+        if (found) {
+          return found;
+        }
+        
+        // Then look in selected conversations
+        const selected = selectedConversations.find(c => c.id === id);
+        if (selected) {
+          // Convert SelectedConversation to Conversation format
+          const converted = {
+            id: selected.id,
+            title: selected.title,
+            modelVersion: 'Unknown',
+            conversationLength: 0,
+            createdAt: new Date().toISOString(),
+            messageCount: 0,
+            filePath: selected.sourceFilePath
+          };
+          return converted;
+        }
+        
+        return undefined;
       },
 
       // Selection management
@@ -218,6 +243,16 @@ export const useConversationStore = create<ConversationStore>()(
                 selectedConversations: result.data,
                 selectedConversationIds: result.data.map((conv: any) => conv.id)
               });
+              
+              // Also set the currentSourceFile if it's not already set
+              const { currentSourceFile } = get();
+              if (!currentSourceFile && result.data.length > 0) {
+                const firstConversation = result.data[0];
+                if (firstConversation.sourceFilePath) {
+                  set({ currentSourceFile: firstConversation.sourceFilePath });
+                }
+              }
+              
               return true;
             } else {
               set({ selectedConversations: [], selectedConversationIds: [] });

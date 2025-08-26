@@ -18,6 +18,8 @@ const Header: React.FC<HeaderProps> = ({ isSidebarOpen, onToggleSidebar }) => {
         return 'Label Conversations';
       case 'ai-comparisons':
         return 'AI Comparisons';
+      case 'survey-questions':
+        return 'Survey Questions';
       default:
         return 'Unknown Page';
     }
@@ -31,6 +33,8 @@ const Header: React.FC<HeaderProps> = ({ isSidebarOpen, onToggleSidebar }) => {
         return 'Label and categorize selected conversations';
       case 'ai-comparisons':
         return 'Compare AI model performance across conversations';
+      case 'survey-questions':
+        return 'Create and manage survey templates and questions';
       default:
         return 'Navigation and analysis tools';
     }

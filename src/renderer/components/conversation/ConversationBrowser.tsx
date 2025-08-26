@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useConversationStore } from '../../stores/conversationStore';
 import { useNavigationStore } from '../../stores/navigationStore';
 import { ConversationService, ConversationData } from '../../services/conversationService';
@@ -12,6 +13,7 @@ import { FileList } from './FileList';
 
 const ConversationBrowser: React.FC = () => {
   const [aiRelevancyResults, setAiRelevancyResults] = useState<AIRelevancyResult[]>([]);
+  const navigate = useNavigate();
   
   // Use our new custom hooks
   const { loading, error, setError, loadConversationsFromFile, handleNewFileSelect } = useConversationLoader();
@@ -70,7 +72,10 @@ const ConversationBrowser: React.FC = () => {
     clearSelection();
   };
 
-  const formatDate = (timestamp: number) => {
+  const formatDate = (timestamp: number | string) => {
+    if (typeof timestamp === 'string') {
+      return new Date(timestamp).toLocaleDateString();
+    }
     return new Date(timestamp * 1000).toLocaleDateString();
   };
 
@@ -226,7 +231,7 @@ const ConversationBrowser: React.FC = () => {
                       )}
                     </div>
                     <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
-                      <span>Created: {formatDate(conversation.createTime)}</span>
+                      <span>Created: {formatDate(conversation.createTime || conversation.createdAt || Date.now())}</span>
                       <span>Messages: {conversation.messageCount}</span>
                       {conversation.model && <span>Model: {conversation.model}</span>}
                     </div>
@@ -283,7 +288,7 @@ const ConversationBrowser: React.FC = () => {
                     useNavigationStore.getState().setCurrentPage('label-conversations');
                     
                     // Navigate to labeling page
-                    window.history.pushState({}, '', '/label-conversations');
+                    navigate('/label-conversations');
                   }}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
                 >

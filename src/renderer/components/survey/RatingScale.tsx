@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface RatingScaleProps {
   scale: number;
@@ -13,7 +13,20 @@ const RatingScale: React.FC<RatingScaleProps> = ({
   currentRating,
   onRatingChange
 }) => {
+  const [hoveredRating, setHoveredRating] = useState<number | null>(null);
+
+  // Debug logging
+  useEffect(() => {
+    console.log('🔍 RatingScale Debug:', {
+      scale,
+      currentRating,
+      labels,
+      hoveredRating
+    });
+  }, [scale, currentRating, labels, hoveredRating]);
+
   const handleRatingClick = (rating: number) => {
+    console.log('🎯 Rating clicked:', rating, 'Current rating was:', currentRating);
     onRatingChange(rating);
   };
 
@@ -27,10 +40,11 @@ const RatingScale: React.FC<RatingScaleProps> = ({
   return (
     <div className="space-y-3">
       {/* Rating Buttons */}
-      <div className="flex items-center justify-center space-x-2">
+      <div className="flex items-center space-x-2">
         {Array.from({ length: scale }, (_, i) => {
           const rating = i + 1;
           const isSelected = currentRating === rating;
+          const isHovered = hoveredRating === rating;
           const label = labels[rating] || rating.toString();
 
           return (
@@ -39,13 +53,15 @@ const RatingScale: React.FC<RatingScaleProps> = ({
               <button
                 onClick={() => handleRatingClick(rating)}
                 onKeyPress={(e) => handleKeyPress(e, rating)}
+                onMouseEnter={() => setHoveredRating(rating)}
+                onMouseLeave={() => setHoveredRating(null)}
                 className={`
-                  w-9 h-9 rounded-full border-2 transition-all duration-200 ease-in-out
-                  flex items-center justify-center text-sm font-medium
+                  w-7 h-7 rounded-full border-2 transition-all duration-200 ease-in-out
+                  flex items-center justify-center text-xs font-medium
                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
                   ${isSelected
-                    ? 'bg-blue-600 border-blue-600 text-white shadow-lg scale-110'
-                    : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400 hover:scale-105'
+                    ? 'bg-blue-600 border-blue-600 text-white shadow-lg'
+                    : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400'
                   }
                 `}
                 aria-label={`Rate ${rating}: ${label}`}
@@ -54,40 +70,25 @@ const RatingScale: React.FC<RatingScaleProps> = ({
               >
                 {rating}
               </button>
-              
-              {/* Label */}
-              <div className="text-center">
-                <div className={`
-                  text-xs font-medium transition-colors duration-200
-                  ${isSelected ? 'text-blue-600' : 'text-gray-600'}
-                `}>
-                  {label}
-                </div>
-              </div>
             </div>
           );
         })}
       </div>
-
-      {/* Scale Range Indicator */}
-      <div className="text-center text-xs text-gray-500">
-        <span className="bg-gray-100 px-2 py-1 rounded">
-          {scale === 2 ? 'Binary Scale' : 
-           scale === 3 ? '3-Point Scale' :
-           scale === 5 ? '5-Point Scale' :
-           scale === 7 ? '7-Point Scale' :
-           scale === 10 ? '10-Point Scale' :
-           `${scale}-Point Scale`}
-        </span>
-      </div>
-
-      {/* Current Selection Summary */}
-      {currentRating > 0 && (
-        <div className="text-center">
-          <div className="inline-flex items-center space-x-2 bg-blue-50 text-blue-700 px-3 py-2 rounded-lg">
-            <span className="text-sm font-medium">Selected:</span>
-            <span className="font-bold">{currentRating}</span>
-            <span className="text-sm">({labels[currentRating]})</span>
+      
+      {/* Label - Show below the entire rating selector */}
+      {(hoveredRating || currentRating) ? (
+        <div className="text-left pt-2">
+          <div className={`
+            text-sm italic text-gray-600 transition-all duration-200
+            ${currentRating ? 'text-blue-600' : 'text-gray-600'}
+          `}>
+            {hoveredRating ? labels[hoveredRating] : labels[currentRating]}
+          </div>
+        </div>
+      ) : (
+        <div className="text-left pt-2">
+          <div className="text-sm italic text-gray-500">
+            Select a rating
           </div>
         </div>
       )}
