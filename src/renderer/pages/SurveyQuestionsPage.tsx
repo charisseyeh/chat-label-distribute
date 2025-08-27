@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSurveyQuestions } from '../hooks/useSurveyQuestions';
 import { SurveyTemplate, SurveyQuestion } from '../types/survey';
-import { QuestionCategory, QuestionScale } from '../types/question';
+import { QuestionScale } from '../types/question';
+import { ListItem, List, Chip } from '../components/common';
 
 const SurveyQuestionsPage: React.FC = () => {
   const { id: templateId } = useParams<{ id: string }>();
@@ -215,43 +216,22 @@ const SurveyQuestionsPage: React.FC = () => {
           {/* Question List */}
           <div className="space-y-4">
             {currentTemplate.questions.map((question, index) => (
-              <div
+              <ListItem
                 key={question.id}
-                className="p-4 border border-gray-200 rounded-lg bg-white"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <span className="text-sm text-gray-500">#{index + 1}</span>
-                      <span className="text-sm text-gray-500">•</span>
-                      <span className="text-sm text-gray-500">{question.scale}-point scale</span>
-                    </div>
-                    <h4 className="font-medium text-gray-900 mb-2">{question.text}</h4>
-                    <div className="text-sm text-gray-600">
-                      <strong>Labels:</strong> {Object.entries(question.labels)
-                        .map(([rating, label]) => `${rating}=${label}`)
-                        .join(', ')}
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2 ml-4">
-                    <button
-                      onClick={() => {
-                        setEditingQuestion(question);
-                        setIsEditingQuestion(true);
-                      }}
-                      className="px-3 py-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteQuestion(question.id)}
-                      className="px-3 py-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </div>
+                variant="double"
+                title={question.text}
+                metadata={[
+                  `#${index + 1} • ${question.scale}-point scale`,
+                  `Labels: ${Object.entries(question.labels)
+                    .map(([rating, label]) => `${rating}=${label}`)
+                    .join(', ')}`
+                ]}
+                onClick={() => {
+                  setEditingQuestion(question);
+                  setIsEditingQuestion(true);
+                }}
+                onDelete={() => handleDeleteQuestion(question.id)}
+              />
             ))}
           </div>
         </div>
@@ -296,7 +276,6 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onSave, onCan
   const [formData, setFormData] = useState({
     text: question?.text || '',
     scale: question?.scale || 5,
-    category: question?.category || 'custom' as QuestionCategory,
     labels: question?.labels || { 1: 'Very Poor', 2: 'Poor', 3: 'Average', 4: 'Good', 5: 'Excellent' }
   });
 
@@ -384,25 +363,6 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onSave, onCan
               <option value={5}>5-point scale</option>
               <option value={7}>7-point scale</option>
               <option value={10}>10-point scale</option>
-            </select>
-          </div>
-
-          {/* Category */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Category
-            </label>
-            <select
-              value={formData.category}
-              onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value as QuestionCategory }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="mood">Mood</option>
-              <option value="emotional">Emotional</option>
-              <option value="stress">Stress</option>
-              <option value="energy">Energy</option>
-              <option value="wellbeing">Wellbeing</option>
-              <option value="custom">Custom</option>
             </select>
           </div>
 

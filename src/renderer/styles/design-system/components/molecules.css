@@ -15,10 +15,17 @@
 }
 
 .list-item__title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
   font-weight: 600;
   color: #111827;
   margin-bottom: var(--spacing-xs);
   line-height: 1.4;
+}
+
+.list-item__title-text {
+  flex: 1;
 }
 
 .list-item__metadata {
@@ -44,8 +51,48 @@
 }
 
 .list-item__chip {
-  margin-left: auto;
-  align-self: flex-start;
+  flex-shrink: 0;
+}
+
+.list-item__delete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  flex-shrink: 0;
+  margin-left: var(--spacing-sm);
+}
+
+.list-item:hover .list-item__delete-btn {
+  opacity: 1;
+}
+
+.list-item__delete-btn:hover {
+  opacity: 1;
+}
+
+.list-item__delete-btn:focus {
+  opacity: 1;
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.list-item__delete-icon {
+  width: 16px;
+  height: 16px;
+  color: #ef4444;
+  transition: color 0.2s ease;
+}
+
+.list-item__delete-btn:hover .list-item__delete-icon {
+  color: #dc2626;
 }
 
 /* ===== MOLECULAR COMPONENT VARIANTS ===== */
@@ -84,9 +131,4 @@
 
 .list-item--double-chip .list-item__metadata {
   composes: list-item__metadata--double;
-}
-
-.list-item--double-chip .list-item__chip {
-  margin-left: auto;
-  align-self: flex-start;
 }

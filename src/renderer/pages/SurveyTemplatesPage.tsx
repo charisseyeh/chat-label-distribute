@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSurveyQuestions } from '../hooks/useSurveyQuestions';
 import { SurveyTemplate } from '../types/survey';
+import { List, ListItem } from '../components/common';
+import { useNavigationStore } from '../stores/navigationStore';
 
 const SurveyTemplatesPage: React.FC = () => {
   const {
@@ -14,6 +16,7 @@ const SurveyTemplatesPage: React.FC = () => {
     clearError
   } = useSurveyQuestions();
 
+  const { currentTemplateId, setCurrentTemplateId } = useNavigationStore();
   const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
   const [newTemplateName, setNewTemplateName] = useState('');
   const navigate = useNavigate();
@@ -23,6 +26,13 @@ const SurveyTemplatesPage: React.FC = () => {
     initializeTemplate();
   }, [initializeTemplate]);
 
+  // Set current template ID if there's only one template and none is currently selected
+  useEffect(() => {
+    if (templates.length === 1 && !currentTemplateId) {
+      setCurrentTemplateId(templates[0].id);
+    }
+  }, [templates, currentTemplateId, setCurrentTemplateId]);
+
   // Handle template creation
   const handleCreateTemplate = async () => {
     if (!newTemplateName.trim()) return;
@@ -31,7 +41,8 @@ const SurveyTemplatesPage: React.FC = () => {
       const newTemplate = await createTemplate(newTemplateName.trim());
       setNewTemplateName('');
       setIsCreatingTemplate(false);
-      // Navigate to the new template
+      // Set as current template and navigate to it
+      setCurrentTemplateId(newTemplate.id);
       navigate(`/survey-template/${newTemplate.id}`);
     } catch (error) {
       console.error('Failed to create template:', error);
@@ -43,6 +54,10 @@ const SurveyTemplatesPage: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this template? This action cannot be undone.')) {
       try {
         await deleteTemplate(templateId);
+        // Clear current template ID if we deleted the active template
+        if (currentTemplateId === templateId) {
+          setCurrentTemplateId(null);
+        }
       } catch (error) {
         console.error('Failed to delete template:', error);
       }
@@ -51,8 +66,35 @@ const SurveyTemplatesPage: React.FC = () => {
 
   // Navigate to template
   const handleTemplateClick = (template: SurveyTemplate) => {
+    setCurrentTemplateId(template.id);
     navigate(`/survey-template/${template.id}`);
   };
+
+  // Prepare list items data for the design system
+  const listItems = templates.map((template) => {
+    const metadata = [
+      `${template.questions.length} questions • Created ${new Date(template.createdAt).toLocaleDateString()}`
+    ];
+
+    // Add updated date if different from creation date
+    if (template.updatedAt !== template.createdAt) {
+      metadata[0] += ` • Updated ${new Date(template.updatedAt).toLocaleDateString()}`;
+    }
+
+    const isCurrentlyUsing = currentTemplateId === template.id;
+
+    return {
+      title: template.name,
+      metadata,
+      chip: isCurrentlyUsing ? {
+        variant: 'currently-using' as const,
+        text: 'currently using'
+      } : undefined,
+      onClick: () => handleTemplateClick(template),
+      onDelete: () => handleDeleteTemplate(template.id),
+      selected: isCurrentlyUsing
+    };
+  });
 
   if (loading) {
     return (
@@ -129,69 +171,40 @@ const SurveyTemplatesPage: React.FC = () => {
         </div>
       )}
 
-      {/* Templates List */}
-      <div className="space-y-6">
-        {templates.length === 0 && !isCreatingTemplate ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600 mb-4">No survey templates found.</p>
+      {/* Templates List using Design System */}
+      {templates.length === 0 && !isCreatingTemplate ? (
+        <div className="text-center py-12">
+          <p className="text-gray-600 mb-4">No survey templates found.</p>
+          <button
+            onClick={() => setIsCreatingTemplate(true)}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Create Your First Template
+          </button>
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <List
+            variant="with-dividers"
+            listItemVariant="double-chip"
+            items={listItems}
+            className="bg-white"
+          />
+          
+          {/* Create New Template Button at bottom */}
+          <div className="p-4 bg-orange-50 border-t border-orange-200">
             <button
-              onClick={() => setIsCreatingTemplate(true)}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              onClick={() => {
+                setIsCreatingTemplate(true);
+                setNewTemplateName('');
+              }}
+              className="w-full text-center text-orange-700 hover:text-orange-800 font-medium py-3 px-4 rounded-lg transition-colors"
             >
-              Create Your First Template
+              + Create new template
             </button>
           </div>
-        ) : (
-          templates.map((template) => (
-            <div
-              key={template.id}
-              className="p-6 border border-gray-200 rounded-lg bg-white hover:border-blue-300 hover:shadow-md transition-all cursor-pointer"
-              onClick={() => handleTemplateClick(template)}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{template.name}</h3>
-                  <div className="flex items-center space-x-4 text-sm text-gray-600">
-                    <span>{template.questions.length} questions</span>
-                    <span>•</span>
-                    <span>Created {new Date(template.createdAt).toLocaleDateString()}</span>
-                    {template.updatedAt !== template.createdAt && (
-                      <>
-                        <span>•</span>
-                        <span>Updated {new Date(template.updatedAt).toLocaleDateString()}</span>
-                      </>
-                    )}
-                  </div>
-                  <div className="mt-3">
-                    <span className="text-sm text-gray-500">Categories: </span>
-                    {Array.from(new Set(template.questions.map(q => q.category))).join(', ')}
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2 ml-6">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleTemplateClick(template);
-                    }}
-                    className="px-4 py-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
-                  >
-                    Edit Template
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteTemplate(template.id);
-                    }}
-                    className="px-4 py-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

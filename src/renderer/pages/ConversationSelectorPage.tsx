@@ -9,6 +9,7 @@ import { useConversationLoader } from '../hooks/useConversationLoader';
 import { useFileManager } from '../hooks/useFileManager';
 import { FileList } from '../components/conversation/FileList';
 import { TwoPanelLayout } from '../components/common';
+import { ListItem, List } from '../components/common';
 
 const ConversationSelectorPage: React.FC = () => {
   const [aiRelevancyResults, setAiRelevancyResults] = useState<AIRelevancyResult[]>([]);
@@ -69,6 +70,11 @@ const ConversationSelectorPage: React.FC = () => {
 
   const handleDeselectAll = () => {
     clearSelection();
+  };
+
+  const handleRemoveConversation = (conversationId: string) => {
+    // Remove from selected conversations
+    toggleConversationSelection(conversationId);
   };
 
   const formatDate = (timestamp: number | string) => {
@@ -259,54 +265,40 @@ const ConversationSelectorPage: React.FC = () => {
           )}
 
           <div className="flex-1 overflow-y-auto">
+            <List
+              variant="without-dividers"
+              listItemVariant="check-chip-single"
+              items={filteredConversations.map((conversation) => ({
+                title: conversation.title || 'Untitled Conversation',
+                metadata: `Created: ${formatDate(conversation.createTime || conversation.createdAt || Date.now())} • Messages: ${conversation.messageCount}${conversation.model ? ` • Model: ${conversation.model}` : ''}`,
+                chip: conversation.aiRelevancy ? {
+                  variant: conversation.aiRelevancy.category === 'relevant' ? 'relevant' : 'not-relevant',
+                  text: conversation.aiRelevancy.category === 'relevant' ? '✓ Relevant' : '✗ Not Relevant'
+                } : undefined,
+                checked: selectedConversationIds.includes(conversation.id),
+                onCheckChange: () => toggleConversationSelection(conversation.id),
+                onDelete: () => handleRemoveConversation(conversation.id),
+                selected: selectedConversationIds.includes(conversation.id),
+                onClick: () => toggleConversationSelection(conversation.id)
+              }))}
+            />
+            
+            {/* AI Analysis Explanations */}
             {filteredConversations.map((conversation) => (
-              <div
-                key={conversation.id}
-                className={`p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                  selectedConversationIds.includes(conversation.id) ? 'bg-blue-50' : ''
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedConversationIds.includes(conversation.id)}
-                    onChange={() => toggleConversationSelection(conversation.id)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-medium text-gray-900 truncate">
-                        {conversation.title || 'Untitled Conversation'}
-                      </h4>
-                      {conversation.aiRelevancy && (
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          conversation.aiRelevancy.category === 'relevant' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {conversation.aiRelevancy.category === 'relevant' ? '✓ Relevant' : '✗ Not Relevant'}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
-                      <span>Created: {formatDate(conversation.createTime || conversation.createdAt || Date.now())}</span>
-                      <span>Messages: {conversation.messageCount}</span>
-                      {conversation.model && <span>Model: {conversation.model}</span>}
-                    </div>
-                    {conversation.aiRelevancy?.explanation && (
-                      <div className="mt-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
-                        <strong>AI Analysis:</strong> {conversation.aiRelevancy.explanation}
-                      </div>
-                    )}
-                    {conversation.conversationPreview && (
-                      <div className="mt-2 text-xs text-gray-600 bg-blue-50 p-2 rounded">
-                        <strong>Preview:</strong> {conversation.conversationPreview}
-                      </div>
-                    )}
-                  </div>
+              conversation.aiRelevancy?.explanation && (
+                <div key={`explanation-${conversation.id}`} className="px-4 py-2 text-xs text-gray-600 bg-gray-50 border-b border-gray-100">
+                  <strong>AI Analysis for {conversation.title}:</strong> {conversation.aiRelevancy.explanation}
                 </div>
-              </div>
+              )
+            ))}
+            
+            {/* Conversation Previews */}
+            {filteredConversations.map((conversation) => (
+              conversation.conversationPreview && (
+                <div key={`preview-${conversation.id}`} className="px-4 py-2 text-xs text-gray-600 bg-blue-50 border-b border-blue-100">
+                  <strong>Preview for {conversation.title}:</strong> {conversation.conversationPreview}
+                </div>
+              )
             ))}
           </div>
         </div>
