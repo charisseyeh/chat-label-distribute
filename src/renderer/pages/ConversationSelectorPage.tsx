@@ -21,6 +21,7 @@ const ConversationSelectorPage: React.FC = () => {
   
   const { 
     selectedConversationIds, 
+    selectedConversations,
     toggleConversationSelection, 
     setSelectedConversations,
     clearSelection,
@@ -72,10 +73,7 @@ const ConversationSelectorPage: React.FC = () => {
     clearSelection();
   };
 
-  const handleRemoveConversation = (conversationId: string) => {
-    // Remove from selected conversations
-    toggleConversationSelection(conversationId);
-  };
+
 
   const formatDate = (timestamp: number | string) => {
     if (typeof timestamp === 'string') {
@@ -96,6 +94,22 @@ const ConversationSelectorPage: React.FC = () => {
     <TwoPanelLayout
       sidebarContent={
         <>
+          {/* Show permanently stored selected conversations */}
+          {selectedConversations.length > 0 && (
+            <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
+              <h3 className="text-sm font-medium text-gray-900 mb-3">Permanently Stored Conversations</h3>
+              <div className="space-y-2">
+                {selectedConversations.map((conv) => (
+                  <div key={conv.id} className="text-xs text-gray-600 p-2 bg-gray-50 rounded">
+                    {conv.title}
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 text-xs text-gray-500">
+                These conversations are permanently saved and will appear in the labeling page.
+              </div>
+            </div>
+          )}
           
           {currentSourceFile && loadedConversations.length > 0 ? (
             <AIFilteringPanel
@@ -189,7 +203,7 @@ const ConversationSelectorPage: React.FC = () => {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
-                Conversations ({filteredConversations.length} of {loadedConversations.length})
+                Conversations ({filteredConversations.length} available, {selectedConversations.length} permanently stored)
               </h2>
               {aiRelevancyResults.length > 0 && (
                 <div className="text-sm text-green-600 mt-1">
@@ -214,12 +228,33 @@ const ConversationSelectorPage: React.FC = () => {
                 <button
                   onClick={async () => {
                     try {
-                      // Save selected conversations to storage
-                      await useConversationStore.getState().saveSelectedConversationsToStorage();
+                      console.log('🚀 "Go to Labeling" button clicked!');
+                      console.log('🚀 Current temporary selection count:', selectedConversationIds.length);
+                      console.log('🚀 Current permanently stored count:', selectedConversations.length);
+                      
+                      // First commit the temporary selection to selectedConversations
+                      console.log('🚀 Calling commitTemporarySelection...');
+                      useConversationStore.getState().commitTemporarySelection();
+                      
+                      // Then save selected conversations to permanent storage
+                      console.log('🚀 Calling saveSelectedConversationsToStorage...');
+                      const saveResult = await useConversationStore.getState().saveSelectedConversationsToStorage();
+                      console.log('🚀 Save result:', saveResult);
+                      
+                      if (!saveResult) {
+                        console.error('❌ Failed to save conversations to storage');
+                        return; // Don't navigate if save failed
+                      }
+                      
+                      // Add a small delay so user can see the sidebar update
+                      console.log('🚀 Waiting 1 second for sidebar to update...');
+                      await new Promise(resolve => setTimeout(resolve, 1000));
+                      
                       // Navigate to labeling page
+                      console.log('🚀 Navigation to labeling page...');
                       navigate('/label-conversations');
                     } catch (error) {
-                      console.error('Failed to save selected conversations:', error);
+                      console.error('❌ Failed to save selected conversations:', error);
                     }
                   }}
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
@@ -235,7 +270,8 @@ const ConversationSelectorPage: React.FC = () => {
             <div className="flex gap-4">
               <span>Total Loaded: {loadedConversations.length}</span>
               <span>Currently Filtered: {filteredConversations.length}</span>
-              <span>Selected: {selectedConversationIds.length}</span>
+              <span>Temporary Selection: {selectedConversationIds.length}</span>
+              <span>Permanently Stored: {selectedConversations.length}</span>
             </div>
           </div>
 
@@ -265,22 +301,34 @@ const ConversationSelectorPage: React.FC = () => {
           )}
 
           <div className="flex-1 overflow-y-auto">
+            {/* Show all conversations with proper checkbox functionality */}
             <List
               variant="without-dividers"
               listItemVariant="check-chip-single"
-              items={filteredConversations.map((conversation) => ({
-                title: conversation.title || 'Untitled Conversation',
-                metadata: `Created: ${formatDate(conversation.createTime || conversation.createdAt || Date.now())} • Messages: ${conversation.messageCount}${conversation.model ? ` • Model: ${conversation.model}` : ''}`,
-                chip: conversation.aiRelevancy ? {
-                  variant: conversation.aiRelevancy.category === 'relevant' ? 'relevant' : 'not-relevant',
-                  text: conversation.aiRelevancy.category === 'relevant' ? '✓ Relevant' : '✗ Not Relevant'
-                } : undefined,
-                checked: selectedConversationIds.includes(conversation.id),
-                onCheckChange: () => toggleConversationSelection(conversation.id),
-                onDelete: () => handleRemoveConversation(conversation.id),
-                selected: selectedConversationIds.includes(conversation.id),
-                onClick: () => toggleConversationSelection(conversation.id)
-              }))}
+              items={filteredConversations.map((conversation) => {
+                const isPermanentlyStored = selectedConversations.some(selected => selected.id === conversation.id);
+                const isCurrentlySelected = selectedConversationIds.includes(conversation.id);
+                
+                return {
+                  title: conversation.title || 'Untitled Conversation',
+                  metadata: isPermanentlyStored 
+                    ? `Permanently stored • Source: ${conversation.sourceFilePath?.split('/').pop() || 'Unknown file'}`
+                    : `Created: ${formatDate(conversation.createTime || conversation.createdAt || Date.now())} • Messages: ${conversation.messageCount}${conversation.model ? ` • Model: ${conversation.model}` : ''}`,
+                  chip: isPermanentlyStored 
+                    ? {
+                        variant: 'selected',
+                        text: '✓ Stored'
+                      }
+                    : conversation.aiRelevancy ? {
+                        variant: conversation.aiRelevancy.category === 'relevant' ? 'relevant' : 'not-relevant',
+                        text: conversation.aiRelevancy.category === 'relevant' ? '✓ Relevant' : '✗ Not Relevant'
+                      } : undefined,
+                  checked: isPermanentlyStored || isCurrentlySelected,
+                  onCheckChange: isPermanentlyStored ? () => {} : () => toggleConversationSelection(conversation.id),
+                  selected: isPermanentlyStored || isCurrentlySelected,
+                  onClick: isPermanentlyStored ? () => {} : () => toggleConversationSelection(conversation.id)
+                };
+              })}
             />
             
             {/* AI Analysis Explanations */}

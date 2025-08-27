@@ -30,8 +30,6 @@ export class AIService {
 
   async generateSurveyResponses(prompt: string): Promise<string> {
     try {
-      console.log('🤖 Calling OpenAI API via IPC...');
-      
       // Use the exposed electronAPI method from preload script
       const response = await (window as any).electronAPI.callOpenAIAPI({
         apiKey: this.config.apiKey,
@@ -83,18 +81,6 @@ export class AIService {
     try {
       const prompt = this.buildAnalysisPrompt(sample);
       
-      // Debug logging
-      console.log('🔍 AI Service Debug:');
-      console.log('🔑 API Key type:', typeof this.config.apiKey);
-      console.log('🔑 API Key value:', this.config.apiKey);
-      console.log('🔑 API Key length:', this.config.apiKey?.length);
-      console.log('🤖 Model:', this.config.model);
-      console.log('📝 Prompt length:', prompt.length);
-      console.log('💬 Conversation Title:', sample.title);
-      console.log('💬 Conversation Preview:', sample.conversationPreview);
-      console.log('💬 First Message:', sample.firstMessage);
-      console.log('📋 Full Prompt:', prompt);
-      
       // Extract API key - handle both string and object cases
       let apiKey: string;
       let model: string;
@@ -113,9 +99,6 @@ export class AIService {
       if (!apiKey || typeof apiKey !== 'string') {
         throw new Error(`Invalid API key. Type: ${typeof apiKey}, Value: ${apiKey}`);
       }
-      
-      console.log('🔑 Extracted API Key:', apiKey.substring(0, 20) + '...');
-      console.log('🔑 Extracted Model:', model);
       
       const response = await (window as any).electronAPI.callOpenAIAPI({
         apiKey: apiKey,

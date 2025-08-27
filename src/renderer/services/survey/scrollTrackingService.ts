@@ -145,7 +145,6 @@ export class ScrollTrackingService implements ScrollTracker {
    * Reset tracking state
    */
   reset(): void {
-    console.log('🔄 ScrollTrackingService: Resetting tracking state');
     this.turn6Reached = false;
     this.endReached = false;
     this.currentMessageIndex = 0;

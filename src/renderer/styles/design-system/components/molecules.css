@@ -3,8 +3,8 @@
 /* ===== LIST ITEMS ===== */
 .list-item {
   display: flex;
-  align-items: flex-start;
-  gap: var(--spacing-sm);
+  align-items: center;
+  gap: var(--spacing-xs);
   padding: var(--spacing-md);
   width: 100%;
 }
@@ -16,16 +16,18 @@
 
 .list-item__title {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--spacing-sm);
   font-weight: 600;
   color: #111827;
   margin-bottom: var(--spacing-xs);
   line-height: 1.4;
+  flex-wrap: wrap;
 }
 
 .list-item__title-text {
-  flex: 1;
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .list-item__metadata {

@@ -58,7 +58,7 @@ export const ListItem: React.FC<ListItemProps> = ({
       <div className="list-item__content">
         <div className="list-item__title">
           <span className="list-item__title-text">{title}</span>
-          {hasChip && chip && (
+          {chip && (
             <Chip variant={chip.variant}>
               {chip.text}
             </Chip>

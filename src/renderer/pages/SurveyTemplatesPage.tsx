@@ -92,7 +92,7 @@ const SurveyTemplatesPage: React.FC = () => {
       } : undefined,
       onClick: () => handleTemplateClick(template),
       onDelete: () => handleDeleteTemplate(template.id),
-      selected: isCurrentlyUsing
+      selected: false // Don't highlight the currently using template with background color
     };
   });
 
@@ -106,12 +106,6 @@ const SurveyTemplatesPage: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Survey Templates</h1>
-        <p className="text-gray-600">
-          Create and manage survey question templates for psychological assessment of conversations.
-        </p>
-      </div>
 
       {/* Error Display */}
       {error && (
@@ -128,15 +122,6 @@ const SurveyTemplatesPage: React.FC = () => {
         </div>
       )}
 
-      {/* Create Template Button */}
-      <div className="mb-8">
-        <button
-          onClick={() => setIsCreatingTemplate(true)}
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Create New Template
-        </button>
-      </div>
 
       {/* Create Template Form */}
       {isCreatingTemplate && (
@@ -186,7 +171,7 @@ const SurveyTemplatesPage: React.FC = () => {
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <List
             variant="with-dividers"
-            listItemVariant="double-chip"
+            listItemVariant="double"
             items={listItems}
             className="bg-white"
           />

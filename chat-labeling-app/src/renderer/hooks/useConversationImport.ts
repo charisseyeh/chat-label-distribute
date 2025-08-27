@@ -12,11 +12,8 @@ export const useConversationImport = (onConversationAdded: (conversation: Conver
       setImporting(true);
       setImportError(null);
 
-      console.log('File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
-
       // Parse the file using the new parsing service
       const parsedConversations = await ConversationParser.parseConversationFile(file);
-      console.log(`Successfully parsed ${parsedConversations.length} conversation(s):`, parsedConversations);
       
       // Process and add each conversation
       for (const parsedConversation of parsedConversations) {
@@ -28,15 +25,6 @@ export const useConversationImport = (onConversationAdded: (conversation: Conver
         
         // Notify parent component
         onConversationAdded(legacyConversation);
-        
-        console.log(`Successfully imported conversation: ${legacyConversation.title}`);
-      }
-
-      // Show success message
-      if (parsedConversations.length === 1) {
-        console.log(`Successfully imported 1 conversation: ${parsedConversations[0].title}`);
-      } else {
-        console.log(`Successfully imported ${parsedConversations.length} conversations`);
       }
       
     } catch (err) {
@@ -101,7 +89,6 @@ export const useConversationImport = (onConversationAdded: (conversation: Conver
       // Notify parent component
       onConversationAdded(legacyConversation);
       
-      console.log('Successfully loaded test conversation:', legacyConversation.title);
     } catch (error) {
       console.error('Error creating test conversation:', error);
       setImportError('Failed to create test conversation');
@@ -112,8 +99,6 @@ export const useConversationImport = (onConversationAdded: (conversation: Conver
     try {
       setImporting(true);
       setImportError(null);
-      
-      console.log('Loading test file with ChatGPT format...');
       
       // Use inline test data instead of fetching from server
       const testConversationData = {
@@ -165,11 +150,9 @@ export const useConversationImport = (onConversationAdded: (conversation: Conver
       };
       
       const fileContent = JSON.stringify(testConversationData);
-      console.log('Test file content length:', fileContent.length);
       
       // Parse the conversation content using the new parser
       const parsedConversations = ConversationParser.parseConversationContent(fileContent);
-      console.log('Parsed test conversations:', parsedConversations);
       
       // Process and add each conversation
       for (const parsedConversation of parsedConversations) {
@@ -181,8 +164,6 @@ export const useConversationImport = (onConversationAdded: (conversation: Conver
         
         // Notify parent component
         onConversationAdded(legacyConversation);
-        
-        console.log(`Successfully loaded test conversation: ${legacyConversation.title}`);
       }
       
     } catch (err) {

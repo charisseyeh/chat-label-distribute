@@ -19,31 +19,34 @@ const Footer: React.FC<FooterProps> = ({ className = '' }) => {
 
   const handleGoToLabeling = async () => {
     try {
-      // Get the selected conversations with their file paths
-      const selectedConvs = selectedConversations.map(conv => ({
-        id: conv.id,
-        title: conv.title || 'Untitled Conversation',
-        sourceFilePath: currentSourceFile || ''
-      }));
+      console.log('🚀 Footer "Go to Labeling" button clicked!');
+      console.log('🚀 Current temporary selection count:', selectedConversationIds.length);
+      console.log('🚀 Current permanently stored count:', selectedConversations.length);
+      console.log('🚀 Temporary selection IDs:', selectedConversationIds);
       
-      // Store in conversation store for persistence
-      useConversationStore.getState().setSelectedConversationsWithFile(selectedConvs);
-      useConversationStore.getState().setCurrentSourceFile(currentSourceFile || '');
+      // First commit the temporary selection to selectedConversations
+      console.log('🚀 Calling commitTemporarySelection...');
+      useConversationStore.getState().commitTemporarySelection();
       
-      // Save to permanent storage
-      await useConversationStore.getState().saveSelectedConversationsToStorage();
+      // Then save selected conversations to permanent storage
+      console.log('🚀 Calling saveSelectedConversationsToStorage...');
+      const saveResult = await useConversationStore.getState().saveSelectedConversationsToStorage();
+      console.log('🚀 Save result:', saveResult);
       
-      // Also update navigation store for backward compatibility
-      setSelectedConversations(selectedConvs.map(conv => ({
-        id: conv.id,
-        title: conv.title
-      })));
-      setCurrentPage('label-conversations');
+      if (!saveResult) {
+        console.error('❌ Failed to save conversations to storage');
+        return; // Don't navigate if save failed
+      }
+      
+      // Add a small delay so user can see the sidebar update
+      console.log('🚀 Waiting 1 second for sidebar to update...');
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Navigate to labeling page
+      console.log('🚀 Navigation to labeling page...');
       navigate('/label-conversations');
     } catch (error) {
-      console.error('Failed to navigate to labeling:', error);
+      console.error('❌ Failed to save selected conversations:', error);
     }
   };
 

@@ -29,7 +29,6 @@ export class ConversationParser {
           throw new Error('File contains no conversations');
         }
         
-        console.log(`Parsing ${data.length} conversations from file`);
         return data.map((conversation, index) => 
           this.parseSingleConversation(conversation, `conversation_${index}`)
         );
@@ -37,7 +36,6 @@ export class ConversationParser {
       
       // Handle single conversation
       if (typeof data === 'object' && data !== null) {
-        console.log('Parsing single conversation from file');
         return [this.parseSingleConversation(data)];
       }
       

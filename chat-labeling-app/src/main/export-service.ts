@@ -10,7 +10,6 @@ export class ExportService {
   async generateExport(options: any): Promise<any> {
     try {
       // This will be implemented with actual export logic
-      console.log('Generating export with options:', options);
       
       // Placeholder response
       return {

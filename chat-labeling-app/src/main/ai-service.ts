@@ -6,7 +6,6 @@ export class AIService {
   async generateLabels(conversationId: string, position: string): Promise<any> {
     try {
       // This will be implemented with actual OpenAI API integration
-      console.log(`Generating AI labels for conversation ${conversationId} at position ${position}`);
       
       // Placeholder response
       return {

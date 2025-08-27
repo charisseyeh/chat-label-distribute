@@ -35,7 +35,6 @@ export class DatabaseManager {
       // Initialize default survey dimensions if they don't exist
       await this.initializeDefaultDimensions();
       
-      console.log('Database initialized successfully');
     } catch (error) {
       console.error('Failed to initialize database:', error);
       throw error;
@@ -320,7 +319,6 @@ export class DatabaseManager {
   async close(): Promise<void> {
     try {
       await this.prisma.$disconnect();
-      console.log('Database connection closed');
     } catch (error) {
       console.error('Error closing database connection:', error);
     }
@@ -333,7 +331,6 @@ export class DatabaseManager {
       await this.prisma.$executeRaw`DELETE FROM messages`;
       await this.prisma.$executeRaw`DELETE FROM conversations`;
       await this.prisma.$executeRaw`DELETE FROM export_history`;
-      console.log('Database reset successfully');
     } catch (error) {
       console.error('Failed to reset database:', error);
       throw error;

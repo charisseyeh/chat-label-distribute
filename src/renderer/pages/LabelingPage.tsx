@@ -154,7 +154,9 @@ const LabelingPage: React.FC = () => {
   useEffect(() => {
     const loadFromStorage = async () => {
       try {
+        console.log('🔄 LabelingPage: Loading selected conversations from storage on mount');
         const result = await loadSelectedConversationsFromStorage();
+        console.log('🔄 LabelingPage: Load result:', result);
       } catch (error) {
         console.warn('Failed to load selected conversations from storage:', error);
       }
@@ -165,8 +167,17 @@ const LabelingPage: React.FC = () => {
     cleanupOldCache();
   }, []); // Empty dependency array - only run once on mount
 
+  // Debug effect to see store state on mount
+  useEffect(() => {
+    console.log('🔍 LabelingPage: Component mounted - Store state:');
+    console.log('🔍 LabelingPage: - conversations:', conversations);
+    console.log('🔍 LabelingPage: - selectedConversations:', storeSelectedConversations);
+    console.log('🔍 LabelingPage: - currentSourceFile:', currentSourceFile);
+  }, []); // Empty dependency array - only run once on mount
+
   // Synchronize navigation store with conversation store when storeSelectedConversations change
   useEffect(() => {
+    console.log('🔄 LabelingPage: storeSelectedConversations changed:', storeSelectedConversations);
     if (storeSelectedConversations.length > 0) {
       setSelectedConversations(storeSelectedConversations.map(conv => ({
         id: conv.id,
@@ -189,8 +200,10 @@ const LabelingPage: React.FC = () => {
         
         // Get conversation from store
         const conversation = getConversationById(id);
-              console.log('🔍 LabelingPage: Looking for conversation with ID:', id);
-      console.log('🔍 LabelingPage: Found conversation:', conversation);
+        console.log('🔍 LabelingPage: Looking for conversation with ID:', id);
+        console.log('🔍 LabelingPage: Found conversation:', conversation);
+        console.log('🔍 LabelingPage: Store state - conversations:', conversations);
+        console.log('🔍 LabelingPage: Store state - selectedConversations:', storeSelectedConversations);
         
         if (!conversation) {
           console.error('❌ LabelingPage: Conversation not found for ID:', id);

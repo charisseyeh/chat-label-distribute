@@ -102,12 +102,6 @@ export const DateFilteringSection: React.FC<DateFilteringSectionProps> = ({
     }
 
     try {
-      console.log('Applying date filter:', {
-        startDate: options.customStartDate,
-        endDate: options.customEndDate,
-        totalOriginalConversations: originalConversations.length
-      });
-
       const filteredConversations = DateFilterService.filterByDateRanges(
         originalConversations,
         [], // No predefined ranges used
@@ -118,12 +112,6 @@ export const DateFilteringSection: React.FC<DateFilteringSectionProps> = ({
       
       // Apply message count filter to date-filtered results
       const finalFiltered = filteredConversations.filter(conv => conv.messageCount > 8);
-      
-      console.log('Filtered conversations:', {
-        dateFilteredCount: filteredConversations.length,
-        finalFilteredCount: finalFiltered.length,
-        sampleConversation: finalFiltered[0]
-      });
       
       onFilteredConversations(finalFiltered);
       setFilteredConversations(finalFiltered);

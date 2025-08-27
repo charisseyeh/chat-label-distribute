@@ -93,14 +93,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       removeFromStore(conversationId);
       
       // Save updated selection to permanent storage
-      await saveSelectedConversationsToStorage();
+      const saveResult = await saveSelectedConversationsToStorage();
+      
+      if (saveResult) {
+        // Success
+      } else {
+        console.error('❌ handleRemoveConversation: Failed to save after deletion');
+      }
       
       // If no conversations left and user is on labeling page, redirect to selection page
       if (selectedConversations.length === 1 && currentPage === 'label-conversations') {
         navigate('/select-conversations');
       }
     } catch (error) {
-      console.error('Failed to remove conversation:', error);
+      console.error('❌ handleRemoveConversation: Failed to remove conversation:', error);
     }
   };
 

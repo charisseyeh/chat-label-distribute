@@ -80,7 +80,6 @@ export class IPCHandlers {
   private extractConversationPreview(conversation: any): string {
     try {
       if (!conversation.mapping) {
-        console.log(`🔍 No mapping found for conversation: ${conversation.title}`);
         return 'No conversation content available';
       }
 
@@ -89,14 +88,10 @@ export class IPCHandlers {
       const messageEntries = Object.entries(conversation.mapping)
         .filter(([_, msg]: [string, any]) => {
           if (!msg.message || !msg.message.content || !msg.message.content.parts || !Array.isArray(msg.message.content.parts)) {
-            console.log(`🔍 Filtered out message in ${conversation.title}: missing content structure`);
             return false;
           }
           const firstPart = msg.message.content.parts[0];
           const isValid = firstPart && typeof firstPart === 'string' && firstPart.trim() !== '';
-          if (!isValid) {
-            console.log(`🔍 Filtered out message in ${conversation.title}: invalid content - type: ${typeof firstPart}, length: ${firstPart?.length}, trimmed: "${firstPart?.trim()}"`);
-          }
           return isValid;
         })
         .sort((a, b) => {
@@ -105,8 +100,6 @@ export class IPCHandlers {
           return timeA - timeB;
         })
         .slice(0, 3); // Take first 3 messages for preview
-
-      console.log(`🔍 ${conversation.title}: Found ${messageEntries.length} valid messages out of ${Object.keys(conversation.mapping).length} total nodes`);
 
       for (const [_, msg] of messageEntries) {
         const messageData = msg as any;
@@ -121,12 +114,10 @@ export class IPCHandlers {
       }
 
       if (messages.length === 0) {
-        console.log(`🔍 ${conversation.title}: No readable message content found after processing`);
         return 'No readable message content found';
       }
 
       const preview = messages.join('\n\n');
-      console.log(`🔍 ${conversation.title}: Generated preview with ${preview.length} characters`);
       return preview;
     } catch (error) {
       console.error(`Error extracting conversation preview for ${conversation.title}:`, error);
@@ -241,7 +232,6 @@ export class IPCHandlers {
         const conversationIndex = conversations.map(conv => {
           // Analyze content quality for debugging
           const qualityAnalysis = this.analyzeContentQuality(conv);
-          console.log(`🔍 Content Quality Analysis for "${conv.title}":`, qualityAnalysis);
           
           return {
             id: conv.conversation_id || conv.id || `conv_${Date.now()}_${Math.random()}`,
@@ -367,20 +357,11 @@ export class IPCHandlers {
     // OpenAI API handler
     ipcMain.handle('call-openai-api', async (event, { apiKey, model, prompt }) => {
       try {
-        console.log('🤖 Main process: Calling OpenAI API...');
-        
         // Type checking for apiKey
         if (!apiKey || typeof apiKey !== 'string') {
           console.error('❌ Invalid API key type:', typeof apiKey, 'Value:', apiKey);
           return { error: 'Invalid API key format. Please check your OpenAI API key.' };
         }
-        
-        console.log('🔑 API Key length:', apiKey.length);
-        console.log('🔑 API Key starts with:', apiKey.substring(0, 20));
-        console.log('🔑 API Key ends with:', apiKey.substring(apiKey.length - 20));
-        console.log('🔑 API Key contains sk-proj:', apiKey.includes('sk-proj'));
-        console.log('🤖 Model:', model);
-        console.log('📝 Prompt length:', prompt.length);
         
         const response = await axios.post(
           'https://api.openai.com/v1/chat/completions',
@@ -409,7 +390,6 @@ export class IPCHandlers {
 
         if (response.data.choices && response.data.choices[0]?.message?.content) {
           const content = response.data.choices[0].message.content;
-          console.log('✅ Main process: OpenAI API response received');
           return { content };
         } else {
           throw new Error('No valid response from OpenAI API');

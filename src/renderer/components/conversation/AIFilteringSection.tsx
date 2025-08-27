@@ -135,10 +135,6 @@ export const AIFilteringSection: React.FC<AIFilteringSectionProps> = ({
         }
         
         // Debug logging to see what content we're sending
-        console.log(`🔍 AI Filtering Debug - Conversation: ${conv.title}`);
-        console.log(`📝 Preview length: ${conv.conversationPreview?.length || 0}`);
-        console.log(`📝 Preview content: ${conv.conversationPreview?.substring(0, 200)}...`);
-        console.log(`📝 Final content length: ${content.length}`);
         
         return {
           title: conv.title,

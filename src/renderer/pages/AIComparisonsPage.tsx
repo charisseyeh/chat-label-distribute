@@ -64,17 +64,12 @@ const AIComparisonsPage: React.FC = () => {
 
   // Initialize AI service
   const initializeAIService = () => {
-    console.log('🔍 initializeAIService called with apiKey:', apiKey);
-    console.log('🔍 apiKey length:', apiKey.length);
-    console.log('🔍 apiKey trimmed:', apiKey.trim());
-    
     if (!apiKey.trim()) {
       alert('Please enter an OpenAI API key');
       return;
     }
     
     const cleanApiKey = apiKey.trim();
-    console.log('🔍 Clean API key being used:', cleanApiKey.substring(0, 10) + '...');
     
     // Validate the API key format
     if (!cleanApiKey.startsWith('sk-')) {
@@ -90,17 +85,9 @@ const AIComparisonsPage: React.FC = () => {
 
   // Generate AI responses for selected conversations
   const generateAIResponses = async () => {
-    console.log('🔍 generateAIResponses called');
-    console.log('🔍 Current apiKey state:', apiKey);
-    console.log('🔍 Current apiKey length:', apiKey.length);
-    console.log('🔍 Current apiKey trimmed:', apiKey.trim());
-    
     let service = aiService;
     
-    console.log('🔍 Current aiService state:', aiService);
-    
     if (!service) {
-      console.log('🔄 Initializing new AI service...');
       const newService = initializeAIService();
       if (!newService) {
         console.error('❌ Failed to initialize AI service');
@@ -108,11 +95,7 @@ const AIComparisonsPage: React.FC = () => {
       }
       service = newService;
       setAIService(newService);
-      console.log('✅ AI service initialized:', newService);
     }
-
-    console.log('🤖 Using AI service:', service);
-    console.log('🔑 Service config:', { apiKey: '***' + apiKey.substring(0, 10) + '***', model: model });
 
     // Validate service configuration
     if (!service.isConfigured()) {
@@ -147,9 +130,6 @@ const AIComparisonsPage: React.FC = () => {
     try {
       // Update status to generating
       setGenerationProgress(prev => ({ ...prev, status: 'generating' }));
-      console.log('🚀 Starting AI generation process with real OpenAI API...');
-      console.log('🔑 Using API key:', apiKey.substring(0, 10) + '...');
-      console.log('🤖 Using model:', model);
 
       // Generate AI responses for each conversation (only once per conversation)
       for (let convIndex = 0; convIndex < selectedConversations.length; convIndex++) {
@@ -157,7 +137,6 @@ const AIComparisonsPage: React.FC = () => {
         const conversation = storeConversations.find(c => c.id === conversationId);
         if (!conversation) continue;
 
-        console.log(`💬 Processing conversation ${convIndex + 1}/${selectedConversations.length}: ${conversation.title}`);
         setGenerationProgress(prev => ({ 
           ...prev, 
           currentConversation: convIndex + 1,
@@ -176,8 +155,6 @@ const AIComparisonsPage: React.FC = () => {
         const aiResponses: Record<string, number> = {};
         
         try {
-          console.log(`🤖 Calling OpenAI API for conversation: ${conversation.title}`);
-          
           const conversationContext = `Conversation: ${conversation.title}`;
           const prompt = generateOpenAIPrompt(conversationContext, 'beginning'); // Use beginning position for single analysis
           if (!prompt) continue;
@@ -192,7 +169,6 @@ const AIComparisonsPage: React.FC = () => {
 
           // Call the real OpenAI API using the local service variable
           const aiResponse = await service.generateSurveyResponses(prompt);
-          console.log(`✅ OpenAI API response received for conversation: ${conversation.title}`);
           const parsedRatings = parseAIResponse(aiResponse);
           
           if (parsedRatings) {
@@ -216,7 +192,6 @@ const AIComparisonsPage: React.FC = () => {
           // Continue with other conversations
         }
 
-        console.log(`✅ Completed conversation: ${conversation.title}`);
         // Calculate agreement and differences
         const agreement = calculateAgreement(humanResponses, aiResponses);
         const differences = calculateDifferences(humanResponses, aiResponses, currentTemplate);
@@ -231,7 +206,6 @@ const AIComparisonsPage: React.FC = () => {
         });
       }
 
-      console.log('⚙️ Processing results and calculating accuracy...');
       // Update status to processing
       setGenerationProgress(prev => ({ 
         ...prev, 
@@ -246,7 +220,6 @@ const AIComparisonsPage: React.FC = () => {
       const overallAccuracy = calculateOverallAccuracy(trials);
       setAccuracy(overallAccuracy);
 
-      console.log('✅ AI generation completed successfully!');
       // Update status to complete
       setGenerationProgress(prev => ({ 
         ...prev, 

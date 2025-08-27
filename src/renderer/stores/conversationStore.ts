@@ -78,6 +78,8 @@ interface ConversationState {
   // Add these new fields for loaded conversations
   loadedConversations: ConversationData[]; // The conversations loaded from a file
   filteredConversations: ConversationData[]; // The filtered conversations
+  // Add this flag to prevent reloading after deletion
+  preventReload: boolean;
 }
 
 interface ConversationActions {
@@ -112,6 +114,9 @@ interface ConversationActions {
   setFilteredConversations: (conversations: ConversationData[]) => void;
   clearLoadedConversations: () => void;
 
+  // Convert temporary selection to permanent storage
+  commitTemporarySelection: () => void;
+
   // Permanent storage operations
   loadSelectedConversationsFromStorage: () => Promise<boolean>;
   saveSelectedConversationsToStorage: () => Promise<boolean>;
@@ -133,6 +138,8 @@ export const useConversationStore = create<ConversationStore>()(
       error: null,
       loadedConversations: [],
       filteredConversations: [],
+      // Add this flag to prevent reloading after deletion
+      preventReload: false,
 
       // State management
       setLoading: (loading) => set({ loading }),
@@ -180,22 +187,15 @@ export const useConversationStore = create<ConversationStore>()(
       getConversationById: (id: string) => {
         const { conversations, selectedConversations, loadedConversations } = get();
         
-        console.log('🔍 getConversationById: Looking for conversation ID:', id);
-        console.log('🔍 getConversationById: Regular conversations count:', conversations.length);
-        console.log('🔍 getConversationById: Loaded conversations count:', loadedConversations.length);
-        console.log('🔍 getConversationById: Selected conversations count:', selectedConversations.length);
-        
         // First look in regular conversations
         let found = conversations.find(c => c.id === id);
         if (found) {
-          console.log('🔍 getConversationById: Found in regular conversations');
           return found;
         }
         
         // Then look in loaded conversations (which should have the full data)
         const loaded = loadedConversations.find(c => c.id === id);
         if (loaded) {
-          console.log('🔍 getConversationById: Found in loaded conversations');
           // Convert ConversationData to Conversation format
           const converted = {
             id: loaded.id,
@@ -206,14 +206,12 @@ export const useConversationStore = create<ConversationStore>()(
             messageCount: loaded.messageCount || 0,
             filePath: loaded.sourceFilePath || ''
           };
-          console.log('🔍 getConversationById: Converted conversation:', converted);
           return converted;
         }
         
         // Finally look in selected conversations
         const selected = selectedConversations.find(c => c.id === id);
         if (selected) {
-          console.log('🔍 getConversationById: Found in selected conversations');
           // Convert SelectedConversation to Conversation format
           const converted = {
             id: selected.id,
@@ -224,79 +222,31 @@ export const useConversationStore = create<ConversationStore>()(
             messageCount: 0,
             filePath: selected.sourceFilePath
           };
-          console.log('🔍 getConversationById: Converted conversation:', converted);
           return converted;
         }
         
-        console.log('❌ getConversationById: Conversation not found anywhere');
         return undefined;
       },
 
       // Selection management
       toggleConversationSelection: (id) => {
-        const { selectedConversationIds, selectedConversations, loadedConversations } = get();
+        const { selectedConversationIds } = get();
         const isSelected = selectedConversationIds.includes(id);
         
-        console.log('🔍 toggleConversationSelection: Toggling conversation ID:', id);
-        console.log('🔍 toggleConversationSelection: Currently selected IDs:', selectedConversationIds);
-        console.log('🔍 toggleConversationSelection: Loaded conversations count:', loadedConversations.length);
-        
         if (isSelected) {
-          // Remove from both arrays
+          // Remove from temporary selection only
           const newSelectedIds = selectedConversationIds.filter(selectedId => selectedId !== id);
-          const newSelectedConversations = selectedConversations.filter(conv => conv.id !== id);
-          console.log('🔍 toggleConversationSelection: Removing conversation, new selected IDs:', newSelectedIds);
-          set({ 
-            selectedConversationIds: newSelectedIds,
-            selectedConversations: newSelectedConversations
-          });
+          set({ selectedConversationIds: newSelectedIds });
         } else {
-          // Add to both arrays
+          // Add to temporary selection only
           const newSelectedIds = [...selectedConversationIds, id];
-          const conversationToAdd = loadedConversations.find(conv => conv.id === id);
-          let newSelectedConversations = [...selectedConversations];
-          
-          console.log('🔍 toggleConversationSelection: Adding conversation, found in loaded:', !!conversationToAdd);
-          
-          if (conversationToAdd) {
-            // Convert ConversationData to SelectedConversation format
-            const selectedConversation = {
-              id: conversationToAdd.id,
-              title: conversationToAdd.title,
-              sourceFilePath: conversationToAdd.sourceFilePath || get().currentSourceFile || ''
-            };
-            newSelectedConversations = [...selectedConversations, selectedConversation];
-            console.log('🔍 toggleConversationSelection: Created selected conversation:', selectedConversation);
-          }
-          
-          set({ 
-            selectedConversationIds: newSelectedIds,
-            selectedConversations: newSelectedConversations
-          });
+          set({ selectedConversationIds: newSelectedIds });
         }
       },
 
       setSelectedConversations: (ids) => {
-        const { loadedConversations, currentSourceFile } = get();
-        const selectedConversations = ids.map(id => {
-          const conversation = loadedConversations.find(conv => conv.id === id);
-          if (conversation) {
-            return {
-              id: conversation.id,
-              title: conversation.title,
-              sourceFilePath: conversation.sourceFilePath || currentSourceFile || ''
-            };
-          }
-          return {
-            id,
-            title: 'Unknown Conversation',
-            sourceFilePath: currentSourceFile || ''
-          };
-        });
-        set({ 
-          selectedConversationIds: ids,
-          selectedConversations
-        });
+        // Only set temporary selection IDs, don't populate selectedConversations
+        set({ selectedConversationIds: ids });
       },
 
       setSelectedConversationsWithFile: (conversations) => set({ selectedConversations: conversations }), // New
@@ -304,8 +254,16 @@ export const useConversationStore = create<ConversationStore>()(
       removeSelectedConversation: (id) => {
         const { selectedConversations } = get();
         const updated = selectedConversations.filter(conv => conv.id !== id);
-        set({ selectedConversations: updated });
-        set({ selectedConversationIds: updated.map(conv => conv.id) });
+        
+        set({ 
+          selectedConversations: updated,
+          preventReload: true // Prevent automatic reloading after deletion
+        });
+        
+        // Clear the preventReload flag after a short delay
+        setTimeout(() => {
+          set({ preventReload: false });
+        }, 1000);
       },
 
       clearSelection: () => set({ selectedConversationIds: [], selectedConversations: [] }),
@@ -322,15 +280,90 @@ export const useConversationStore = create<ConversationStore>()(
       setFilteredConversations: (conversations) => set({ filteredConversations: conversations }),
       clearLoadedConversations: () => set({ loadedConversations: [], filteredConversations: [] }),
 
+      // Convert temporary selection to permanent storage
+      commitTemporarySelection: () => {
+        const { selectedConversationIds, loadedConversations, currentSourceFile } = get();
+        
+        if (selectedConversationIds.length === 0) {
+          console.warn('⚠️ commitTemporarySelection: No temporary selection to commit');
+          return;
+        }
+        
+        if (loadedConversations.length === 0) {
+          console.warn('⚠️ commitTemporarySelection: No loaded conversations available');
+          return;
+        }
+        
+        const newSelectedConversations = selectedConversationIds.map(id => {
+          const conversation = loadedConversations.find(conv => conv.id === id);
+          if (conversation) {
+            const selectedConversation = {
+              id: conversation.id,
+              title: conversation.title,
+              sourceFilePath: conversation.sourceFilePath || currentSourceFile || ''
+            };
+            return selectedConversation;
+          }
+          console.warn('⚠️ commitTemporarySelection: Could not find conversation with ID:', id);
+          return {
+            id,
+            title: 'Unknown Conversation',
+            sourceFilePath: currentSourceFile || ''
+          };
+        });
+        
+        // Also preserve the loaded conversations so they can be accessed on the labeling page
+        const selectedConversationsForStore = selectedConversationIds.map(id => {
+          const conv = loadedConversations.find(c => c.id === id);
+          if (conv) {
+            return {
+              id: conv.id,
+              title: conv.title,
+              modelVersion: conv.modelVersion || 'Unknown',
+              conversationLength: conv.messageCount || 0,
+              createdAt: conv.createdAt || new Date().toISOString(),
+              messageCount: conv.messageCount || 0,
+              filePath: conv.sourceFilePath || currentSourceFile || ''
+            };
+          }
+          return null;
+        }).filter((conv): conv is NonNullable<typeof conv> => conv !== null);
+        
+        set({ 
+          selectedConversations: newSelectedConversations,
+          conversations: selectedConversationsForStore
+        });
+      },
+
       // Permanent storage operations
       loadSelectedConversationsFromStorage: async () => {
         try {
+          const { preventReload } = get();
+          
+          // Don't reload if we just deleted a conversation
+          if (preventReload) {
+            return true;
+          }
+          
           if (window.electronAPI && window.electronAPI.getSelectedConversations) {
             const result = await window.electronAPI.getSelectedConversations();
+            
             if (result.success && result.data && Array.isArray(result.data)) {
+              // Convert SelectedConversation format to Conversation format for the store
+              const conversationsForStore = result.data.map((conv: any) => ({
+                id: conv.id,
+                title: conv.title,
+                modelVersion: 'Unknown',
+                conversationLength: 0,
+                createdAt: new Date().toISOString(),
+                messageCount: 0,
+                filePath: conv.sourceFilePath
+              }));
+              
               set({ 
                 selectedConversations: result.data,
-                selectedConversationIds: result.data.map((conv: any) => conv.id)
+                selectedConversationIds: result.data.map((conv: any) => conv.id),
+                conversations: conversationsForStore
               });
               
               // Also set the currentSourceFile if it's not already set
@@ -344,7 +377,8 @@ export const useConversationStore = create<ConversationStore>()(
               
               return true;
             } else {
-              set({ selectedConversations: [], selectedConversationIds: [] });
+              console.warn('⚠️ loadSelectedConversationsFromStorage: No data or invalid data from API');
+              set({ selectedConversations: [], selectedConversationIds: [], conversations: [] });
             }
           } else {
             console.warn('⚠️ Electron API not available for loading selected conversations');
@@ -359,19 +393,21 @@ export const useConversationStore = create<ConversationStore>()(
       saveSelectedConversationsToStorage: async () => {
         try {
           const { selectedConversations } = get();
+          
+          // Allow saving empty arrays (for deletion purposes)
           if (window.electronAPI && window.electronAPI.storeSelectedConversations) {
             const result = await window.electronAPI.storeSelectedConversations(selectedConversations);
             if (result.success) {
               return true;
             } else {
-              console.error('❌ Failed to save selected conversations:', result.error);
+              console.error('❌ saveSelectedConversationsToStorage: Failed to save selected conversations:', result.error);
             }
           } else {
-            console.warn('⚠️ Electron API not available for saving selected conversations');
+            console.warn('⚠️ saveSelectedConversationsToStorage: Electron API not available for saving selected conversations');
           }
           return false;
         } catch (error) {
-          console.error('❌ Failed to save selected conversations to storage:', error);
+          console.error('❌ saveSelectedConversationsToStorage: Failed to save selected conversations to storage:', error);
           return false;
         }
       },
@@ -398,11 +434,10 @@ export const useConversationStore = create<ConversationStore>()(
     }),
     {
       name: 'conversation-storage',
-      // Only persist conversations, not loading/error states
+      // Only persist permanently stored conversations, not temporary selection state
       partialize: (state) => ({ 
         conversations: state.conversations,
         currentConversation: state.currentConversation,
-        selectedConversationIds: state.selectedConversationIds,
         selectedConversations: state.selectedConversations,
         currentSourceFile: state.currentSourceFile, 
         loadedConversations: state.loadedConversations,

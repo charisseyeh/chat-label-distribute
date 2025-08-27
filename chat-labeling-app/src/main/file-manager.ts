@@ -68,8 +68,6 @@ export class FileManager {
       // Create messages in database
       await this.databaseManager.createMessages(conversation.id, conversationData.messages);
 
-      console.log(`Conversation imported successfully: ${conversation.title}`);
-
       return {
         id: conversation.id,
         title: conversation.title,
@@ -147,7 +145,6 @@ export class FileManager {
       // Delete the stored file
       if (conversation.filePath && await fs.pathExists(conversation.filePath)) {
         await fs.remove(conversation.filePath);
-        console.log(`Deleted file: ${conversation.filePath}`);
       }
 
       console.log(`Conversation deleted successfully: ${conversation.title}`);
@@ -268,11 +265,9 @@ export class FileManager {
         if (!isReferenced) {
           await fs.remove(filePath);
           cleanedCount++;
-          console.log(`Cleaned up orphaned file: ${file}`);
         }
       }
 
-      console.log(`Cleanup completed. Removed ${cleanedCount} orphaned files.`);
       return cleanedCount;
     } catch (error) {
       console.error('Failed to cleanup orphaned files:', error);
