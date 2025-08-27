@@ -370,7 +370,7 @@ const AIComparisonsPage: React.FC = () => {
 
         {/* Empty State */}
         {comparisonData.length === 0 && !isGeneratingAI && (
-          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+          <div className="bg-white rounded-lg border border-gray-200 p-8 text-left">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">No Comparison Results Yet</h3>
             <p className="text-gray-600 mb-4">
               Select conversations from the sidebar and run AI comparison to see results here.

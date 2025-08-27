@@ -56,7 +56,7 @@
 
 /* Add spacing after the check toggle */
 .list-item > *:first-child {
-  margin-right: var(--spacing-sm);
+  margin-right: var(--spacing-md);
 }
 
 .list-item__delete-btn {

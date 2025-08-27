@@ -76,10 +76,12 @@ const ConversationSelectorPage: React.FC = () => {
 
 
   const formatDate = (timestamp: number | string) => {
-    if (typeof timestamp === 'string') {
-      return new Date(timestamp).toLocaleDateString();
-    }
-    return new Date(timestamp * 1000).toLocaleDateString();
+    const date = typeof timestamp === 'string' ? new Date(timestamp) : new Date(timestamp * 1000);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
   };
 
   if (loading) {
@@ -94,23 +96,6 @@ const ConversationSelectorPage: React.FC = () => {
     <TwoPanelLayout
       sidebarContent={
         <>
-          {/* Show permanently stored selected conversations */}
-          {selectedConversations.length > 0 && (
-            <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
-              <h3 className="text-sm font-medium text-gray-900 mb-3">Permanently Stored Conversations</h3>
-              <div className="space-y-2">
-                {selectedConversations.map((conv) => (
-                  <div key={conv.id} className="text-xs text-gray-600 p-2 bg-gray-50 rounded">
-                    {conv.title}
-                  </div>
-                ))}
-              </div>
-              <div className="mt-3 text-xs text-gray-500">
-                These conversations are permanently saved and will appear in the labeling page.
-              </div>
-            </div>
-          )}
-          
           {currentSourceFile && loadedConversations.length > 0 ? (
             <AIFilteringPanel
               conversations={filteredConversations}
@@ -246,13 +231,10 @@ const ConversationSelectorPage: React.FC = () => {
                 return {
                   title: conversation.title || 'Untitled Conversation',
                   metadata: isPermanentlyStored 
-                    ? `Permanently stored • Source: ${conversation.sourceFilePath?.split('/').pop() || 'Unknown file'}`
-                    : `Created: ${formatDate(conversation.createTime || conversation.createdAt || Date.now())} • Messages: ${conversation.messageCount}${conversation.model ? ` • Model: ${conversation.model}` : ''}`,
+                    ? 'Selected for labeling'
+                    : `${formatDate(conversation.createTime || conversation.createdAt || Date.now())}${conversation.model ? ` • ${conversation.model}` : ''}`,
                   chip: isPermanentlyStored 
-                    ? {
-                        variant: 'selected',
-                        text: '✓ Stored'
-                      }
+                    ? undefined
                     : conversation.aiRelevancy ? {
                         variant: conversation.aiRelevancy.category === 'relevant' ? 'relevant' : 'not-relevant',
                         text: conversation.aiRelevancy.category === 'relevant' ? '✓ Relevant' : '✗ Not Relevant'
