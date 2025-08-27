@@ -30,7 +30,7 @@ declare global {
       deleteStoredFile: (fileId: string) => Promise<{ success: boolean; data?: string; error?: string }>;
       getStorageStats: () => Promise<{ success: boolean; data?: any; error?: string }>;
       cleanupDuplicateFiles: () => Promise<{ success: boolean; data?: any; error?: string }>;
-      getConversationIndex: (filePath: string) => Promise<{ success: boolean; data?: Array<{id: string, title: string, createTime: number, messageCount: number, model?: string}>; total: number; returned: number; error?: string }>;
+      getConversationIndex: (filePath: string) => Promise<{ success: boolean; data?: Array<{id: string, title: string, createTime: number, createdAt: string, messageCount: number, model?: string, modelVersion?: string, conversationLength?: number, conversationPreview?: string, sourceFilePath?: string, contentQuality?: any}>; total: number; returned: number; error?: string }>;
       readSingleConversation: (filePath: string, conversationId: string) => Promise<{ success: boolean; data?: any; found: boolean; error?: string }>;
       storeSelectedConversations: (selectedConversations: any[]) => Promise<{ success: boolean; data?: any; error?: string }>;
       getSelectedConversations: () => Promise<{ success: boolean; data?: any; found: boolean; lastUpdated?: string; totalSelected?: number; error?: string }>;

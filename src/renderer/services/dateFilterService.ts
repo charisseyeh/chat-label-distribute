@@ -131,12 +131,37 @@ export class DateFilterService {
     customEndDate?: Date,
     useCustomRange: boolean = false
   ): any[] {
-    if (useCustomRange && customStartDate && customEndDate) {
-      return conversations.filter(conv => {
+    console.log('🔍 DateFilterService.filterByDateRanges called with:', {
+      conversationsCount: conversations.length,
+      useCustomRange,
+      customStartDate,
+      customEndDate
+    });
+    
+    if (useCustomRange && (customStartDate || customEndDate)) {
+      console.log('🔍 Using custom date range filtering');
+      const filtered = conversations.filter(conv => {
         const convDate = this.extractConversationDate(conv);
-        if (!convDate) return false; // Skip conversations without valid dates
-        return convDate >= customStartDate && convDate <= customEndDate;
+        console.log('🔍 Conversation:', conv.title, 'Date extracted:', convDate, 'Original data:', { createTime: conv.createTime, createdAt: conv.createdAt });
+        if (!convDate) {
+          console.log('🔍 Skipping conversation without valid date:', conv.title);
+          return false; // Skip conversations without valid dates
+        }
+        
+        // Handle partial date ranges
+        let isInRange = true;
+        if (customStartDate && convDate < customStartDate) {
+          isInRange = false;
+        }
+        if (customEndDate && convDate > customEndDate) {
+          isInRange = false;
+        }
+        
+        console.log('🔍 Conversation in range:', conv.title, isInRange, 'Date:', convDate, 'Range:', customStartDate || 'no start', 'to', customEndDate || 'no end');
+        return isInRange;
       });
+      console.log('🔍 Custom range filtering result:', filtered.length, 'conversations');
+      return filtered;
     }
 
     if (selectedRanges.length === 0) {

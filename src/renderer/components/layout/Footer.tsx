@@ -19,19 +19,11 @@ const Footer: React.FC<FooterProps> = ({ className = '' }) => {
 
   const handleGoToLabeling = async () => {
     try {
-      console.log('🚀 Footer "Go to Labeling" button clicked!');
-      console.log('🚀 Current temporary selection count:', selectedConversationIds.length);
-      console.log('🚀 Current permanently stored count:', selectedConversations.length);
-      console.log('🚀 Temporary selection IDs:', selectedConversationIds);
-      
       // First commit the temporary selection to selectedConversations
-      console.log('🚀 Calling commitTemporarySelection...');
       useConversationStore.getState().commitTemporarySelection();
       
       // Then save selected conversations to permanent storage
-      console.log('🚀 Calling saveSelectedConversationsToStorage...');
       const saveResult = await useConversationStore.getState().saveSelectedConversationsToStorage();
-      console.log('🚀 Save result:', saveResult);
       
       if (!saveResult) {
         console.error('❌ Failed to save conversations to storage');
@@ -39,11 +31,9 @@ const Footer: React.FC<FooterProps> = ({ className = '' }) => {
       }
       
       // Add a small delay so user can see the sidebar update
-      console.log('🚀 Waiting 1 second for sidebar to update...');
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Navigate to labeling page
-      console.log('🚀 Navigation to labeling page...');
       navigate('/label-conversations');
     } catch (error) {
       console.error('❌ Failed to save selected conversations:', error);

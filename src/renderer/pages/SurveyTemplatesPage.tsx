@@ -26,12 +26,8 @@ const SurveyTemplatesPage: React.FC = () => {
     initializeTemplate();
   }, [initializeTemplate]);
 
-  // Set current template ID if there's only one template and none is currently selected
-  useEffect(() => {
-    if (templates.length === 1 && !currentTemplateId) {
-      setCurrentTemplateId(templates[0].id);
-    }
-  }, [templates, currentTemplateId, setCurrentTemplateId]);
+  // Note: Removed automatic template selection to allow proper navigation highlighting
+  // Users must explicitly click on a template to navigate to it
 
   // Handle template creation
   const handleCreateTemplate = async () => {

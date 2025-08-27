@@ -285,12 +285,10 @@ export const useConversationStore = create<ConversationStore>()(
         const { selectedConversationIds, loadedConversations, currentSourceFile } = get();
         
         if (selectedConversationIds.length === 0) {
-          console.warn('⚠️ commitTemporarySelection: No temporary selection to commit');
           return;
         }
         
         if (loadedConversations.length === 0) {
-          console.warn('⚠️ commitTemporarySelection: No loaded conversations available');
           return;
         }
         
@@ -304,7 +302,6 @@ export const useConversationStore = create<ConversationStore>()(
             };
             return selectedConversation;
           }
-          console.warn('⚠️ commitTemporarySelection: Could not find conversation with ID:', id);
           return {
             id,
             title: 'Unknown Conversation',

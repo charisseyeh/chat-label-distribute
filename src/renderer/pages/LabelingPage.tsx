@@ -55,15 +55,10 @@ const LabelingPage: React.FC = () => {
   const loadMessages = useCallback(async (conversation: any) => {
     if (!conversation || !id) return;
     
-    console.log('🔍 LabelingPage: Loading messages for conversation:', conversation);
-    
     // Get the source file path from the conversation or fall back to currentSourceFile
     const sourceFilePath = conversation.filePath || currentSourceFile;
-          console.log('🔍 LabelingPage: Source file path:', sourceFilePath);
-      console.log('🔍 LabelingPage: Current source file:', currentSourceFile);
     
     if (!sourceFilePath) {
-              console.error('❌ LabelingPage: No source file path available');
       setError('No source file path available for this conversation');
       return;
     }
@@ -154,9 +149,7 @@ const LabelingPage: React.FC = () => {
   useEffect(() => {
     const loadFromStorage = async () => {
       try {
-        console.log('🔄 LabelingPage: Loading selected conversations from storage on mount');
         const result = await loadSelectedConversationsFromStorage();
-        console.log('🔄 LabelingPage: Load result:', result);
       } catch (error) {
         console.warn('Failed to load selected conversations from storage:', error);
       }
@@ -167,17 +160,8 @@ const LabelingPage: React.FC = () => {
     cleanupOldCache();
   }, []); // Empty dependency array - only run once on mount
 
-  // Debug effect to see store state on mount
-  useEffect(() => {
-    console.log('🔍 LabelingPage: Component mounted - Store state:');
-    console.log('🔍 LabelingPage: - conversations:', conversations);
-    console.log('🔍 LabelingPage: - selectedConversations:', storeSelectedConversations);
-    console.log('🔍 LabelingPage: - currentSourceFile:', currentSourceFile);
-  }, []); // Empty dependency array - only run once on mount
-
   // Synchronize navigation store with conversation store when storeSelectedConversations change
   useEffect(() => {
-    console.log('🔄 LabelingPage: storeSelectedConversations changed:', storeSelectedConversations);
     if (storeSelectedConversations.length > 0) {
       setSelectedConversations(storeSelectedConversations.map(conv => ({
         id: conv.id,
@@ -200,19 +184,13 @@ const LabelingPage: React.FC = () => {
         
         // Get conversation from store
         const conversation = getConversationById(id);
-        console.log('🔍 LabelingPage: Looking for conversation with ID:', id);
-        console.log('🔍 LabelingPage: Found conversation:', conversation);
-        console.log('🔍 LabelingPage: Store state - conversations:', conversations);
-        console.log('🔍 LabelingPage: Store state - selectedConversations:', storeSelectedConversations);
         
         if (!conversation) {
-          console.error('❌ LabelingPage: Conversation not found for ID:', id);
           setError('Conversation not found');
           return;
         }
         
         setCurrentConversation(conversation);
-        console.log('🔍 LabelingPage: Set current conversation:', conversation);
         
         // Load messages
         await loadMessages(conversation);

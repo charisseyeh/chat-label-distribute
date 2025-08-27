@@ -86,8 +86,8 @@ export const DateFilteringSection: React.FC<DateFilteringSectionProps> = ({
       
       onDateFilterOptionsChange(newOptions);
       
-      // Auto-apply filtering when both dates are set
-      if (field === 'end' && newOptions.customStartDate && newOptions.customEndDate) {
+      // Auto-apply filtering immediately when either date changes
+      if (newOptions.customStartDate || newOptions.customEndDate) {
         applyDateFiltering(newOptions);
       }
     } catch (error) {
@@ -97,11 +97,16 @@ export const DateFilteringSection: React.FC<DateFilteringSectionProps> = ({
 
   // Apply date filtering
   const applyDateFiltering = (options = dateFilterOptions) => {
-    if (!options.customStartDate || !options.customEndDate) {
-      return; // Don't apply if dates aren't set
+    // Apply filtering even with partial date ranges
+    if (!options.customStartDate && !options.customEndDate) {
+      return; // Don't apply if no dates are set at all
     }
 
     try {
+      console.log('🔍 Applying date filter with options:', options);
+      console.log('🔍 Original conversations count:', originalConversations.length);
+      console.log('🔍 Sample conversation data:', originalConversations[0]);
+      
       const filteredConversations = DateFilterService.filterByDateRanges(
         originalConversations,
         [], // No predefined ranges used
@@ -110,8 +115,12 @@ export const DateFilteringSection: React.FC<DateFilteringSectionProps> = ({
         true // Always use custom range
       );
       
+      console.log('🔍 Date-filtered conversations count:', filteredConversations.length);
+      
       // Apply message count filter to date-filtered results
       const finalFiltered = filteredConversations.filter(conv => conv.messageCount > 8);
+      
+      console.log('🔍 Final filtered conversations count:', finalFiltered.length);
       
       onFilteredConversations(finalFiltered);
       setFilteredConversations(finalFiltered);
@@ -155,7 +164,7 @@ export const DateFilteringSection: React.FC<DateFilteringSectionProps> = ({
       {/* Model Era Dropdown */}
       <div className="mb-4">
         <FloatingLabelSelect
-          label=""
+          label="Model Era"
           value={getSelectedEra()}
           onChange={handleModelEraChange}
           options={[
@@ -166,15 +175,16 @@ export const DateFilteringSection: React.FC<DateFilteringSectionProps> = ({
             }))
           ]}
         />
-
       </div>
+
+
 
       {/* Custom Date Range - Always Visible */}
       <div className="mb-4">
         <div className="grid grid-cols-2 gap-3">
           <div>
             <FloatingLabelInput
-              label=""
+              label="Start Date"
               value={dateFilterOptions.customStartDate?.toISOString().split('T')[0] || ''}
               onChange={(value) => handleCustomDateChange('start', value)}
               type="date"
@@ -182,13 +192,15 @@ export const DateFilteringSection: React.FC<DateFilteringSectionProps> = ({
           </div>
           <div>
             <FloatingLabelInput
-              label=""
+              label="End Date"
               value={dateFilterOptions.customEndDate?.toISOString().split('T')[0] || ''}
               onChange={(value) => handleCustomDateChange('end', value)}
               type="date"
             />
           </div>
         </div>
+        
+
       </div>
 
 

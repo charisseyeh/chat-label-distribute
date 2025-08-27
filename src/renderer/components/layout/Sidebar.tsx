@@ -110,6 +110,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     }
   };
 
+  // Helper function to determine if a navigation item should be active
+  const isNavigationItemActive = (itemId: string) => {
+    if (currentPage !== itemId) return false;
+    if (currentConversationId) return false;
+    
+    // Special case for survey-templates: only active when no specific template is selected
+    if (itemId === 'survey-templates' && currentTemplateId) return false;
+    
+    return true;
+  };
+
   const navigationItems = [
     {
       id: 'select-conversations',
@@ -162,7 +173,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
               <NavigationItem
                 icon={item.icon}
                 label={item.label}
-                isActive={currentPage === item.id && !currentConversationId && !currentTemplateId}
+                isActive={isNavigationItemActive(item.id)}
                 onClick={item.onClick}
               />
               

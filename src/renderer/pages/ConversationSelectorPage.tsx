@@ -199,18 +199,8 @@ const ConversationSelectorPage: React.FC = () => {
       )}
 
       {currentSourceFile && loadedConversations.length > 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 h-full flex flex-col">
+        <div className="h-full flex flex-col">
           <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                Conversations ({filteredConversations.length} available, {selectedConversations.length} permanently stored)
-              </h2>
-              {aiRelevancyResults.length > 0 && (
-                <div className="text-sm text-green-600 mt-1">
-                  ({aiRelevancyResults.filter(r => r.category === 'relevant').length} AI-relevant)
-                </div>
-              )}
-            </div>
             <div className="flex gap-2">
               <button
                 onClick={handleSelectAll}
@@ -222,67 +212,11 @@ const ConversationSelectorPage: React.FC = () => {
                 onClick={handleDeselectAll}
                 className="text-sm text-blue-600 hover:text-blue-800 underline"
               >
-                Reset AI Filter
+                Deselect All
               </button>
-              {selectedConversationIds.length > 0 && (
-                <button
-                  onClick={async () => {
-                    try {
-                      console.log('🚀 "Go to Labeling" button clicked!');
-                      console.log('🚀 Current temporary selection count:', selectedConversationIds.length);
-                      console.log('🚀 Current permanently stored count:', selectedConversations.length);
-                      
-                      // First commit the temporary selection to selectedConversations
-                      console.log('🚀 Calling commitTemporarySelection...');
-                      useConversationStore.getState().commitTemporarySelection();
-                      
-                      // Then save selected conversations to permanent storage
-                      console.log('🚀 Calling saveSelectedConversationsToStorage...');
-                      const saveResult = await useConversationStore.getState().saveSelectedConversationsToStorage();
-                      console.log('🚀 Save result:', saveResult);
-                      
-                      if (!saveResult) {
-                        console.error('❌ Failed to save conversations to storage');
-                        return; // Don't navigate if save failed
-                      }
-                      
-                      // Add a small delay so user can see the sidebar update
-                      console.log('🚀 Waiting 1 second for sidebar to update...');
-                      await new Promise(resolve => setTimeout(resolve, 1000));
-                      
-                      // Navigate to labeling page
-                      console.log('🚀 Navigation to labeling page...');
-                      navigate('/label-conversations');
-                    } catch (error) {
-                      console.error('❌ Failed to save selected conversations:', error);
-                    }
-                  }}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-                >
-                  Continue to Labeling ({selectedConversationIds.length} selected)
-                </button>
-              )}
             </div>
           </div>
 
-          {/* Debug Info */}
-          <div className="px-4 py-2 bg-gray-100 border-b border-gray-200 text-xs text-gray-600">
-            <div className="flex gap-4">
-              <span>Total Loaded: {loadedConversations.length}</span>
-              <span>Currently Filtered: {filteredConversations.length}</span>
-              <span>Temporary Selection: {selectedConversationIds.length}</span>
-              <span>Permanently Stored: {selectedConversations.length}</span>
-            </div>
-          </div>
-
-          {/* Filtering info */}
-          {loadedConversations.length > filteredConversations.length && (
-            <div className="px-4 py-2 bg-blue-50 border-b border-blue-200">
-              <div className="text-sm text-blue-800">
-                <span className="font-medium">Filtering:</span> Only showing conversations with more than 8 messages (user + bot exchanges)
-              </div>
-            </div>
-          )}
 
           {/* AI Analysis Results Summary */}
           {aiRelevancyResults.length > 0 && (
@@ -331,23 +265,9 @@ const ConversationSelectorPage: React.FC = () => {
               })}
             />
             
-            {/* AI Analysis Explanations */}
-            {filteredConversations.map((conversation) => (
-              conversation.aiRelevancy?.explanation && (
-                <div key={`explanation-${conversation.id}`} className="px-4 py-2 text-xs text-gray-600 bg-gray-50 border-b border-gray-100">
-                  <strong>AI Analysis for {conversation.title}:</strong> {conversation.aiRelevancy.explanation}
-                </div>
-              )
-            ))}
+
             
-            {/* Conversation Previews */}
-            {filteredConversations.map((conversation) => (
-              conversation.conversationPreview && (
-                <div key={`preview-${conversation.id}`} className="px-4 py-2 text-xs text-gray-600 bg-blue-50 border-b border-blue-100">
-                  <strong>Preview for {conversation.title}:</strong> {conversation.conversationPreview}
-                </div>
-              )
-            ))}
+
           </div>
         </div>
       )}

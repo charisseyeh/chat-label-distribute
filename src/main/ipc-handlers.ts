@@ -236,6 +236,7 @@ export class IPCHandlers {
           return {
             id: conv.conversation_id || conv.id || `conv_${Date.now()}_${Math.random()}`,
             title: conv.title || 'Untitled Conversation',
+            createTime: conv.create_time || Math.floor(Date.now() / 1000), // Add createTime field
             modelVersion: conv.model || 'Unknown',
             conversationLength: conv.mapping ? Object.keys(conv.mapping).length * 100 : 0,
             createdAt: new Date((conv.create_time || Date.now()) * 1000).toISOString(),

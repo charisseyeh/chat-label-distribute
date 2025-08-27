@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSurveyResponseStore } from '../../stores/surveyResponseStore';
 
 interface Conversation {
   id: string;
@@ -25,6 +26,7 @@ interface ExportOptions {
 }
 
 const ExportPanel: React.FC = () => {
+  const { conversationData } = useSurveyResponseStore();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
     includeConversations: true,
@@ -65,6 +67,42 @@ const ExportPanel: React.FC = () => {
 
   const getSurveyResponses = (conversationId: string) => {
     try {
+      // Use the store data instead of localStorage
+      const storeData = conversationData[conversationId];
+      if (storeData && storeData.responses) {
+        // Convert the responses array to the expected format
+        const formattedResponses: Record<string, any> = {};
+        
+        // Group responses by position
+        const beginningResponses = storeData.responses.filter(r => r.position === 'beginning');
+        const turn6Responses = storeData.responses.filter(r => r.position === 'turn6');
+        const endResponses = storeData.responses.filter(r => r.position === 'end');
+        
+        if (beginningResponses.length > 0) {
+          formattedResponses.beginning = beginningResponses.reduce((acc, r) => {
+            acc[r.questionId] = r.rating;
+            return acc;
+          }, {} as Record<string, number>);
+        }
+        
+        if (turn6Responses.length > 0) {
+          formattedResponses.turn6 = turn6Responses.reduce((acc, r) => {
+            acc[r.questionId] = r.rating;
+            return acc;
+          }, {} as Record<string, number>);
+        }
+        
+        if (endResponses.length > 0) {
+          formattedResponses.end = endResponses.reduce((acc, r) => {
+            acc[r.questionId] = r.rating;
+            return acc;
+          }, {} as Record<string, number>);
+        }
+        
+        return formattedResponses;
+      }
+      
+      // Fallback to localStorage for backward compatibility
       const savedResponses = localStorage.getItem(`survey_responses_${conversationId}`);
       return savedResponses ? JSON.parse(savedResponses) : {};
     } catch (err) {

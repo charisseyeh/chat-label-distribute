@@ -109,6 +109,10 @@ const AIComparisonsPage: React.FC = () => {
       return;
     }
 
+    // Debug: Log the current template
+    console.log('🔍 Current template for AI generation:', currentTemplate);
+    console.log('🔍 Template questions:', currentTemplate.questions);
+
     if (selectedConversations.length === 0) {
       alert('Please select at least one conversation to analyze.');
       return;
