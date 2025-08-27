@@ -35,6 +35,9 @@ interface SurveyResponseActions {
   clearConversationData: (conversationId: string) => void;
   exportConversationData: (conversationId: string) => ConversationSurveyData | null;
   importConversationData: (data: ConversationSurveyData) => void;
+  
+  // Template switching safety
+  clearAllResponsesForTemplate: (templateId: string) => void;
 }
 
 type SurveyResponseStore = SurveyResponseState & SurveyResponseActions;
@@ -325,6 +328,25 @@ export const useSurveyResponseStore = create<SurveyResponseStore>()(
           conversationData: updatedConversationData,
           responses: updatedResponses
         });
+      },
+      
+      clearAllResponsesForTemplate: (templateId) => {
+        const { conversationData } = get();
+        // Clear all responses for all conversations
+        const clearedData = { ...conversationData };
+        
+        Object.keys(clearedData).forEach(conversationId => {
+          if (clearedData[conversationId]) {
+            clearedData[conversationId] = {
+              ...clearedData[conversationId],
+              responses: [],
+              completedSections: [],
+              lastUpdated: new Date().toISOString()
+            };
+          }
+        });
+        
+        set({ conversationData: clearedData });
       },
     }),
     {

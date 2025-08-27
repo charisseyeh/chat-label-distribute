@@ -186,9 +186,7 @@ export const AIFilteringSection: React.FC<AIFilteringSectionProps> = ({
     }
   };
 
-  if (!ai.enableAIFiltering) {
-    return null;
-  }
+
 
   return (
     <>

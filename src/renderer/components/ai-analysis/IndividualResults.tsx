@@ -43,7 +43,7 @@ const IndividualResults: React.FC<IndividualResultsProps> = ({ comparisonData })
               <div>
                 <h6 className="font-medium text-gray-900 mb-2">Rating Differences</h6>
                 <div className="space-y-2">
-                  {comparison.differences.slice(0, 3).map((diff, diffIndex) => (
+                  {comparison.differences.slice(0, 6).map((diff, diffIndex) => (
                     <div key={diffIndex} className="flex justify-between text-sm">
                       <span className="text-gray-600 truncate flex-1 mr-2">
                         {diff.questionText}
@@ -57,6 +57,49 @@ const IndividualResults: React.FC<IndividualResultsProps> = ({ comparisonData })
                     </div>
                   ))}
                 </div>
+              </div>
+            </div>
+            
+            {/* Position-based Results */}
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <h6 className="font-medium text-gray-900 mb-3">Results by Position</h6>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {['beginning', 'turn6', 'end'].map((position) => {
+                  const positionHumanResponses = Object.entries(comparison.humanResponses)
+                    .filter(([key]) => key.startsWith(`${position}_`))
+                    .reduce((acc, [key, value]) => {
+                      const questionId = key.replace(`${position}_`, '');
+                      acc[questionId] = value;
+                      return acc;
+                    }, {} as Record<string, number>);
+                  
+                  const positionAIResponses = Object.entries(comparison.aiResponses)
+                    .filter(([key]) => key.startsWith(`${position}_`))
+                    .reduce((acc, [key, value]) => {
+                      const questionId = key.replace(`${position}_`, '');
+                      acc[questionId] = value;
+                      return acc;
+                    }, {} as Record<string, number>);
+                  
+                  const positionAgreement = Object.keys(positionHumanResponses).length > 0 ? 
+                    (Object.keys(positionHumanResponses).filter(qId => 
+                      positionHumanResponses[qId] === positionAIResponses[qId]
+                    ).length / Object.keys(positionHumanResponses).length) * 100 : 0;
+                  
+                  return (
+                    <div key={position} className="text-center p-3 bg-gray-50 rounded-lg">
+                      <div className="text-sm font-medium text-gray-700 capitalize mb-2">
+                        {position === 'turn6' ? 'Mid-Conversation' : position === 'beginning' ? 'Beginning' : 'End'}
+                      </div>
+                      <div className="text-lg font-bold text-blue-600">
+                        {positionAgreement.toFixed(0)}%
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {Object.keys(positionHumanResponses).length} questions
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

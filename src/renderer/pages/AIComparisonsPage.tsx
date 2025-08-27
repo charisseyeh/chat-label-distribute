@@ -125,8 +125,11 @@ const AIComparisonsPage: React.FC = () => {
 
     setIsGeneratingAI(true);
     
-    // Initialize progress tracking
-    setGenerationProgress(initializeGenerationProgress(selectedConversations.length));
+    // Initialize progress tracking for all positions
+    setGenerationProgress({
+      ...initializeGenerationProgress(selectedConversations.length),
+      totalPositions: 3 // beginning, turn6, end
+    });
 
     const results: ComparisonData[] = [];
     const trials: TrialComparison[] = [];
@@ -150,50 +153,49 @@ const AIComparisonsPage: React.FC = () => {
         const data = getConversationData(conversationId);
         const humanResponses: Record<string, number> = {};
         
-        // Extract human responses
+        // Extract human responses for all three positions
+        console.log('🔍 Human responses data:', data.responses);
         data.responses.forEach(response => {
-          humanResponses[response.questionId] = response.rating;
+          const positionKey = `${response.position}_${response.questionId}`;
+          humanResponses[positionKey] = response.rating;
         });
+        console.log('🔍 Extracted human responses:', humanResponses);
 
-        // Generate AI response for this conversation (single call)
+        // Generate AI responses for all three positions (beginning, turn6, end)
         const aiResponses: Record<string, number> = {};
+        const positions: Array<'beginning' | 'turn6' | 'end'> = ['beginning', 'turn6', 'end'];
         
-        try {
-          const conversationContext = `Conversation: ${conversation.title}`;
-          const prompt = generateOpenAIPrompt(conversationContext, 'beginning'); // Use beginning position for single analysis
-          if (!prompt) continue;
-
-          // Update progress
-          setGenerationProgress(prev => ({ 
-            ...prev, 
-            currentPosition: 1,
-            currentOperation: `Generating AI response for conversation: ${conversation.title}`,
-            currentPrompt: prompt
-          }));
-
-          // Call the real OpenAI API using the local service variable
-          const aiResponse = await service.generateSurveyResponses(prompt);
-          const parsedRatings = parseAIResponse(aiResponse);
+        for (let posIndex = 0; posIndex < positions.length; posIndex++) {
+          const position = positions[posIndex];
           
-          if (parsedRatings) {
-            // Map AI ratings to question IDs
-            Object.entries(parsedRatings).forEach(([questionId, rating]) => {
-              aiResponses[questionId] = rating;
-            });
+          try {
+            const conversationContext = `Conversation: ${conversation.title}`;
+            const prompt = generateOpenAIPrompt(conversationContext, position);
+            if (!prompt) continue;
+
+            // Update progress
+            setGenerationProgress(prev => ({ 
+              ...prev, 
+              currentPosition: posIndex + 1,
+              currentOperation: `Generating AI response for ${position} position: ${conversation.title}`,
+              currentPrompt: prompt
+            }));
+
+            // Call the real OpenAI API using the local service variable
+            const aiResponse = await service.generateSurveyResponses(prompt);
+            const parsedRatings = parseAIResponse(aiResponse);
+            
+            if (parsedRatings) {
+              // Map AI ratings to question IDs with position prefix
+              Object.entries(parsedRatings).forEach(([questionId, rating]) => {
+                const positionKey = `${position}_${questionId}`;
+                aiResponses[positionKey] = rating;
+              });
+            }
+          } catch (error) {
+            console.error(`❌ Error generating AI response for ${position} position: ${conversation.title}`, error);
+            // Continue with other positions
           }
-        } catch (error) {
-          console.error(`❌ Error generating AI response for conversation: ${conversation.title}`, error);
-          // Set error status in progress
-          setGenerationProgress(prev => ({ 
-            ...prev, 
-            status: 'error',
-            error: error instanceof Error ? error.message : 'Unknown error occurred'
-          }));
-          // Show user-friendly error message
-          if (error instanceof Error) {
-            alert(`Error generating AI response: ${error.message}`);
-          }
-          // Continue with other conversations
         }
 
         // Calculate agreement and differences

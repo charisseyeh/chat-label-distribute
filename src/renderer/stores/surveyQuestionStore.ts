@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { SurveyQuestion, SurveyTemplate } from '../types/survey';
-import { QuestionCategory, QuestionScale } from '../types/question';
 
 interface SurveyQuestionState {
   templates: SurveyTemplate[];
@@ -21,6 +20,7 @@ interface SurveyQuestionActions {
   updateTemplate: (id: string, updates: Partial<SurveyTemplate>) => void;
   deleteTemplate: (id: string) => void;
   setCurrentTemplate: (template: SurveyTemplate | null) => void;
+  setCurrentTemplateSafely: (template: SurveyTemplate | null, onConfirm: () => void) => void;
   
   // Question management
   addQuestion: (templateId: string, question: Omit<SurveyQuestion, 'id' | 'order'>) => void;
@@ -31,6 +31,13 @@ interface SurveyQuestionActions {
   // Default template initialization
   initializeDefaultTemplate: () => void;
   getDefaultQuestions: () => SurveyQuestion[];
+  
+  // Template switching safety
+  checkTemplateSwitchImpact: (newTemplate: SurveyTemplate | null) => {
+    hasExistingResponses: boolean;
+    responseCount: number;
+    willLoseData: boolean;
+  };
 }
 
 type SurveyQuestionStore = SurveyQuestionState & SurveyQuestionActions;
@@ -50,7 +57,6 @@ const getDefaultQuestions = (): SurveyQuestion[] => [
       6: 'Positive',
       7: 'Very positive'
     },
-    category: 'mood',
     order: 1
   },
   {
@@ -66,7 +72,6 @@ const getDefaultQuestions = (): SurveyQuestion[] => [
       6: 'Good control',
       7: 'Excellent control'
     },
-    category: 'emotional',
     order: 2
   },
   {
@@ -82,7 +87,6 @@ const getDefaultQuestions = (): SurveyQuestion[] => [
       6: 'Relaxed',
       7: 'No stress'
     },
-    category: 'stress',
     order: 3
   },
   {
@@ -98,7 +102,6 @@ const getDefaultQuestions = (): SurveyQuestion[] => [
       6: 'High energy',
       7: 'Very high energy'
     },
-    category: 'energy',
     order: 4
   },
   {
@@ -114,7 +117,6 @@ const getDefaultQuestions = (): SurveyQuestion[] => [
       6: 'Good',
       7: 'Excellent'
     },
-    category: 'wellbeing',
     order: 5
   }
 ];
@@ -178,6 +180,13 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
       },
 
       setCurrentTemplate: (template) => set({ currentTemplate: template }),
+      
+      setCurrentTemplateSafely: (template, onConfirm) => {
+        // This will be implemented to show confirmation dialog
+        // For now, just call the callback and set the template
+        onConfirm();
+        set({ currentTemplate: template });
+      },
 
       // Question management
       addQuestion: (templateId, questionData) => {
@@ -307,6 +316,26 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
       },
 
       getDefaultQuestions: () => getDefaultQuestions(),
+
+             // Template switching safety
+       checkTemplateSwitchImpact: (newTemplate) => {
+         const currentTemplate = get().currentTemplate;
+
+         if (!currentTemplate) {
+           return {
+             hasExistingResponses: false,
+             responseCount: 0,
+             willLoseData: false
+           };
+         }
+
+         // For now, return a basic check - this will be enhanced when we integrate with survey response store
+         return {
+           hasExistingResponses: false,
+           responseCount: 0,
+           willLoseData: false
+         };
+       },
     }),
     {
       name: 'survey-question-storage',

@@ -69,7 +69,11 @@ const ExportPanel: React.FC = () => {
     try {
       // Use the store data instead of localStorage
       const storeData = conversationData[conversationId];
+      console.log('🔍 Store data for conversation:', conversationId, storeData);
+      
       if (storeData && storeData.responses) {
+        console.log('🔍 Store responses:', storeData.responses);
+        
         // Convert the responses array to the expected format
         const formattedResponses: Record<string, any> = {};
         
@@ -77,6 +81,12 @@ const ExportPanel: React.FC = () => {
         const beginningResponses = storeData.responses.filter(r => r.position === 'beginning');
         const turn6Responses = storeData.responses.filter(r => r.position === 'turn6');
         const endResponses = storeData.responses.filter(r => r.position === 'end');
+        
+        console.log('🔍 Responses by position:', {
+          beginning: beginningResponses,
+          turn6: turn6Responses,
+          end: endResponses
+        });
         
         if (beginningResponses.length > 0) {
           formattedResponses.beginning = beginningResponses.reduce((acc, r) => {
@@ -99,11 +109,13 @@ const ExportPanel: React.FC = () => {
           }, {} as Record<string, number>);
         }
         
+        console.log('🔍 Formatted responses:', formattedResponses);
         return formattedResponses;
       }
       
       // Fallback to localStorage for backward compatibility
       const savedResponses = localStorage.getItem(`survey_responses_${conversationId}`);
+      console.log('🔍 Fallback localStorage responses:', savedResponses);
       return savedResponses ? JSON.parse(savedResponses) : {};
     } catch (err) {
       console.error('Error loading survey responses:', err);
@@ -139,6 +151,13 @@ const ExportPanel: React.FC = () => {
   };
 
   const isConversationComplete = (conversationId: string) => {
+    // Use store data to check completion
+    const storeData = conversationData[conversationId];
+    if (storeData && storeData.completedSections) {
+      return storeData.completedSections.length >= 3; // beginning, turn6, end
+    }
+    
+    // Fallback to old method
     const responses = getSurveyResponses(conversationId);
     const positions = ['beginning', 'turn6', 'end'];
     return positions.every(pos => responses[pos]);
@@ -176,10 +195,38 @@ const ExportPanel: React.FC = () => {
       if (exportOptions.includeSurveyResponses) {
         const responses = getSurveyResponses(conversation.id);
         if (Object.keys(responses).length > 0) {
+          // Get all human responses from the store, not just the current template
+          const storeData = conversationData[conversation.id];
+          let allHumanResponses = responses;
+          
+          if (storeData && storeData.responses) {
+            // Create a comprehensive response object with all human data
+            allHumanResponses = {
+              beginning: {},
+              turn6: {},
+              end: {}
+            };
+            
+            // Group all responses by position
+            storeData.responses.forEach(response => {
+              if (!allHumanResponses[response.position]) {
+                allHumanResponses[response.position] = {};
+              }
+              allHumanResponses[response.position][response.questionId] = response.rating;
+            });
+          }
+          
           exportData.surveyResponses.push({
             conversationId: conversation.id,
             conversationTitle: conversation.title,
-            responses
+            responses: allHumanResponses,
+            // Include metadata about what template was used for human responses
+            humanResponseTemplate: {
+              questionIds: Object.keys(responses.beginning || {}).concat(
+                Object.keys(responses.turn6 || {}),
+                Object.keys(responses.end || {})
+              ).filter((id, index, arr) => arr.indexOf(id) === index) // Remove duplicates
+            }
           });
         }
       }
