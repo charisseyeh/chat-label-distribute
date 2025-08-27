@@ -279,7 +279,6 @@ const AIComparisonsPage: React.FC = () => {
         <div className="p-6 space-y-6">
           {/* Chat Selection */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Chat Conversations</h3>
             <ConversationSelector
               conversations={conversationsWithData}
               selectedConversations={selectedConversations}

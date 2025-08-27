@@ -1,6 +1,6 @@
 /* Design System - Import all styles */
 @import './theme/index.css';
 @import './components/atoms.css';
-@import './components/molecules.css';
 @import './components/lists.css';
+@import './components/molecules.css';
 @import './components/navigation.css';

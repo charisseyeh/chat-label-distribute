@@ -4,7 +4,7 @@
 .list-item {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
+  gap: 0;
   padding: var(--spacing-md);
   width: 100%;
 }
@@ -19,9 +19,9 @@
   align-items: flex-start;
   gap: var(--spacing-sm);
   font-weight: 600;
-  color: #111827;
+  color: var(--foreground);
   margin-bottom: var(--spacing-xs);
-  line-height: 1.4;
+  line-height: 1.2;
   flex-wrap: wrap;
 }
 
@@ -30,14 +30,12 @@
   min-width: 0;
 }
 
-.list-item__metadata {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-}
-
 .list-item__metadata--single {
   display: block;
+  height: auto;
+  line-height: 1;
+  margin: 0;
+  padding: 0;
 }
 
 .list-item__metadata--double {
@@ -48,12 +46,17 @@
 
 .list-item__metadata-text {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--muted-foreground);
   line-height: 1.3;
 }
 
 .list-item__chip {
   flex-shrink: 0;
+}
+
+/* Add spacing after the check toggle */
+.list-item > *:first-child {
+  margin-right: var(--spacing-sm);
 }
 
 .list-item__delete-btn {
@@ -81,7 +84,7 @@
 
 .list-item__delete-btn:focus {
   opacity: 1;
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--ring);
   outline-offset: 2px;
   border-radius: 2px;
 }
@@ -89,7 +92,7 @@
 .list-item__delete-icon {
   width: 16px;
   height: 16px;
-  color: #ef4444;
+  color: var(--error);
   transition: color 0.2s ease;
 }
 
@@ -101,36 +104,40 @@
 
 /* Check toggle with chip, one metadata */
 .list-item--check-chip-single {
-  composes: list-item;
+  /* Inherits from .list-item */
 }
 
 .list-item--check-chip-single .list-item__metadata {
-  composes: list-item__metadata--single;
+  display: block !important;
 }
 
 /* Check toggle without chip, one metadata */
 .list-item--check-single {
-  composes: list-item;
+  /* Inherits from .list-item */
 }
 
 .list-item--check-single .list-item__metadata {
-  composes: list-item__metadata--single;
+  display: block !important;
 }
 
 /* No check toggle, two metadata */
 .list-item--double {
-  composes: list-item;
+  /* Inherits from .list-item */
 }
 
 .list-item--double .list-item__metadata {
-  composes: list-item__metadata--double;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
 }
 
 /* No check toggle, two metadata, with chip */
 .list-item--double-chip {
-  composes: list-item;
+  /* Inherits from .list-item */
 }
 
 .list-item--double-chip .list-item__metadata {
-  composes: list-item__metadata--double;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
 }

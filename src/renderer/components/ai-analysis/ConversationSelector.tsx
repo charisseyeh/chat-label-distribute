@@ -1,4 +1,5 @@
 import React from 'react';
+import { ListItem } from '../common/molecules/ListItem';
 
 interface ConversationWithData {
   id: string;
@@ -19,32 +20,18 @@ const ConversationSelector: React.FC<ConversationSelectorProps> = ({
   onConversationToggle
 }) => {
   return (
-    <div className="space-y-3">
+    <div>
       {conversations.map(conversation => (
-        <div
+        <ListItem
           key={conversation.id}
-          className={`p-3 border rounded-md cursor-pointer transition-colors ${
-            selectedConversations.includes(conversation.id)
-              ? 'border-blue-500 bg-blue-50'
-              : 'border-gray-200 hover:border-gray-300'
-          }`}
+          variant="check-single"
+          title={conversation.title}
+          metadata={`${conversation.data.responses.length} responses`}
+          checked={selectedConversations.includes(conversation.id)}
+          onCheckChange={() => onConversationToggle(conversation.id)}
           onClick={() => onConversationToggle(conversation.id)}
-        >
-          <div className="flex items-center gap-3">
-            <input
-              type="radio"
-              checked={selectedConversations.includes(conversation.id)}
-              onChange={() => onConversationToggle(conversation.id)}
-              className="text-blue-600"
-            />
-            <div className="flex-1 min-w-0">
-              <h3 className="font-medium text-gray-900 truncate text-sm">{conversation.title}</h3>
-              <p className="text-xs text-gray-500">
-                {conversation.data.responses.length} responses
-              </p>
-            </div>
-          </div>
-        </div>
+          className="hover:border-gray-300 transition-colors"
+        />
       ))}
       {conversations.length === 0 && (
         <p className="text-gray-500 text-center py-4 text-sm">
