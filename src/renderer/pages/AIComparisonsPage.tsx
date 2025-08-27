@@ -276,7 +276,7 @@ const AIComparisonsPage: React.FC = () => {
   return (
     <TwoPanelLayout
       sidebarContent={
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 border-l border-gray-200 h-full">
           {/* Chat Selection */}
           <div>
             <ConversationSelector
@@ -287,8 +287,9 @@ const AIComparisonsPage: React.FC = () => {
           </div>
 
           {/* AI Configuration */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">AI Comparison</h3>
+          <div className="border-t border-gray-200">
+            <h3 className="pt-4 pb-1">AI Comparison</h3>
+            <body>Add your API key and model to compare conversations</body>
             <AIConfigurationPanel
               apiKey={apiKey}
               model={model}
@@ -323,14 +324,6 @@ const AIComparisonsPage: React.FC = () => {
     >
       {/* Main Content Area - AI Comparison Results */}
       <div className="space-y-6">
-        {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">AI Comparison</h1>
-          <p className="text-lg text-gray-600">
-            Select reflective or therapy-like chats that you had with ChatGPT below to label it
-          </p>
-        </div>
-
         {/* Progress and Status Display */}
         {isGeneratingAI && (
           <ProgressTracker

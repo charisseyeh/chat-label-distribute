@@ -34,7 +34,6 @@ const AIConfigurationPanel: React.FC<AIConfigurationPanelProps> = ({
           type="password"
           placeholder="sk-..."
         />
-        <p className="text-xs text-gray-500 mt-1">Your OpenAI API key (stored locally)</p>
       </div>
       
       <div>
@@ -48,7 +47,6 @@ const AIConfigurationPanel: React.FC<AIConfigurationPanelProps> = ({
             { value: "gpt-4o", label: "GPT-4o (Balanced)" }
           ]}
         />
-        <p className="text-xs text-gray-500 mt-1">Choose based on accuracy vs. cost</p>
       </div>
 
       <div className="pt-2">
@@ -63,11 +61,8 @@ const AIConfigurationPanel: React.FC<AIConfigurationPanelProps> = ({
 
       {/* Survey Template Display - Compact version */}
       {currentTemplate && (
-        <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
-          <h4 className="text-sm font-medium text-gray-900 mb-2">Using '{currentTemplate.name}'</h4>
-          <div className="text-xs text-gray-600">
-            {currentTemplate.questions.length} questions, {currentTemplate.questions[0]?.scale || 7}-point scale
-          </div>
+        <div>
+          <body>Using "{currentTemplate.name}"</body>
         </div>
       )}
     </div>

@@ -4,11 +4,13 @@
 @tailwind components;
 @tailwind utilities;
 
-
+/* ==========================================================================
+   CSS Custom Properties (Variables)
+   ========================================================================== */
 
 @layer base {
   :root {
-    /* Custom color palette - replace with your actual colors */
+    /* Primary Color Palette */
     --primary-50: #f0f9ff;
     --primary-100: #e0f2fe;
     --primary-200: #bae6fd;
@@ -20,6 +22,7 @@
     --primary-800: #075985;
     --primary-900: #0c4a6e;
     
+    /* Secondary Color Palette */
     --secondary-50: #f8fafc;
     --secondary-100: #f1f5f9;
     --secondary-200: #e2e8f0;
@@ -31,6 +34,7 @@
     --secondary-800: #1e293b;
     --secondary-900: #0f172a;
     
+    /* Accent Color Palette */
     --accent-50: #fef7ee;
     --accent-100: #fdedd6;
     --accent-200: #fbd7ad;
@@ -42,6 +46,7 @@
     --accent-800: #823604;
     --accent-900: #501f02;
     
+    /* Semantic Colors */
     --background: #ffffff;
     --foreground: #0f172a;
     --muted: #f1f5f9;
@@ -54,6 +59,7 @@
     --error: #ef4444;
   }
 
+  /* Dark Theme Overrides */
   .dark {
     --background: #0f172a;
     --foreground: #f8fafc;
@@ -65,18 +71,56 @@
   }
 }
 
+/* ==========================================================================
+   Base Element Styles
+   ========================================================================== */
+
 @layer base {
+  /* Global Border Color */
   * {
     @apply border-border;
   }
   
+  /* Body Typography */
   body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    @apply leading-tight;
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-normal);
+  }
+
+  /* Heading Hierarchy */
+  h1 {
+    @apply leading-tight;
+    font-size: var(--font-size-h1);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  h2 {
+    @apply leading-tight;
+    font-size: var(--font-size-h2);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  h3 {
+    @apply leading-tight;
+    font-size: var(--font-size-h3);
+    font-weight: var(--font-weight-medium);
+  }
+
+  /* Paragraph and Text Elements */
+  p {
+    @apply leading-tight;
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-normal);
   }
 }
 
+/* ==========================================================================
+   Component Styles
+   ========================================================================== */
+
 @layer components {
+  /* Button Variants */
   .btn-primary {
     @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
   }
@@ -89,10 +133,12 @@
     @apply border border-border hover:bg-muted text-foreground font-medium py-2 px-4 rounded-lg transition-colors duration-200;
   }
   
+  /* Form Elements */
   .input-field {
     @apply w-full px-3 py-2 border border-border rounded-lg bg-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent;
   }
   
+  /* Card Components */
   .card {
     @apply bg-background border border-border rounded-lg shadow-sm;
   }
@@ -103,6 +149,10 @@
   
   .card-content {
     @apply px-6 py-4;
+  }
+  
+  .card-footer {
+    @apply px-6 py-4 border-t border-border bg-muted/50;
   }
   
   /* Message Bubble Styles */
@@ -127,7 +177,7 @@
     @apply bg-gray-50 text-gray-900 border-gray-200;
   }
   
-  /* Chat Message Positioning */
+  /* Chat Message Layout */
   .message-container {
     @apply flex w-full;
   }
@@ -152,16 +202,12 @@
     @apply order-1;
   }
   
-  /* Two Column Layout */
+  /* Grid Layouts */
   .message-grid {
     @apply grid grid-cols-1 md:grid-cols-2 gap-6;
   }
   
-    .message-column {
+  .message-column {
     @apply space-y-4;
-  }
-  
-  .card-footer {
-    @apply px-6 py-4 border-t border-border bg-muted/50;
   }
 }
