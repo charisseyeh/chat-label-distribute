@@ -1,0 +1,92 @@
+/* Molecular Components - Combinations of atoms */
+
+/* ===== LIST ITEMS ===== */
+.list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  width: 100%;
+}
+
+.list-item__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.list-item__title {
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: var(--spacing-xs);
+  line-height: 1.4;
+}
+
+.list-item__metadata {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.list-item__metadata--single {
+  display: block;
+}
+
+.list-item__metadata--double {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.list-item__metadata-text {
+  font-size: 0.875rem;
+  color: #6b7280;
+  line-height: 1.3;
+}
+
+.list-item__chip {
+  margin-left: auto;
+  align-self: flex-start;
+}
+
+/* ===== MOLECULAR COMPONENT VARIANTS ===== */
+
+/* Check toggle with chip, one metadata */
+.list-item--check-chip-single {
+  composes: list-item;
+}
+
+.list-item--check-chip-single .list-item__metadata {
+  composes: list-item__metadata--single;
+}
+
+/* Check toggle without chip, one metadata */
+.list-item--check-single {
+  composes: list-item;
+}
+
+.list-item--check-single .list-item__metadata {
+  composes: list-item__metadata--single;
+}
+
+/* No check toggle, two metadata */
+.list-item--double {
+  composes: list-item;
+}
+
+.list-item--double .list-item__metadata {
+  composes: list-item__metadata--double;
+}
+
+/* No check toggle, two metadata, with chip */
+.list-item--double-chip {
+  composes: list-item;
+}
+
+.list-item--double-chip .list-item__metadata {
+  composes: list-item__metadata--double;
+}
+
+.list-item--double-chip .list-item__chip {
+  margin-left: auto;
+  align-self: flex-start;
+}

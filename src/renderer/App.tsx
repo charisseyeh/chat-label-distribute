@@ -8,13 +8,14 @@ import LabelConversations from './components/conversation/LabelConversations';
 import LabelingPage from './pages/LabelingPage';
 import AIComparisonsPage from './pages/AIComparisonsPage';
 import SurveyQuestionsPage from './pages/SurveyQuestionsPage';
+import SurveyTemplatesPage from './pages/SurveyTemplatesPage';
 import { useConversationStore } from './stores/conversationStore';
 import { useNavigationStore } from './stores/navigationStore';
 
 // Component to sync navigation store with route changes
 const NavigationSync: React.FC = () => {
   const location = useLocation();
-  const { setCurrentPage, setCurrentConversationId } = useNavigationStore();
+  const { setCurrentPage, setCurrentConversationId, setCurrentTemplateId } = useNavigationStore();
 
   useEffect(() => {
     const path = location.pathname;
@@ -23,22 +24,37 @@ const NavigationSync: React.FC = () => {
     if (path === '/' || path === '/select-conversations') {
       setCurrentPage('select-conversations');
       setCurrentConversationId(null);
+      setCurrentTemplateId(null);
     } else if (path === '/label-conversations') {
       setCurrentPage('label-conversations');
       setCurrentConversationId(null);
+      setCurrentTemplateId(null);
     } else if (path === '/ai-comparisons') {
       setCurrentPage('ai-comparisons');
       setCurrentConversationId(null);
+      setCurrentTemplateId(null);
+    } else if (path === '/survey-templates') {
+      setCurrentPage('survey-templates');
+      setCurrentConversationId(null);
+      setCurrentTemplateId(null);
     } else if (path === '/survey-questions') {
       setCurrentPage('survey-questions');
       setCurrentConversationId(null);
+      setCurrentTemplateId(null);
     } else if (path.startsWith('/conversation/')) {
       // Extract conversation ID from path
       const conversationId = path.split('/conversation/')[1];
       setCurrentConversationId(conversationId);
+      setCurrentTemplateId(null);
       // Keep current page as 'label-conversations' for breadcrumb context
+    } else if (path.startsWith('/survey-template/')) {
+      // Extract template ID from path
+      const templateId = path.split('/survey-template/')[1];
+      setCurrentTemplateId(templateId);
+      setCurrentConversationId(null);
+      // Keep current page as 'survey-templates' for breadcrumb context
     }
-  }, [location.pathname, setCurrentPage, setCurrentConversationId]);
+  }, [location.pathname, setCurrentPage, setCurrentConversationId, setCurrentTemplateId]);
 
   return null;
 };
@@ -84,7 +100,7 @@ function App() {
         <Sidebar isOpen={isSidebarOpen} />
         <div className="flex-1 flex flex-col">
           <Header isSidebarOpen={isSidebarOpen} onToggleSidebar={toggleSidebar} />
-          <main className="flex-1 overflow-hidden p-6">
+          <main className="flex-1 overflow-hidden">
             <NavigationSync />
             <Routes>
               <Route path="/" element={<ConversationSelectorPage />} />
@@ -92,6 +108,8 @@ function App() {
               <Route path="/label-conversations" element={<LabelConversations />} />
               <Route path="/conversation/:id" element={<LabelingPage />} />
               <Route path="/ai-comparisons" element={<AIComparisonsPage />} />
+              <Route path="/survey-templates" element={<SurveyTemplatesPage />} />
+              <Route path="/survey-template/:id" element={<SurveyQuestionsPage />} />
               <Route path="/survey-questions" element={<SurveyQuestionsPage />} />
               <Route path="*" element={<ConversationSelectorPage />} />
             </Routes>

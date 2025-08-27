@@ -1,0 +1,54 @@
+/* Navigation Item Base */
+.nav-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-body);
+  text-decoration: none;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.nav-item:hover {
+  color: var(--color-secondary-hover);
+  background-color: var(--color-secondary-bg-hover);
+}
+
+.nav-item.active {
+  color: var(--color-secondary-active);
+  background-color: var(--color-secondary-bg-active);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Navigation Item with Icon */
+.nav-item-with-icon {
+  gap: var(--spacing-sm);
+}
+
+.nav-item-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* Nested Navigation Item */
+.nav-item-nested {
+  padding-left: var(--spacing-3xl);
+  padding-right: var(--spacing-lg);
+}
+
+/* Navigation Container */
+.nav-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}

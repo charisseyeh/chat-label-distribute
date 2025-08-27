@@ -1,0 +1,27 @@
+:root {
+  /* Body text color */
+  --color-text-body: #565656;
+  
+  /* Secondary colors */
+  --color-secondary-hover: #374151;
+  --color-secondary-active: #1f2937;
+  
+  /* Secondary background colors */
+  --color-secondary-bg-hover: #f3f4f6;
+  --color-secondary-bg-active: #e5e7eb;
+
+  /* Chip colors */
+  --color-chip-relevant-bg: #dcfce7;
+  --color-chip-relevant-text: #166534;
+  --color-chip-not-relevant-bg: #fed7d7;
+  --color-chip-not-relevant-text: #c53030;
+  --color-chip-selected-bg: #dbeafe;
+  --color-chip-selected-text: #1e40af;
+  --color-chip-currently-using-bg: #fef3c7;
+  --color-chip-currently-using-text: #d97706;
+
+  /* Check toggle colors */
+  --color-check-toggle-border: #d1d5db;
+  --color-check-toggle-checked: #3b82f6;
+  --color-check-toggle-hover: #9ca3af;
+}

@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useSurveyQuestions } from '../hooks/useSurveyQuestions';
 import { SurveyTemplate, SurveyQuestion } from '../types/survey';
 import { QuestionCategory, QuestionScale } from '../types/question';
 
 const SurveyQuestionsPage: React.FC = () => {
+  const { id: templateId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const {
     templates,
     currentTemplate,
@@ -26,19 +29,33 @@ const SurveyQuestionsPage: React.FC = () => {
   const [editingQuestion, setEditingQuestion] = useState<SurveyQuestion | null>(null);
   const [newTemplateName, setNewTemplateName] = useState('');
 
-  // Initialize default template on mount
+  // Initialize default template on mount if no template ID
   useEffect(() => {
-    initializeTemplate();
-  }, [initializeTemplate]);
+    if (!templateId) {
+      initializeTemplate();
+    }
+  }, [templateId, initializeTemplate]);
+
+  // Set current template when templateId changes
+  useEffect(() => {
+    if (templateId && templates.length > 0) {
+      const template = templates.find(t => t.id === templateId);
+      if (template) {
+        setCurrentTemplate(template);
+      }
+    }
+  }, [templateId, templates, setCurrentTemplate]);
 
   // Handle template creation
   const handleCreateTemplate = async () => {
     if (!newTemplateName.trim()) return;
     
     try {
-      await createTemplate(newTemplateName.trim());
+      const newTemplate = await createTemplate(newTemplateName.trim());
       setNewTemplateName('');
       setIsCreatingTemplate(false);
+      // Navigate to the new template
+      navigate(`/survey-template/${newTemplate.id}`);
     } catch (error) {
       console.error('Failed to create template:', error);
     }
@@ -81,6 +98,8 @@ const SurveyQuestionsPage: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this template? This action cannot be undone.')) {
       try {
         await deleteTemplate(templateId);
+        // Redirect to templates list after deletion
+        navigate('/survey-templates');
       } catch (error) {
         console.error('Failed to delete template:', error);
       }
@@ -95,12 +114,71 @@ const SurveyQuestionsPage: React.FC = () => {
     );
   }
 
+  // If no template ID and no current template, show template creation
+  if (!templateId && !currentTemplate) {
+    return (
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Survey Template</h1>
+          <p className="text-gray-600">
+            Create a new survey question template for psychological assessment of conversations.
+          </p>
+        </div>
+
+        {/* Create Template Form */}
+        <div className="p-6 bg-gray-50 border border-gray-200 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">New Template</h3>
+          <div className="flex items-center space-x-4">
+            <input
+              type="text"
+              value={newTemplateName}
+              onChange={(e) => setNewTemplateName(e.target.value)}
+              placeholder="Enter template name..."
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autoFocus
+            />
+            <button
+              onClick={handleCreateTemplate}
+              disabled={!newTemplateName.trim()}
+              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Create Template
+            </button>
+            <button
+              onClick={() => navigate('/survey-templates')}
+              className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              Back to Templates
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-6xl mx-auto">
+      {/* Header with back button */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Survey Questions</h1>
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={() => navigate('/survey-templates')}
+            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-2 rounded-lg transition-colors"
+          >
+            ← Back to Templates
+          </button>
+          <button
+            onClick={() => handleDeleteTemplate(currentTemplate!.id)}
+            className="px-4 py-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+          >
+            Delete Template
+          </button>
+        </div>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          {currentTemplate ? currentTemplate.name : 'Survey Questions'}
+        </h1>
         <p className="text-gray-600">
-          Create and manage survey questions for psychological assessment of conversations.
+          Manage questions for this survey template.
         </p>
       </div>
 
@@ -118,85 +196,6 @@ const SurveyQuestionsPage: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* Template Management */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Survey Templates</h2>
-          <button
-            onClick={() => setIsCreatingTemplate(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Create New Template
-          </button>
-        </div>
-
-        {/* Create Template Form */}
-        {isCreatingTemplate && (
-          <div className="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-            <div className="flex items-center space-x-4">
-              <input
-                type="text"
-                value={newTemplateName}
-                onChange={(e) => setNewTemplateName(e.target.value)}
-                placeholder="Enter template name..."
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                onClick={handleCreateTemplate}
-                disabled={!newTemplateName.trim()}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Create
-              </button>
-              <button
-                onClick={() => {
-                  setIsCreatingTemplate(false);
-                  setNewTemplateName('');
-                }}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Template List */}
-        <div className="space-y-4">
-          {templates.map((template) => (
-            <div
-              key={template.id}
-              className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                currentTemplate?.id === template.id
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-              onClick={() => setCurrentTemplate(template)}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-gray-900">{template.name}</h3>
-                  <p className="text-sm text-gray-600">
-                    {template.questions.length} questions • Created {new Date(template.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteTemplate(template.id);
-                    }}
-                    className="px-3 py-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* Question Management */}
       {currentTemplate && (
@@ -273,19 +272,12 @@ const SurveyQuestionsPage: React.FC = () => {
       {/* No Template Selected */}
       {!currentTemplate && templates.length > 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-600">Select a template to manage its questions.</p>
-        </div>
-      )}
-
-      {/* No Templates */}
-      {templates.length === 0 && !isCreatingTemplate && (
-        <div className="text-center py-12">
-          <p className="text-gray-600 mb-4">No survey templates found.</p>
+          <p className="text-gray-600">Template not found or not loaded.</p>
           <button
-            onClick={() => setIsCreatingTemplate(true)}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            onClick={() => navigate('/survey-templates')}
+            className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Create Your First Template
+            Back to Templates
           </button>
         </div>
       )}

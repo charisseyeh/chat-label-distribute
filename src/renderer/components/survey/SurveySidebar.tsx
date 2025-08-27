@@ -171,7 +171,7 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages 
   return (
     <div className="flex flex-col h-full">
       {/* Survey Sections */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {surveySections.map((section) => (
           <SurveySection
             key={section.position}

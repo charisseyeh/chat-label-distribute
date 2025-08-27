@@ -17,7 +17,7 @@ const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
     <div className={`flex h-screen max-h-screen overflow-hidden`}>
       {/* Main Content Panel - Flexible width */}
       <div className="flex-1 flex flex-col min-h-0">
-        <div className="flex-1 p-6 w-full overflow-y-auto">
+        <div className="flex-1 pb-24 w-full overflow-y-auto">
           {children}
         </div>
       </div>

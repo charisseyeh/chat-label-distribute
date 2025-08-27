@@ -1,0 +1,44 @@
+/* List Components - Container for list items */
+
+/* ===== LIST CONTAINERS ===== */
+.list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* List with dividing lines */
+.list--with-dividers .list-item {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.list--with-dividers .list-item:last-child {
+  border-bottom: none;
+}
+
+/* List without dividing lines */
+.list--without-dividers .list-item {
+  border-bottom: none;
+}
+
+/* ===== LIST VARIANTS ===== */
+.list--compact .list-item {
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.list--spacious .list-item {
+  padding: var(--spacing-lg) var(--spacing-md);
+}
+
+/* ===== LIST STATES ===== */
+.list-item:hover {
+  background-color: #f9fafb;
+}
+
+.list-item--selected {
+  background-color: #eff6ff;
+}
+
+.list-item--selected:hover {
+  background-color: #dbeafe;
+}

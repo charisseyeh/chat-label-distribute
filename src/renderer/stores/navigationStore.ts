@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type Page = 'select-conversations' | 'label-conversations' | 'ai-comparisons' | 'survey-questions';
+export type Page = 'select-conversations' | 'label-conversations' | 'ai-comparisons' | 'survey-templates' | 'survey-questions';
 
 export interface NavigationState {
   currentPage: Page;
@@ -9,18 +9,21 @@ export interface NavigationState {
     title: string;
   }>;
   currentConversationId: string | null;
+  currentTemplateId: string | null;
   setCurrentPage: (page: Page) => void;
   setSelectedConversations: (conversations: Array<{ id: string; title: string }>) => void;
   addSelectedConversation: (conversation: { id: string; title: string }) => void;
   removeSelectedConversation: (id: string) => void;
   clearSelectedConversations: () => void;
   setCurrentConversationId: (id: string | null) => void;
+  setCurrentTemplateId: (id: string | null) => void;
 }
 
 export const useNavigationStore = create<NavigationState>((set) => ({
   currentPage: 'select-conversations',
   selectedConversations: [],
   currentConversationId: null,
+  currentTemplateId: null,
   
   setCurrentPage: (page) => set({ currentPage: page }),
   
@@ -37,4 +40,6 @@ export const useNavigationStore = create<NavigationState>((set) => ({
   clearSelectedConversations: () => set({ selectedConversations: [] }),
   
   setCurrentConversationId: (id) => set({ currentConversationId: id }),
+  
+  setCurrentTemplateId: (id) => set({ currentTemplateId: id }),
 }));

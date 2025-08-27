@@ -360,31 +360,8 @@ const LabelingPage: React.FC = () => {
       }
               className="labeling-page"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-border bg-white">
-        <div className="flex items-center space-x-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">{currentConversation.title}</h1>
-          </div>
-        </div>
-      </div>
-
-      {/* Conversation Metadata */}
-      <div className="p-6 bg-white border-b border-border">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div>
-            <div className="text-sm text-muted-foreground">Messages</div>
-            <div className="font-medium">{currentConversation.messageCount}</div>
-          </div>
-          <div>
-            <div className="text-sm text-muted-foreground">Created</div>
-            <div className="font-medium">{new Date(currentConversation.createdAt).toLocaleDateString()}</div>
-          </div>
-        </div>
-      </div>
-
       {/* Messages Container - Scrollable */}
-      <div className="flex-1 overflow-y-auto p-6 messages-container min-h-0">
+      <div className="flex-1 overflow-y-auto p-6 pb-44 messages-container min-h-0">
         {!Array.isArray(messages) || messages.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             {!Array.isArray(messages) ? 'Error: Messages not loaded properly' : 'No messages found in this conversation'}

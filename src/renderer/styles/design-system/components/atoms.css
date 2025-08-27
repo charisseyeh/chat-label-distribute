@@ -1,0 +1,76 @@
+/* Atomic Components - Basic building blocks */
+
+/* ===== CHIPS ===== */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.chip--relevant {
+  background-color: var(--color-chip-relevant-bg);
+  color: var(--color-chip-relevant-text);
+}
+
+.chip--not-relevant {
+  background-color: var(--color-chip-not-relevant-bg);
+  color: var(--color-chip-not-relevant-text);
+}
+
+.chip--selected {
+  background-color: var(--color-chip-selected-bg);
+  color: var(--color-chip-selected-text);
+}
+
+.chip--currently-using {
+  background-color: var(--color-chip-currently-using-bg);
+  color: var(--color-chip-currently-using-text);
+}
+
+/* ===== CHECK TOGGLES ===== */
+.check-toggle {
+  position: relative;
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-check-toggle-border);
+  border-radius: 50%;
+  background-color: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.check-toggle:hover {
+  border-color: var(--color-check-toggle-hover);
+}
+
+.check-toggle--checked {
+  background-color: var(--color-check-toggle-checked);
+  border-color: var(--color-check-toggle-checked);
+}
+
+.check-toggle--checked::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.check-toggle input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}

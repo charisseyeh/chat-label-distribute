@@ -1,0 +1,5 @@
+/* Import all design tokens */
+@import './colors.css';
+@import './spacing.css';
+@import './typography.css';
+@import './border-radius.css';
