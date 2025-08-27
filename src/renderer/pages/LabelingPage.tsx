@@ -6,6 +6,7 @@ import { useSurveyStore } from '../stores/surveyStore';
 
 import SurveySidebar from '../components/survey/SurveySidebar';
 import { TwoPanelLayout } from '../components/common';
+import { MessageList } from '../components/conversation';
 
 interface Message {
   id: string;
@@ -390,28 +391,18 @@ const LabelingPage: React.FC = () => {
           </div>
         ) : (
           <>
-            <div className="space-y-4">
-              {displayedMessages.map((message, index) => (
-                <div key={message.id} className="flex space-x-3">
-                  
-                  {/* Message Content */}
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getRoleColor(message.role)}`}>
-                        {getRoleDisplayName(message.role)}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(message.create_time * 1000).toLocaleTimeString()}
-                      </span>
-                    </div>
-                    
-                    <div className="prose prose-sm max-w-none">
-                      {formatMessageContent(message.content)}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <MessageList
+              messages={displayedMessages.map(msg => ({
+                id: msg.id,
+                role: msg.role,
+                content: msg.content,
+                timestamp: msg.create_time
+              }))}
+              layout="two-column"
+              messageVariant="bubble"
+              showRole={false}
+              showTimestamp={false}
+            />
             
             {/* Lazy Loading Controls */}
             {messages.length > messageLimit && !showAllMessages && (
