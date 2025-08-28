@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSurveyQuestions } from '../hooks/survey/useSurveyQuestions';
-import { useSurveyQuestionStore } from '../stores/surveyQuestionStore';
 import { SurveyTemplate, SurveyQuestion } from '../types/survey';
 import { QuestionScale } from '../types/question';
-import { ListItem, List, Chip } from '../components/common';
 import { FloatingLabelInput, FloatingLabelSelect, FloatingLabelTextarea } from '../components/common/molecules/label';
 
 const SurveyQuestionsPage: React.FC = () => {
@@ -28,8 +26,6 @@ const SurveyQuestionsPage: React.FC = () => {
   } = useSurveyQuestions();
 
   const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
-  const [isEditingQuestion, setIsEditingQuestion] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState<SurveyQuestion | null>(null);
   const [newTemplateName, setNewTemplateName] = useState('');
 
   // Initialize default template on mount if no template ID
@@ -64,22 +60,30 @@ const SurveyQuestionsPage: React.FC = () => {
     }
   };
 
-  // Handle question creation/editing
-  const handleSaveQuestion = async (questionData: Partial<SurveyQuestion>) => {
+  // Handle question creation
+  const handleAddQuestion = async () => {
     if (!currentTemplate) return;
 
     try {
-      if (editingQuestion) {
-        // Update existing question
-        await updateQuestion(currentTemplate.id, editingQuestion.id, questionData);
-        setIsEditingQuestion(false);
-        setEditingQuestion(null);
-      } else {
-        // Create new question
-        await addQuestion(currentTemplate.id, questionData as Omit<SurveyQuestion, 'id' | 'order'>);
-      }
+      const newQuestion = {
+        text: 'New question',
+        scale: 7,
+        labels: { 1: 'Very Low', 2: 'Low', 3: 'Somewhat Low', 4: 'Neutral', 5: 'Somewhat High', 6: 'High', 7: 'Very High' }
+      };
+      await addQuestion(currentTemplate.id, newQuestion);
     } catch (error) {
-      console.error('Failed to save question:', error);
+      console.error('Failed to add question:', error);
+    }
+  };
+
+  // Handle question update
+  const handleUpdateQuestion = async (questionId: string, questionData: Partial<SurveyQuestion>) => {
+    if (!currentTemplate) return;
+
+    try {
+      await updateQuestion(currentTemplate.id, questionId, questionData);
+    } catch (error) {
+      console.error('Failed to update question:', error);
     }
   };
 
@@ -159,7 +163,7 @@ const SurveyQuestionsPage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto p-6 h-screen overflow-y-auto">
       {/* Error Display */}
       {error && (
         <div className="mb-6 p-4 bg-error/10 border border-error/20 rounded-lg">
@@ -208,7 +212,7 @@ const SurveyQuestionsPage: React.FC = () => {
           {/* Add Question Button */}
           <div className="mb-8">
             <button
-              onClick={() => setIsEditingQuestion(true)}
+              onClick={handleAddQuestion}
               className="w-full py-4 px-6 bg-orange-100 border-2 border-orange-300 border-dashed rounded-lg text-orange-700 hover:bg-orange-200 transition-colors font-medium"
             >
               + Add new question
@@ -218,31 +222,16 @@ const SurveyQuestionsPage: React.FC = () => {
           {/* Questions Display */}
           <div className="space-y-6">
             {currentTemplate.questions.map((question, index) => (
-              <QuestionCard
+              <EditableQuestionCard
                 key={question.id}
                 question={question}
                 index={index}
-                onEdit={() => {
-                  setEditingQuestion(question);
-                  setIsEditingQuestion(true);
-                }}
+                onSave={(questionData) => handleUpdateQuestion(question.id, questionData)}
                 onDelete={() => handleDeleteQuestion(question.id)}
               />
             ))}
           </div>
         </div>
-      )}
-
-      {/* Question Editor Modal */}
-      {isEditingQuestion && (
-        <QuestionEditor
-          question={editingQuestion}
-          onSave={handleSaveQuestion}
-          onCancel={() => {
-            setIsEditingQuestion(false);
-            setEditingQuestion(null);
-          }}
-        />
       )}
 
       {/* No Template Selected */}
@@ -261,72 +250,32 @@ const SurveyQuestionsPage: React.FC = () => {
   );
 };
 
-// Question Card Component
-interface QuestionCardProps {
+// Editable Question Card Component
+interface EditableQuestionCardProps {
   question: SurveyQuestion;
   index: number;
-  onEdit: () => void;
+  onSave: (questionData: Partial<SurveyQuestion>) => void;
   onDelete: () => void;
 }
 
-const QuestionCard: React.FC<QuestionCardProps> = ({ question, index, onEdit, onDelete }) => {
-  return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-      <div className="flex items-start justify-between mb-4">
-        <h3 className="text-lg font-medium text-gray-900">
-          Question {index + 1}
-        </h3>
-        <div className="flex space-x-2">
-          <button
-            onClick={onEdit}
-            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-          >
-            Edit
-          </button>
-          <button
-            onClick={onDelete}
-            className="text-red-600 hover:text-red-800 text-sm font-medium"
-          >
-            Delete
-          </button>
-        </div>
-      </div>
-      
-      <p className="text-gray-700 mb-4">{question.text}</p>
-      
-      <div className="space-y-3">
-        {Object.entries(question.labels).map(([rating, label]) => (
-          <div key={rating} className="flex items-center space-x-3">
-            <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-700">
-              {rating}
-            </div>
-            <span className="text-gray-600">{label}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// Question Editor Component
-interface QuestionEditorProps {
-  question?: SurveyQuestion | null;
-  onSave: (questionData: Partial<SurveyQuestion>) => void;
-  onCancel: () => void;
-}
-
-const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onSave, onCancel }) => {
+const EditableQuestionCard: React.FC<EditableQuestionCardProps> = ({ 
+  question, 
+  index, 
+  onSave, 
+  onDelete 
+}) => {
   const [formData, setFormData] = useState({
-    text: question?.text || '',
-    scale: question?.scale || 7,
-    labels: question?.labels || { 1: 'Very Low', 2: 'Low', 3: 'Somewhat Low', 4: 'Neutral', 5: 'Somewhat High', 6: 'High', 7: 'Very High' }
+    text: question.text,
+    scale: question.scale,
+    labels: { ...question.labels }
   });
 
   const handleScaleChange = (newScale: number) => {
+    const labels = generateDefaultLabels(newScale);
     setFormData(prev => ({
       ...prev,
       scale: newScale,
-      labels: generateDefaultLabels(newScale)
+      labels
     }));
   };
 
@@ -369,80 +318,86 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onSave, onCan
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-semibold text-foreground mb-4">
-          {question ? 'Edit Question' : 'Add New Question'}
-        </h3>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Question Text */}
-          <FloatingLabelTextarea
-            label="Question Text"
-            value={formData.text}
-            onChange={(value) => setFormData(prev => ({ ...prev, text: value }))}
-            placeholder="Enter your question here..."
-            rows={3}
-            className="w-full"
-          />
+    <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Question Header */}
+        <div className="flex items-start justify-between">
+          <h3 className="text-sm font-medium text-gray-500">
+            Question {index + 1}
+          </h3>
+          <button
+            type="submit"
+            className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Save
+          </button>
+        </div>
 
-          {/* Scale Selection */}
-          <FloatingLabelSelect
-            label="Rating Scale"
-            value={formData.scale.toString()}
-            onChange={(value) => handleScaleChange(Number(value))}
-            options={[
-              { value: "2", label: "2-point scale" },
-              { value: "3", label: "3-point scale" },
-              { value: "5", label: "5-point scale" },
-              { value: "7", label: "7-point scale" },
-              { value: "10", label: "10-point scale" }
-            ]}
-            className="w-full"
-          />
+        {/* Question Text */}
+        <FloatingLabelTextarea
+          label="Question Text"
+          value={formData.text}
+          onChange={(value) => setFormData(prev => ({ ...prev, text: value }))}
+          placeholder="Enter your question here..."
+          rows={3}
+          className="w-full"
+        />
 
-          {/* Labels */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Rating Labels
-            </label>
-            <div className="space-y-2">
-              {Array.from({ length: formData.scale }, (_, i) => i + 1).map((rating) => (
-                <div key={rating} className="flex items-center space-x-2">
-                  <span className="w-8 text-sm font-medium text-foreground">{rating}</span>
-                  <FloatingLabelInput
-                    label={`Label for rating ${rating}`}
+        {/* Scale Selection */}
+        <FloatingLabelSelect
+          label="Rating Scale"
+          value={formData.scale.toString()}
+          onChange={(value) => handleScaleChange(Number(value))}
+          options={[
+            { value: "2", label: "2-point scale" },
+            { value: "3", label: "3-point scale" },
+            { value: "5", label: "5-point scale" },
+            { value: "7", label: "7-point scale" },
+            { value: "10", label: "10-point scale" }
+          ]}
+          className="w-full"
+        />
+
+        {/* Labels */}
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">
+            Rating Labels
+          </label>
+          <div className="space-y-3">
+            {Array.from({ length: formData.scale }, (_, i) => i + 1).map((rating) => (
+              <div key={rating} className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-700 flex-shrink-0">
+                  {rating}
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="text"
                     value={formData.labels[rating] || ''}
-                    onChange={(value) => setFormData(prev => ({
+                    onChange={(e) => setFormData(prev => ({
                       ...prev,
-                      labels: { ...prev.labels, [rating]: value }
+                      labels: { ...prev.labels, [rating]: e.target.value }
                     }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder={`Label for rating ${rating}`}
-                    className="flex-1"
+                    required
                   />
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
-
-          {/* Form Actions */}
-          <div className="flex items-center justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="px-4 py-2 text-muted-foreground bg-muted rounded-lg hover:bg-secondary-100 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-            >
-              {question ? 'Update Question' : 'Add Question'}
-            </button>
-          </div>
-        </form>
-      </div>
+        </div>
+        
+        {/* Delete Question Button */}
+        <div className="pt-4 border-t border-gray-200">
+          <button
+            type="button"
+            onClick={onDelete}
+            className="w-full py-2 px-4 bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition-colors text-sm font-medium"
+          >
+            Delete question
+          </button>
+        </div>
+      </form>
     </div>
   );
 };
