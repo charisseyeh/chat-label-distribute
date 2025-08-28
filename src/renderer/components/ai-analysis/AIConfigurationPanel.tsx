@@ -25,7 +25,7 @@ const AIConfigurationPanel: React.FC<AIConfigurationPanelProps> = ({
   currentTemplate
 }) => {
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <div>
         <FloatingLabelInput
           label="OpenAI API Key"
@@ -49,7 +49,7 @@ const AIConfigurationPanel: React.FC<AIConfigurationPanelProps> = ({
         />
       </div>
 
-      <div className="pt-2">
+      <div>
         <button
           onClick={onGenerate}
           disabled={isGenerating || !hasSelectedConversations || !apiKey.trim()}
@@ -62,7 +62,19 @@ const AIConfigurationPanel: React.FC<AIConfigurationPanelProps> = ({
       {/* Survey Template Display - Compact version */}
       {currentTemplate && (
         <div>
-          <body>Using "{currentTemplate.name}"</body>
+          <span className="text-muted-foreground">
+            Using "{currentTemplate.name}" {' '}
+            <button 
+              className="text-blue-600 underline hover:text-blue-800 cursor-pointer text-sm"
+              onClick={() => {
+                // This could open a modal with full prompt preview
+                console.log('Review prompt clicked for template:', currentTemplate.name);
+                // You could show this in a modal or tooltip
+              }}
+            >
+              Review prompt
+            </button>
+          </span>
         </div>
       )}
     </div>

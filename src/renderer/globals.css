@@ -113,6 +113,28 @@
     font-size: var(--font-size-body);
     font-weight: var(--font-weight-normal);
   }
+  
+  /* Typography Utility Classes */
+  .font-weight-normal {
+    font-weight: var(--font-weight-normal);
+  }
+  
+  .font-weight-medium {
+    font-weight: var(--font-weight-medium);
+  }
+  
+  .font-weight-semibold {
+    font-weight: var(--font-weight-semibold);
+  }
+  
+  /* Text Color Utilities */
+  .text-foreground {
+    color: var(--foreground);
+  }
+  
+  .text-muted-foreground {
+    color: var(--muted-foreground);
+  }
 }
 
 /* ==========================================================================

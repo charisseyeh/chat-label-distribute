@@ -6,3 +6,5 @@ export { default as ComparisonResults } from './ComparisonResults';
 export { default as TrialComparisonTable } from './TrialComparisonTable';
 export { default as IndividualResults } from './IndividualResults';
 export { default as AIAnalysisTab } from './AIAnalysisTab';
+export { default as AIComparisonSidebar } from './AIComparisonSidebar';
+export { default as ComparisonResultsDisplay } from './ComparisonResultsDisplay';

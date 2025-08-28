@@ -131,8 +131,8 @@ const ConversationSelectorPage: React.FC = () => {
           ) : (
             <div className="p-4">
               <div className="text-center text-gray-500 py-8">
-                <p className="text-sm">No file loaded</p>
-                <p className="text-xs">Load a conversations file to see filtering options</p>
+                <p>No file loaded</p>
+                <p>Load a conversations file to see filtering options</p>
               </div>
             </div>
           )}
