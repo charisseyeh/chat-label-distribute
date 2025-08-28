@@ -11,6 +11,7 @@ interface FloatingLabelInputProps {
   showToggleButton?: boolean;
   onToggleVisibility?: () => void;
   isVisible?: boolean;
+  noBorder?: boolean;
 }
 
 export const FloatingLabelInput: React.FC<FloatingLabelInputProps> = ({
@@ -23,7 +24,8 @@ export const FloatingLabelInput: React.FC<FloatingLabelInputProps> = ({
   disabled = false,
   showToggleButton = false,
   onToggleVisibility,
-  isVisible = true
+  isVisible = true,
+  noBorder = false
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const hasValue = value && value.length > 0;
@@ -57,13 +59,14 @@ export const FloatingLabelInput: React.FC<FloatingLabelInputProps> = ({
         disabled={disabled}
                   className={`
             w-full px-3 pt-6 pb-3 h-14
-            border border-gray-300 rounded-md
-            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+            ${noBorder ? 'border-0 focus:ring-0' : 'border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent'}
+            focus:outline-none
             transition-all duration-200
             ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}
             ${showToggleButton ? 'pr-12' : ''}
             ${type === 'date' ? 'text-xs' : ''}
           `}
+        style={{ borderRadius: 'var(--radius-md)' }}
       />
         <label
           className="absolute left-3 top-2 text-xs pointer-events-none"

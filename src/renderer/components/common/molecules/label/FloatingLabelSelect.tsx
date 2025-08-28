@@ -7,6 +7,7 @@ interface FloatingLabelSelectProps {
   options: { value: string; label: string }[];
   className?: string;
   disabled?: boolean;
+  noBorder?: boolean;
 }
 
 export const FloatingLabelSelect: React.FC<FloatingLabelSelectProps> = ({
@@ -15,7 +16,8 @@ export const FloatingLabelSelect: React.FC<FloatingLabelSelectProps> = ({
   onChange,
   options,
   className = '',
-  disabled = false
+  disabled = false,
+  noBorder = false
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const hasValue = value && value.length > 0;
@@ -30,11 +32,12 @@ export const FloatingLabelSelect: React.FC<FloatingLabelSelectProps> = ({
         disabled={disabled}
         className={`
           w-full px-3 pt-6 pb-3 h-14 text-sm
-          border border-gray-300 rounded-md
-          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+          ${noBorder ? 'border-0 focus:ring-0' : 'border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent'}
+          focus:outline-none
           transition-all duration-200 appearance-none
           ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}
         `}
+        style={{ borderRadius: 'var(--radius-md)' }}
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

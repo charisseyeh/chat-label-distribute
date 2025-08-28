@@ -8,6 +8,7 @@ interface FloatingLabelTextareaProps {
   rows?: number;
   className?: string;
   disabled?: boolean;
+  noBorder?: boolean;
 }
 
 export const FloatingLabelTextarea: React.FC<FloatingLabelTextareaProps> = ({
@@ -17,7 +18,8 @@ export const FloatingLabelTextarea: React.FC<FloatingLabelTextareaProps> = ({
   placeholder,
   rows = 3,
   className = '',
-  disabled = false
+  disabled = false,
+  noBorder = false
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const hasValue = value && value.length > 0;
@@ -34,11 +36,12 @@ export const FloatingLabelTextarea: React.FC<FloatingLabelTextareaProps> = ({
         disabled={disabled}
         className={`
           w-full px-3 py-2
-          border border-gray-300 rounded-md
-          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+          ${noBorder ? 'border-0 focus:ring-0' : 'border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent'}
+          focus:outline-none
           transition-all duration-200 resize-none
           ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}
         `}
+        style={{ borderRadius: 'var(--radius-md)' }}
       />
       <label
         className="absolute left-3 top-1 text-xs pointer-events-none"

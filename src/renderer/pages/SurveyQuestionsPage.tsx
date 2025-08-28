@@ -30,6 +30,7 @@ const SurveyQuestionsPage: React.FC = () => {
   const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
   const [newTemplateName, setNewTemplateName] = useState('');
   const [pendingChanges, setPendingChanges] = useState<Map<string, Partial<SurveyQuestion>>>(new Map());
+  const [globalScale, setGlobalScale] = useState<number>(7);
 
   // Initialize default template on mount if no template ID
   useEffect(() => {
@@ -44,6 +45,8 @@ const SurveyQuestionsPage: React.FC = () => {
       const template = templates.find(t => t.id === templateId);
       if (template) {
         setCurrentTemplate(template);
+        // Set global scale from the first question or default to 7
+        setGlobalScale(template.questions[0]?.scale || 7);
       }
     }
   }, [templateId, templates, setCurrentTemplate]);
@@ -96,6 +99,58 @@ const SurveyQuestionsPage: React.FC = () => {
     } catch (error) {
       console.error('Failed to create template:', error);
     }
+  };
+
+  // Handle global scale change
+  const handleGlobalScaleChange = (newScale: number) => {
+    setGlobalScale(newScale);
+    
+    // Update all questions with the new scale and default labels
+    if (currentTemplate) {
+      const defaultLabels = generateDefaultLabels(newScale);
+      const updatedQuestions = currentTemplate.questions.map(question => ({
+        ...question,
+        scale: newScale,
+        labels: defaultLabels
+      }));
+      
+      // Update the template with new questions
+      updateTemplate(currentTemplate.id, { questions: updatedQuestions });
+    }
+  };
+
+  // Generate default labels for different scales
+  const generateDefaultLabels = (scale: number): Record<number, string> => {
+    const labels: Record<number, string> = {};
+    
+    if (scale === 2) {
+      labels[1] = 'No';
+      labels[2] = 'Yes';
+    } else if (scale === 3) {
+      labels[1] = 'Low';
+      labels[2] = 'Medium';
+      labels[3] = 'High';
+    } else if (scale === 5) {
+      labels[1] = 'Very Poor';
+      labels[2] = 'Poor';
+      labels[3] = 'Average';
+      labels[4] = 'Good';
+      labels[5] = 'Excellent';
+    } else if (scale === 7) {
+      labels[1] = 'Very Low';
+      labels[2] = 'Low';
+      labels[3] = 'Somewhat Low';
+      labels[4] = 'Neutral';
+      labels[5] = 'Somewhat High';
+      labels[6] = 'High';
+      labels[7] = 'Very High';
+    } else {
+      for (let i = 1; i <= scale; i++) {
+        labels[i] = i.toString();
+      }
+    }
+    
+    return labels;
   };
 
   // Handle question creation
@@ -235,7 +290,7 @@ const SurveyQuestionsPage: React.FC = () => {
       {/* Survey Header */}
       {currentTemplate && (
         <div className="mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="flex flex-col gap-0 mb-4 border border-border" style={{ borderRadius: 'var(--radius-md)' }}>
             <FloatingLabelInput
               label="Title"
               value={currentTemplate.name}
@@ -243,13 +298,14 @@ const SurveyQuestionsPage: React.FC = () => {
                 // Handle title update if needed
               }}
               placeholder="Survey title"
-              className="w-full"
+              className="w-full border-b border-border"
+              noBorder={true}
             />
             <FloatingLabelSelect
               label="Scale"
-              value={currentTemplate.questions[0]?.scale?.toString() || "7"}
+              value={globalScale.toString()}
               onChange={(value) => {
-                // Handle scale update if needed
+                handleGlobalScaleChange(Number(value));
               }}
               options={[
                 { value: "2", label: "2 point scale" },
@@ -259,6 +315,7 @@ const SurveyQuestionsPage: React.FC = () => {
                 { value: "10", label: "10 point scale" }
               ]}
               className="w-full"
+              noBorder={true}
             />
           </div>
 
@@ -266,7 +323,7 @@ const SurveyQuestionsPage: React.FC = () => {
           <div className="mb-8">
             <button
               onClick={handleAddQuestion}
-              className="w-full py-4 px-6 bg-orange-100 border-2 border-orange-300 border-dashed rounded-lg text-orange-700 hover:bg-orange-200 transition-colors font-medium"
+              className="btn btn-action btn-lg w-full"
             >
               + Add new question
             </button>
@@ -279,6 +336,7 @@ const SurveyQuestionsPage: React.FC = () => {
                 key={question.id}
                 question={question}
                 index={index}
+                globalScale={globalScale}
                 onSave={(questionData) => handleUpdateQuestion(question.id, questionData)}
                 onDelete={() => handleDeleteQuestion(question.id)}
                 onTrackChanges={(questionData) => trackQuestionChanges(question.id, questionData)}
@@ -308,6 +366,7 @@ const SurveyQuestionsPage: React.FC = () => {
 interface EditableQuestionCardProps {
   question: SurveyQuestion;
   index: number;
+  globalScale: number;
   onSave: (questionData: Partial<SurveyQuestion>) => void;
   onDelete: () => void;
   onTrackChanges: (questionData: Partial<SurveyQuestion>) => void;
@@ -316,6 +375,7 @@ interface EditableQuestionCardProps {
 const EditableQuestionCard: React.FC<EditableQuestionCardProps> = ({ 
   question, 
   index, 
+  globalScale,
   onSave, 
   onDelete,
   onTrackChanges
@@ -325,6 +385,9 @@ const EditableQuestionCard: React.FC<EditableQuestionCardProps> = ({
     scale: question.scale,
     labels: { ...question.labels }
   });
+
+  // Use global scale for rendering, but keep local scale for tracking changes
+  const displayScale = globalScale;
 
   const handleScaleChange = (newScale: number) => {
     const labels = generateDefaultLabels(newScale);
@@ -384,49 +447,32 @@ const EditableQuestionCard: React.FC<EditableQuestionCardProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-      <div className="space-y-4">
+    <div className="rounded-lg border border-border" style={{ borderRadius: 'var(--radius-md)'}}>
+      <div>
         {/* Question Header */}
-        <div className="flex items-start justify-between">
-          <h3 className="text-sm font-medium text-gray-500">
+        <div className="flex items-start px-3">
+          <h3 className="text-sm text-gray-500 pt-3 pb-0">
             Question {index + 1}
           </h3>
         </div>
 
         {/* Question Text */}
-        <FloatingLabelTextarea
-          label="Question Text"
-          value={formData.text}
-          onChange={(value) => handleInputChange('text', value)}
-          placeholder="Enter your question here..."
-          rows={3}
-          className="w-full"
-        />
-
-        {/* Scale Selection */}
-        <FloatingLabelSelect
-          label="Rating Scale"
-          value={formData.scale.toString()}
-          onChange={(value) => handleScaleChange(Number(value))}
-          options={[
-            { value: "2", label: "2-point scale" },
-            { value: "3", label: "3-point scale" },
-            { value: "5", label: "5-point scale" },
-            { value: "7", label: "7-point scale" },
-            { value: "10", label: "10-point scale" }
-          ]}
-          className="w-full"
-        />
+        <div className="border-b border-border pb-3">
+          <input
+            type="text"
+            value={formData.text}
+            onChange={(e) => handleInputChange('text', e.target.value)}
+            placeholder="Enter your question here..."
+            className="w-full px-3 py-0 border-0 focus:ring-0 focus:outline-none"
+          />
+        </div>
 
         {/* Labels */}
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">
-            Rating Labels
-          </label>
-          <div className="space-y-3">
-            {Array.from({ length: formData.scale }, (_, i) => i + 1).map((rating) => (
-              <div key={rating} className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-700 flex-shrink-0">
+        <div className="px-3">
+          <div className="space-y-1">
+            {Array.from({ length: displayScale }, (_, i) => i + 1).map((rating) => (
+              <div key={rating} className={`flex items-center ${rating < displayScale ? 'border-b border-border' : ''}`}>
+                <div className="w-6 h-6 border border-border rounded-full flex items-center justify-center text-sm text-muted-foreground flex-shrink-0">
                   {rating}
                 </div>
                 <div className="flex-1">
@@ -434,7 +480,7 @@ const EditableQuestionCard: React.FC<EditableQuestionCardProps> = ({
                     type="text"
                     value={formData.labels[rating] || ''}
                     onChange={(e) => handleLabelChange(rating, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border-0 focus:ring-0 focus:outline-none"
                     placeholder={`Label for rating ${rating}`}
                     required
                   />
