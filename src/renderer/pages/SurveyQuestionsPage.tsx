@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSurveyQuestions } from '../hooks/survey/useSurveyQuestions';
+import { usePageActionsStore } from '../stores/pageActionsStore';
 import { SurveyTemplate, SurveyQuestion } from '../types/survey';
 import { QuestionScale } from '../types/question';
 import { FloatingLabelInput, FloatingLabelSelect, FloatingLabelTextarea } from '../components/common/molecules/label';
@@ -8,6 +9,7 @@ import { FloatingLabelInput, FloatingLabelSelect, FloatingLabelTextarea } from '
 const SurveyQuestionsPage: React.FC = () => {
   const { id: templateId } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { setSaveHandler, clearSaveHandler, setPendingChangesCount } = usePageActionsStore();
   const {
     templates,
     currentTemplate,
@@ -27,6 +29,7 @@ const SurveyQuestionsPage: React.FC = () => {
 
   const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
   const [newTemplateName, setNewTemplateName] = useState('');
+  const [pendingChanges, setPendingChanges] = useState<Map<string, Partial<SurveyQuestion>>>(new Map());
 
   // Initialize default template on mount if no template ID
   useEffect(() => {
@@ -44,6 +47,41 @@ const SurveyQuestionsPage: React.FC = () => {
       }
     }
   }, [templateId, templates, setCurrentTemplate]);
+
+  // Set up save handler for the footer
+  useEffect(() => {
+    const saveAllChanges = async () => {
+      if (!currentTemplate || pendingChanges.size === 0) return;
+
+      try {
+        // Save all pending changes
+        const savePromises = Array.from(pendingChanges.entries()).map(([questionId, questionData]) =>
+          updateQuestion(currentTemplate.id, questionId, questionData)
+        );
+        
+        await Promise.all(savePromises);
+        
+        // Clear pending changes
+        setPendingChanges(new Map());
+      } catch (error) {
+        console.error('Failed to save changes:', error);
+        throw error;
+      }
+    };
+
+    setSaveHandler(saveAllChanges);
+
+    // Cleanup when component unmounts
+    return () => {
+      clearSaveHandler();
+      setPendingChangesCount(0);
+    };
+  }, [currentTemplate, pendingChanges, updateQuestion, setSaveHandler, clearSaveHandler, setPendingChangesCount]);
+
+  // Sync pending changes count with the store
+  useEffect(() => {
+    setPendingChangesCount(pendingChanges.size);
+  }, [pendingChanges.size, setPendingChangesCount]);
 
   // Handle template creation
   const handleCreateTemplate = async () => {
@@ -82,9 +120,20 @@ const SurveyQuestionsPage: React.FC = () => {
 
     try {
       await updateQuestion(currentTemplate.id, questionId, questionData);
+      // Remove from pending changes after successful save
+      const newPendingChanges = new Map(pendingChanges);
+      newPendingChanges.delete(questionId);
+      setPendingChanges(newPendingChanges);
     } catch (error) {
       console.error('Failed to update question:', error);
     }
+  };
+
+  // Track changes in a question
+  const trackQuestionChanges = (questionId: string, questionData: Partial<SurveyQuestion>) => {
+    const newPendingChanges = new Map(pendingChanges);
+    newPendingChanges.set(questionId, questionData);
+    setPendingChanges(newPendingChanges);
   };
 
   // Handle question deletion
@@ -94,6 +143,10 @@ const SurveyQuestionsPage: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this question?')) {
       try {
         await deleteQuestion(currentTemplate.id, questionId);
+        // Remove from pending changes if it was there
+        const newPendingChanges = new Map(pendingChanges);
+        newPendingChanges.delete(questionId);
+        setPendingChanges(newPendingChanges);
       } catch (error) {
         console.error('Failed to delete question:', error);
       }
@@ -228,6 +281,7 @@ const SurveyQuestionsPage: React.FC = () => {
                 index={index}
                 onSave={(questionData) => handleUpdateQuestion(question.id, questionData)}
                 onDelete={() => handleDeleteQuestion(question.id)}
+                onTrackChanges={(questionData) => trackQuestionChanges(question.id, questionData)}
               />
             ))}
           </div>
@@ -256,13 +310,15 @@ interface EditableQuestionCardProps {
   index: number;
   onSave: (questionData: Partial<SurveyQuestion>) => void;
   onDelete: () => void;
+  onTrackChanges: (questionData: Partial<SurveyQuestion>) => void;
 }
 
 const EditableQuestionCard: React.FC<EditableQuestionCardProps> = ({ 
   question, 
   index, 
   onSave, 
-  onDelete 
+  onDelete,
+  onTrackChanges
 }) => {
   const [formData, setFormData] = useState({
     text: question.text,
@@ -272,11 +328,13 @@ const EditableQuestionCard: React.FC<EditableQuestionCardProps> = ({
 
   const handleScaleChange = (newScale: number) => {
     const labels = generateDefaultLabels(newScale);
-    setFormData(prev => ({
-      ...prev,
+    const newFormData = {
+      ...formData,
       scale: newScale,
       labels
-    }));
+    };
+    setFormData(newFormData);
+    onTrackChanges(newFormData);
   };
 
   const generateDefaultLabels = (scale: number): Record<number, string> => {
@@ -312,32 +370,34 @@ const EditableQuestionCard: React.FC<EditableQuestionCardProps> = ({
     return labels;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
+  const handleInputChange = (field: string, value: any) => {
+    const newFormData = { ...formData, [field]: value };
+    setFormData(newFormData);
+    onTrackChanges(newFormData);
+  };
+
+  const handleLabelChange = (rating: number, value: string) => {
+    const newLabels = { ...formData.labels, [rating]: value };
+    const newFormData = { ...formData, labels: newLabels };
+    setFormData(newFormData);
+    onTrackChanges(newFormData);
   };
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-4">
         {/* Question Header */}
         <div className="flex items-start justify-between">
           <h3 className="text-sm font-medium text-gray-500">
             Question {index + 1}
           </h3>
-          <button
-            type="submit"
-            className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Save
-          </button>
         </div>
 
         {/* Question Text */}
         <FloatingLabelTextarea
           label="Question Text"
           value={formData.text}
-          onChange={(value) => setFormData(prev => ({ ...prev, text: value }))}
+          onChange={(value) => handleInputChange('text', value)}
           placeholder="Enter your question here..."
           rows={3}
           className="w-full"
@@ -373,10 +433,7 @@ const EditableQuestionCard: React.FC<EditableQuestionCardProps> = ({
                   <input
                     type="text"
                     value={formData.labels[rating] || ''}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      labels: { ...prev.labels, [rating]: e.target.value }
-                    }))}
+                    onChange={(e) => handleLabelChange(rating, e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder={`Label for rating ${rating}`}
                     required
@@ -397,7 +454,7 @@ const EditableQuestionCard: React.FC<EditableQuestionCardProps> = ({
             Delete question
           </button>
         </div>
-      </form>
+      </div>
     </div>
   );
 };
