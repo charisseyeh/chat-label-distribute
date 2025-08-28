@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useSurveyQuestions } from '../../hooks/useSurveyQuestions';
-import { useSurveyResponses } from '../../hooks/useSurveyResponses';
-
-import { useScrollTracking } from '../../hooks/useScrollTracking';
+import { useSurveyQuestions } from '../../hooks/survey/useSurveyQuestions';
+import { useSurveyResponses } from '../../hooks/survey/useSurveyResponses';
+import { useConversationStore } from '../../stores/conversationStore';
+import { useScrollTracking } from '../../hooks/core/useScrollTracking';
 import { SurveySection as SurveySectionType } from '../../types/survey';
 import SurveySection from './SurveySection';
 

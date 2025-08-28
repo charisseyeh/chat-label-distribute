@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import Header from './components/layout/Header';
-import Sidebar from './components/layout/Sidebar';
-import Footer from './components/layout/Footer';
+import Header from './components/common/layout/Header';
+import Sidebar from './components/common/layout/Sidebar';
+import Footer from './components/common/layout/Footer';
 import ConversationSelectorPage from './pages/ConversationSelectorPage';
-import LabelConversations from './components/conversation/LabelConversations';
+import LabelConversations from './components/conversation/management/LabelConversations';
 import LabelingPage from './pages/LabelingPage';
 import AIComparisonsPage from './pages/AIComparisonsPage';
 import SurveyQuestionsPage from './pages/SurveyQuestionsPage';

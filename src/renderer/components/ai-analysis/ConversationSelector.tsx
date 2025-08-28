@@ -1,5 +1,5 @@
 import React from 'react';
-import { ListItem } from '../common/molecules/ListItem';
+import { ListItem } from '../common';
 
 interface ConversationWithData {
   id: string;
@@ -34,7 +34,7 @@ const ConversationSelector: React.FC<ConversationSelectorProps> = ({
         />
       ))}
       {conversations.length === 0 && (
-        <p className="text-gray-500 text-left py-4 text-sm">
+        <p className="text-body-secondary text-left py-4">
           No conversations with survey responses found. Please complete surveys in conversations first.
         </p>
       )}

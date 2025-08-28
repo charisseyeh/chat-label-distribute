@@ -1,2 +1,5 @@
-export { ListItem } from './ListItem';
-export { List } from './List';
+// Label components
+export * from './label';
+
+// List components
+export * from './list';

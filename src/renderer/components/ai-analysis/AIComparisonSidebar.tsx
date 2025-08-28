@@ -41,20 +41,20 @@ export const AIComparisonSidebar: React.FC<AIComparisonSidebarProps> = ({
   generateOpenAIPrompt
 }) => {
   return (
-    <div className="space-y-6 border-l border-gray-200 h-full">
+    <aside className="border-l border-gray-200 h-full pl-4 pr-4">
       {/* Chat Selection */}
-      <div>
+      <section>
         <ConversationSelector
           conversations={conversationsWithData}
           selectedConversations={selectedConversationIds}
           onConversationToggle={onConversationToggle}
         />
-      </div>
+      </section>
 
       {/* AI Configuration */}
-      <div className="border-t border-gray-200 p-4">
-        <h3 className="pb-1">AI Comparison</h3>
-        <p className="text-muted-foreground pb-3">
+      <section className="pl-4 pr-4 pt-4 border-t border-gray-200">
+        <h3 className="text-h3 pb-1">AI Comparison</h3>
+        <p className="text-body-secondary pb-3">
           Add your API key and model to compare conversations
         </p>
         <AIConfigurationPanel
@@ -67,18 +67,18 @@ export const AIComparisonSidebar: React.FC<AIComparisonSidebarProps> = ({
           hasSelectedConversations={hasSelectedConversations}
           currentTemplate={currentTemplate}
         />
-      </div>
+      </section>
 
       {/* Prompt Preview */}
-      <div>
+      <section>
         <PromptPreview
           currentTemplate={currentTemplate}
           selectedConversations={selectedConversationIds}
           storeConversations={storeConversations}
           generateOpenAIPrompt={generateOpenAIPrompt}
         />
-      </div>
-    </div>
+      </section>
+    </aside>
   );
 };
 

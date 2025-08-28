@@ -1,7 +1,6 @@
 import React from 'react';
 import { SurveyTemplate } from '../../types/survey';
-import { FloatingLabelInput } from '../common/FloatingLabelInput';
-import { FloatingLabelSelect } from '../common/FloatingLabelSelect';
+import { FloatingLabelInput, FloatingLabelSelect } from '../common';
 
 interface AIConfigurationPanelProps {
   apiKey: string;
@@ -53,7 +52,7 @@ const AIConfigurationPanel: React.FC<AIConfigurationPanelProps> = ({
         <button
           onClick={onGenerate}
           disabled={isGenerating || !hasSelectedConversations || !apiKey.trim()}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition-colors text-sm"
+          className="btn btn-primary btn-md w-full"
         >
           {isGenerating ? 'Generating...' : `Compare ${hasSelectedConversations ? 'conversations' : '0 conversations'}`}
         </button>
@@ -62,10 +61,10 @@ const AIConfigurationPanel: React.FC<AIConfigurationPanelProps> = ({
       {/* Survey Template Display - Compact version */}
       {currentTemplate && (
         <div>
-          <span className="text-muted-foreground">
+          <span className="text-body-secondary">
             Using "{currentTemplate.name}" {' '}
             <button 
-              className="text-blue-600 underline hover:text-blue-800 cursor-pointer text-sm"
+              className="btn btn-link btn-sm"
               onClick={() => {
                 // This could open a modal with full prompt preview
                 console.log('Review prompt clicked for template:', currentTemplate.name);

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
+import { ComparisonData, TrialComparison } from '../../services/ai/aiComparisonService';
 import TrialComparisonTable from './TrialComparisonTable';
 import IndividualResults from './IndividualResults';
 import AIAnalysisTab from './AIAnalysisTab';
 import { AIComparisonExport } from '../export';
 import { SurveyTemplate } from '../../types/survey';
-import { ComparisonData, TrialComparison } from '../../services/aiComparisonService';
 
 interface ComparisonResultsProps {
   comparisonData: ComparisonData[];
@@ -37,7 +37,7 @@ const ComparisonResults: React.FC<ComparisonResultsProps> = ({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`btn-tab ${activeTab === tab.id ? 'active' : ''}`}
+              className={`btn btn-tab ${activeTab === tab.id ? 'active' : ''}`}
             >
               {tab.label}
             </button>
@@ -51,12 +51,12 @@ const ComparisonResults: React.FC<ComparisonResultsProps> = ({
             {/* AI Model Info and Accuracy */}
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="text-h3 text-gray-900">
                   AI model {model}
                 </h3>
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold text-blue-600">
+                <div className="text-large-semibold text-blue-600">
                   Accuracy {accuracy.toFixed(0)}%
                 </div>
               </div>

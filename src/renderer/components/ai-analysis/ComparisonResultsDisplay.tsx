@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComparisonData, TrialComparison } from '../../services/aiComparisonService';
+import { ComparisonData, TrialComparison } from '../../services/ai/aiComparisonService';
 import ComparisonResults from './ComparisonResults';
 import { SurveyTemplate } from '../../types/survey';
 
@@ -19,11 +19,11 @@ export const ComparisonResultsDisplay: React.FC<ComparisonResultsDisplayProps> =
   if (comparisonData.length === 0) {
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-8 text-left">
-        <h2 className="mb-2">No Comparison Results Yet</h2>
-        <p className="text-muted-foreground mb-4">
+        <h2 className="text-h2 mb-2">No Comparison Results Yet</h2>
+        <p className="text-body-secondary mb-4">
           Select conversations from the sidebar and run AI comparison to see results here.
         </p>
-        <div className="text-muted-foreground">
+        <div className="text-body-secondary">
           The comparison will show your ratings vs. AI ratings across different psychological dimensions.
         </div>
       </div>
@@ -35,9 +35,9 @@ export const ComparisonResultsDisplay: React.FC<ComparisonResultsDisplayProps> =
       {comparisonData.map((comparison) => (
         <div key={comparison.conversationId} className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-foreground">{comparison.conversationTitle}</h1>
+            <h3 className="text-h3">{comparison.conversationTitle}</h3>
             <div className="text-right">
-              <p className="text-muted-foreground">AI model {model}</p>
+              <p className="text-body-secondary">AI model {model}</p>
               <div className="text-blue-600 font-weight-semibold">
                 Accuracy {Math.round(comparison.agreement * 100)}%
               </div>

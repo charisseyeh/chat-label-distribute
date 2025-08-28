@@ -1,17 +1,18 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSurveyResponseStore } from '../stores/surveyResponseStore';
 import { useSurveyQuestionStore } from '../stores/surveyQuestionStore';
 import { useConversationStore } from '../stores/conversationStore';
-import { useAIPrompt } from '../hooks/useAIPrompt';
+import { useAIPrompt } from '../hooks/ai/useAIPrompt';
 import { TwoPanelLayout } from '../components/common';
 import { 
   ProgressTracker, 
   AIComparisonSidebar, 
   ComparisonResultsDisplay 
 } from '../components/ai-analysis';
-import { useAIGeneration } from '../hooks/useAIGeneration';
-import { useConversationSelection } from '../hooks/useConversationSelection';
-import { useAIConfiguration } from '../hooks/useAIConfiguration';
+import { useAIGeneration } from '../hooks/ai/useAIGeneration';
+import { useConversationSelection } from '../hooks/conversation/useConversationSelection';
+import { useAIConfiguration } from '../hooks/ai/useAIConfiguration';
 
 const AIComparisonsPage: React.FC = () => {
   const { getConversationData } = useSurveyResponseStore();

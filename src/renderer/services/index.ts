@@ -1,6 +1,7 @@
-export * from './conversationService';
-export * from './ai-service';
-export * from './aiComparisonService';
+// Main services index - organized by category
+export * from './conversation';
+export * from './ai';
+export * from './core';
 
 // Survey services
 export * from './survey/questionService';

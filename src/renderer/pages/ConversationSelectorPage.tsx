@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ConversationService, ConversationData } from '../services/conversation/conversationService';
+import { AIRelevancyResult } from '../services/ai/ai-service';
+import { AIFilteringPanel } from '../components/conversation/filtering';
 import { useConversationStore } from '../stores/conversationStore';
-import { useNavigationStore } from '../stores/navigationStore';
-import { ConversationService, ConversationData } from '../services/conversationService';
-import { AIFilteringPanel } from '../components/conversation/AIFilteringPanel';
-import { AIRelevancyResult } from '../services/ai-service';
-import { useConversationLoader } from '../hooks/useConversationLoader';
-import { useFileManager } from '../hooks/useFileManager';
-import { FileList } from '../components/conversation/FileList';
+import { useConversationLoader } from '../hooks/conversation/useConversationLoader';
+import { useFileManager } from '../hooks/core/useFileManager';
+import { FileList } from '../components/conversation/management';
 import { TwoPanelLayout } from '../components/common';
 import { ListItem, List } from '../components/common';
 
@@ -98,7 +97,7 @@ const ConversationSelectorPage: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-lg">Loading conversations...</div>
+        <div className="text-large">Loading conversations...</div>
       </div>
     );
   }
@@ -110,15 +109,15 @@ const ConversationSelectorPage: React.FC = () => {
           {currentSourceFile && loadedConversations.length > 0 ? (
             <AIFilteringPanel
               conversations={filteredConversations}
-              onFilteredConversations={(filtered) => {
+              onFilteredConversations={(filtered: ConversationData[]) => {
                 setFilteredConversations(filtered);
               }}
-              onRelevancyResults={(results) => {
+              onRelevancyResults={(results: AIRelevancyResult[]) => {
                 setAiRelevancyResults(results);
                 
                 // Merge AI relevancy results with conversations
                 const updatedFilteredConversations = filteredConversations.map(conv => {
-                  const relevancyResult = results.find(result => result.conversationId === conv.title);
+                  const relevancyResult = results.find((result: AIRelevancyResult) => result.conversationId === conv.title);
                   if (relevancyResult) {
                     return {
                       ...conv,
@@ -172,10 +171,10 @@ const ConversationSelectorPage: React.FC = () => {
       {(!currentSourceFile || storedFiles.length === 0) && (
         <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <div className="text-center">
-            <h3 className="text-lg font-medium text-blue-800 mb-2">
+            <h3 className="text-h3 text-blue-800 mb-2">
               {storedFiles.length === 0 ? 'No Files Available' : 'No File Selected'}
             </h3>
-            <p className="text-blue-600 mb-4">
+            <p className="text-body-secondary mb-4">
               {storedFiles.length === 0 
                 ? 'Please upload a conversations.json file to get started.'
                 : 'Please select a conversations.json file to view and select conversations for labeling.'
@@ -183,7 +182,7 @@ const ConversationSelectorPage: React.FC = () => {
             </p>
             <button
               onClick={handleFileSelect}
-              className="bg-blue-600 hover:text-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+              className="bg-blue-600 hover:text-blue-700 text-white text-body py-2 px-4 rounded-lg transition-colors"
             >
               {storedFiles.length === 0 ? 'Upload Conversations File' : 'Select Conversations File'}
             </button>
@@ -199,72 +198,75 @@ const ConversationSelectorPage: React.FC = () => {
 
       {currentSourceFile && loadedConversations.length > 0 && (
         <div className="flex flex-col pl-4 pr-4">
-          <div className="flex items-center justify-between align-end p-4 border-b border-gray-200">
-            <div className="flex gap-2">
-              <button
-                onClick={handleSelectAll}
-                className="btn-outline btn-sm"
-              >
-                Select All
-              </button>
-              <button
-                onClick={handleDeselectAll}
-                className="btn-outline btn-sm"
-              >
-                Deselect All
-              </button>
-            </div>
-            
-            {/* Filter Buttons */}
-            <div className="flex gap-2 items-center">
-              <button
-                onClick={() => {
-                  toggleFilter('relevant');
-                  setTimeout(applyFilters, 0);
-                }}
-                className={`btn-filter relevant btn-sm ${activeFilters.relevant ? 'active' : ''}`}
-              >
-                Relevant
-              </button>
-              <button
-                onClick={() => {
-                  toggleFilter('notRelevant');
-                  setTimeout(applyFilters, 0);
-                }}
-                className={`btn-filter not-relevant btn-sm ${activeFilters.notRelevant ? 'active' : ''}`}
-              >
-                Non-relevant
-              </button>
-              <button
-                onClick={() => {
-                  clearFilters();
-                  setTimeout(applyFilters, 0);
-                }}
-                className="btn-filter-clear btn-sm"
-              >
-                Clear filters
-              </button>
-            </div>
-          </div>
-
-
-          {/* AI Analysis Results Summary */}
-          {aiRelevancyResults.length > 0 && (
-            <div className="px-4 py-2 bg-green-50 border-b border-green-200">
-              <div className="text-sm text-green-800">
-                <span className="font-medium">AI Analysis Complete:</span> 
-                {aiRelevancyResults.filter(r => r.category === 'relevant').length} relevant, 
-                {aiRelevancyResults.filter(r => r.category !== 'relevant').length} not relevant
-                {aiRelevancyResults.length > 0 && (
-                  <span className="ml-2 text-xs">
-                    (Avg Relevancy: {(aiRelevancyResults.reduce((sum, r) => sum + (r.relevancyScore || 0), 0) / aiRelevancyResults.length).toFixed(1)}/10)
-                  </span>
-                )}
+          {/* Sticky Filter Controls - This will stick to the top during scroll */}
+          <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
+            <div className="flex items-center justify-between align-end p-4">
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSelectAll}
+                  className="btn-outline btn-sm"
+                >
+                  Select All
+                </button>
+                <button
+                  onClick={handleDeselectAll}
+                  className="btn-outline btn-sm"
+                >
+                  Deselect All
+                </button>
+              </div>
+              
+              {/* Filter Buttons */}
+              <div className="flex gap-2 items-center">
+                <button
+                  onClick={() => {
+                    toggleFilter('relevant');
+                    setTimeout(applyFilters, 0);
+                  }}
+                  className={`btn-filter relevant btn-sm ${activeFilters.relevant ? 'active' : ''}`}
+                >
+                  Relevant
+                </button>
+                <button
+                  onClick={() => {
+                    toggleFilter('notRelevant');
+                    setTimeout(applyFilters, 0);
+                  }}
+                  className={`btn-filter not-relevant btn-sm ${activeFilters.notRelevant ? 'active' : ''}`}
+                >
+                  Non-relevant
+                </button>
+                <button
+                  onClick={() => {
+                    clearFilters();
+                    setTimeout(applyFilters, 0);
+                  }}
+                  className="btn-filter-clear btn-sm"
+                >
+                  Clear filters
+                </button>
               </div>
             </div>
-          )}
 
-          <div className="overflow-y-auto">
+            {/* AI Analysis Results Summary - Also sticky */}
+            {aiRelevancyResults.length > 0 && (
+              <div className="px-4 py-2 bg-green-50 border-b border-green-200">
+                <div className="text-small text-green-800">
+                  <span className="text-body">AI Analysis Complete:</span> 
+                  {aiRelevancyResults.filter(r => r.category === 'relevant').length} relevant, 
+                  {aiRelevancyResults.filter(r => r.category !== 'relevant').length} not relevant
+                  {aiRelevancyResults.length > 0 && (
+                    <span className="ml-2 text-xs">
+                      (Avg Relevancy: {(aiRelevancyResults.reduce((sum, r) => sum + (r.relevancyScore || 0), 0) / aiRelevancyResults.length).toFixed(1)}/10)
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Scrollable Conversation List */}
+          <div className="overflow-y-auto flex-1">
             {/* Show all conversations with proper checkbox functionality */}
             <List
               variant="without-dividers"
@@ -291,10 +293,6 @@ const ConversationSelectorPage: React.FC = () => {
                 };
               })}
             />
-            
-
-            
-
           </div>
         </div>
       )}
@@ -307,8 +305,8 @@ const ConversationSelectorPage: React.FC = () => {
 
       {currentSourceFile && loadedConversations.length > 0 && filteredConversations.length === 0 && (
         <div className="text-center py-8 text-gray-500">
-          <div className="text-lg font-medium mb-2">No conversations meet the display criteria</div>
-          <div className="text-sm">
+          <div className="text-h3 mb-2">No conversations meet the display criteria</div>
+          <div className="text-small">
             Only conversations with more than 8 messages (user + bot exchanges) are displayed.
             <br />
             The selected file contains {loadedConversations.length} conversation(s), but none have enough messages.

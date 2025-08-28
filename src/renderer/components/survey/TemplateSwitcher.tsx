@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTemplateSwitching } from '../../hooks/useTemplateSwitching';
+import { useTemplateSwitching } from '../../hooks/survey/useTemplateSwitching';
 import { SurveyTemplate } from '../../types/survey';
 
 interface TemplateSwitcherProps {
@@ -38,8 +38,8 @@ const TemplateSwitcher: React.FC<TemplateSwitcherProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">Survey Templates</h3>
-        <div className="text-sm text-gray-500">
+        <h3 className="text-h3 text-foreground">Survey Templates</h3>
+        <div className="text-small text-muted-foreground">
           {currentTemplate ? `Current: ${currentTemplate.name}` : 'No template selected'}
         </div>
       </div>
@@ -61,8 +61,8 @@ const TemplateSwitcher: React.FC<TemplateSwitcherProps> = ({
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-medium text-gray-900">{template.name}</h4>
-                  <p className="text-sm text-gray-600">
+                  <h4 className="text-small-medium text-foreground">{template.name}</h4>
+                  <p className="text-small text-muted-foreground">
                     {template.questions.length} questions
                   </p>
                 </div>
@@ -96,8 +96,8 @@ const TemplateSwitcher: React.FC<TemplateSwitcherProps> = ({
         >
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-medium text-gray-900">No Template</h4>
-              <p className="text-sm text-gray-600">Clear current template</p>
+              <h4 className="text-small-medium text-foreground">No Template</h4>
+              <p className="text-small text-muted-foreground">Clear current template</p>
             </div>
             
             {currentTemplate && checkTemplateSwitchImpact(null).willLoseData && (

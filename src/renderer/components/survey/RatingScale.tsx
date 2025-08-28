@@ -50,7 +50,7 @@ const RatingScale: React.FC<RatingScaleProps> = ({
                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
                   ${isSelected
                     ? 'bg-blue-600 border-blue-600 text-white shadow-lg'
-                    : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400'
+                    : 'bg-white border-gray-300 text-muted-foreground hover:border-blue-400'
                   }
                 `}
                 aria-label={`Rate ${rating}: ${label}`}
@@ -68,15 +68,15 @@ const RatingScale: React.FC<RatingScaleProps> = ({
       {(hoveredRating || currentRating) ? (
         <div className="text-left">
           <div className={`
-            text-sm italic text-gray-600 transition-all duration-200
-            ${currentRating ? 'text-blue-600' : 'text-gray-600'}
+            text-small italic transition-all duration-200
+            ${currentRating ? 'text-blue-600' : 'text-muted-foreground'}
           `}>
             {hoveredRating ? labels[hoveredRating] : labels[currentRating]}
           </div>
         </div>
       ) : (
         <div className="text-left">
-          <div className="text-sm italic text-gray-500">
+          <div className="text-small italic text-muted-foreground">
             Select a rating
           </div>
         </div>

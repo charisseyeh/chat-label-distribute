@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useConversationStore } from '../../stores/conversationStore';
 import { useSurveyStore } from '../../stores/surveyStore';
-import { FloatingLabelTextarea } from '../common/FloatingLabelTextarea';
+import { FloatingLabelTextarea } from '../common';
 
 const POSITIONS = [
   { id: 'beginning', label: 'Beginning', description: 'Pre-conversation state' },

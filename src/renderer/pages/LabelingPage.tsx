@@ -6,7 +6,7 @@ import { useSurveyStore } from '../stores/surveyStore';
 
 import SurveySidebar from '../components/survey/SurveySidebar';
 import { TwoPanelLayout } from '../components/common';
-import { MessageList } from '../components/conversation';
+import { MessageList } from '../components/conversation/messages';
 
 interface Message {
   id: string;

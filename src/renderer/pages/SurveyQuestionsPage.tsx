@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSurveyQuestions } from '../hooks/useSurveyQuestions';
+import { useSurveyQuestions } from '../hooks/survey/useSurveyQuestions';
+import { useSurveyQuestionStore } from '../stores/surveyQuestionStore';
 import { SurveyTemplate, SurveyQuestion } from '../types/survey';
 import { QuestionScale } from '../types/question';
 import { ListItem, List, Chip } from '../components/common';

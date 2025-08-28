@@ -58,7 +58,7 @@ const SurveySection: React.FC<SurveySectionProps> = ({
 
   if (!currentQuestion) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-6 text-center text-gray-500">
+      <div className="bg-white border border-gray-200 rounded-lg p-6 text-center text-muted-foreground">
         <p>No questions available for this section</p>
       </div>
     );
@@ -73,10 +73,10 @@ const SurveySection: React.FC<SurveySectionProps> = ({
       <div className="space-y-2">
         {/* Question Header */}
         <div className="text-left">
-          <div className="text-sm text-gray-500 mb-2">
+          <div className="text-small text-muted-foreground mb-2">
             Question {currentQuestionIndex + 1} of {totalQuestions}
           </div>
-          <h3 className="text-lg font-medium text-gray-900 leading-tight">
+          <h3 className="text-h3 text-foreground leading-tight">
             {currentQuestion.text}
           </h3>
         </div>
@@ -99,7 +99,7 @@ const SurveySection: React.FC<SurveySectionProps> = ({
             {currentQuestionIndex > 0 && (
               <button
                 onClick={goToPreviousQuestion}
-                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                className="btn btn-ghost btn-sm"
               >
                 Previous
               </button>
@@ -109,7 +109,7 @@ const SurveySection: React.FC<SurveySectionProps> = ({
             {currentQuestionIndex < totalQuestions - 1 && (
               <button
                 onClick={goToNextQuestion}
-                className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
+                className="btn btn-primary btn-sm"
               >
                 Next
               </button>
