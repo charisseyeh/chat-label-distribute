@@ -5,6 +5,7 @@ import { useSurveyQuestionStore } from '../stores/surveyQuestionStore';
 import { SurveyTemplate, SurveyQuestion } from '../types/survey';
 import { QuestionScale } from '../types/question';
 import { ListItem, List, Chip } from '../components/common';
+import { FloatingLabelInput, FloatingLabelSelect, FloatingLabelTextarea } from '../components/common/molecules/label';
 
 const SurveyQuestionsPage: React.FC = () => {
   const { id: templateId } = useParams<{ id: string }>();
@@ -121,23 +122,22 @@ const SurveyQuestionsPage: React.FC = () => {
     return (
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Survey Template</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-foreground mb-2">Create Survey Template</h1>
+          <p className="text-muted-foreground">
             Create a new survey question template for psychological assessment of conversations.
           </p>
         </div>
 
         {/* Create Template Form */}
-        <div className="p-6 bg-gray-50 border border-gray-200 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">New Template</h3>
+        <div className="p-6 bg-muted border border-border rounded-lg">
+          <h3 className="text-lg font-semibold text-foreground mb-4">New Template</h3>
           <div className="flex items-center space-x-4">
-            <input
-              type="text"
+            <FloatingLabelInput
+              label="Template Name"
               value={newTemplateName}
-              onChange={(e) => setNewTemplateName(e.target.value)}
+              onChange={setNewTemplateName}
               placeholder="Enter template name..."
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              autoFocus
+              className="flex-1"
             />
             <button
               onClick={handleCreateTemplate}
@@ -159,39 +159,15 @@ const SurveyQuestionsPage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* Header with back button */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={() => navigate('/survey-templates')}
-            className="btn-link"
-          >
-            ← Back to Templates
-          </button>
-          <button
-            onClick={() => handleDeleteTemplate(currentTemplate!.id)}
-            className="btn-outline btn-sm text-red-600 hover:text-red-700 hover:bg-red-50"
-          >
-            Delete Template
-          </button>
-        </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          {currentTemplate ? currentTemplate.name : 'Survey Questions'}
-        </h1>
-        <p className="text-gray-600">
-          Manage questions for this survey template.
-        </p>
-      </div>
-
+    <div className="max-w-6xl mx-auto p-6">
       {/* Error Display */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div className="mb-6 p-4 bg-error/10 border border-error/20 rounded-lg">
           <div className="flex items-center justify-between">
-            <div className="text-red-800">{error}</div>
+            <div className="text-error/80">{error}</div>
             <button
               onClick={clearError}
-              className="text-red-600 hover:text-red-800"
+              className="text-error hover:text-error/80"
             >
               ✕
             </button>
@@ -199,35 +175,54 @@ const SurveyQuestionsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Question Management */}
+      {/* Survey Header */}
       {currentTemplate && (
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">
-              Questions for: {currentTemplate.name}
-            </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <FloatingLabelInput
+              label="Title"
+              value={currentTemplate.name}
+              onChange={(value) => {
+                // Handle title update if needed
+              }}
+              placeholder="Survey title"
+              className="w-full"
+            />
+            <FloatingLabelSelect
+              label="Scale"
+              value={currentTemplate.questions[0]?.scale?.toString() || "7"}
+              onChange={(value) => {
+                // Handle scale update if needed
+              }}
+              options={[
+                { value: "2", label: "2 point scale" },
+                { value: "3", label: "3 point scale" },
+                { value: "5", label: "5 point scale" },
+                { value: "7", label: "7 point scale" },
+                { value: "10", label: "10 point scale" }
+              ]}
+              className="w-full"
+            />
+          </div>
+
+          {/* Add Question Button */}
+          <div className="mb-8">
             <button
               onClick={() => setIsEditingQuestion(true)}
-              className="btn-success"
+              className="w-full py-4 px-6 bg-orange-100 border-2 border-orange-300 border-dashed rounded-lg text-orange-700 hover:bg-orange-200 transition-colors font-medium"
             >
-              Add Question
+              + Add new question
             </button>
           </div>
 
-          {/* Question List */}
-          <div className="space-y-4">
+          {/* Questions Display */}
+          <div className="space-y-6">
             {currentTemplate.questions.map((question, index) => (
-              <ListItem
+              <QuestionCard
                 key={question.id}
-                variant="double"
-                title={question.text}
-                metadata={[
-                  `#${index + 1} • ${question.scale}-point scale`,
-                  `Labels: ${Object.entries(question.labels)
-                    .map(([rating, label]) => `${rating}=${label}`)
-                    .join(', ')}`
-                ]}
-                onClick={() => {
+                question={question}
+                index={index}
+                onEdit={() => {
                   setEditingQuestion(question);
                   setIsEditingQuestion(true);
                 }}
@@ -253,15 +248,62 @@ const SurveyQuestionsPage: React.FC = () => {
       {/* No Template Selected */}
       {!currentTemplate && templates.length > 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-600">Template not found or not loaded.</p>
+          <p className="text-muted-foreground">Template not found or not loaded.</p>
           <button
             onClick={() => navigate('/survey-templates')}
-            className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="mt-4 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
           >
             Back to Templates
           </button>
         </div>
       )}
+    </div>
+  );
+};
+
+// Question Card Component
+interface QuestionCardProps {
+  question: SurveyQuestion;
+  index: number;
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+const QuestionCard: React.FC<QuestionCardProps> = ({ question, index, onEdit, onDelete }) => {
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+      <div className="flex items-start justify-between mb-4">
+        <h3 className="text-lg font-medium text-gray-900">
+          Question {index + 1}
+        </h3>
+        <div className="flex space-x-2">
+          <button
+            onClick={onEdit}
+            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+          >
+            Edit
+          </button>
+          <button
+            onClick={onDelete}
+            className="text-red-600 hover:text-red-800 text-sm font-medium"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+      
+      <p className="text-gray-700 mb-4">{question.text}</p>
+      
+      <div className="space-y-3">
+        {Object.entries(question.labels).map(([rating, label]) => (
+          <div key={rating} className="flex items-center space-x-3">
+            <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-700">
+              {rating}
+            </div>
+            <span className="text-gray-600">{label}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
@@ -276,8 +318,8 @@ interface QuestionEditorProps {
 const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
     text: question?.text || '',
-    scale: question?.scale || 5,
-    labels: question?.labels || { 1: 'Very Poor', 2: 'Poor', 3: 'Average', 4: 'Good', 5: 'Excellent' }
+    scale: question?.scale || 7,
+    labels: question?.labels || { 1: 'Very Low', 2: 'Low', 3: 'Somewhat Low', 4: 'Neutral', 5: 'Somewhat High', 6: 'High', 7: 'Very High' }
   });
 
   const handleScaleChange = (newScale: number) => {
@@ -329,63 +371,54 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onSave, onCan
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <h3 className="text-lg font-semibold text-foreground mb-4">
           {question ? 'Edit Question' : 'Add New Question'}
         </h3>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Question Text */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Question Text
-            </label>
-            <textarea
-              value={formData.text}
-              onChange={(e) => setFormData(prev => ({ ...prev, text: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              rows={3}
-              placeholder="Enter your question here..."
-              required
-            />
-          </div>
+          <FloatingLabelTextarea
+            label="Question Text"
+            value={formData.text}
+            onChange={(value) => setFormData(prev => ({ ...prev, text: value }))}
+            placeholder="Enter your question here..."
+            rows={3}
+            className="w-full"
+          />
 
           {/* Scale Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Rating Scale
-            </label>
-            <select
-              value={formData.scale}
-              onChange={(e) => handleScaleChange(Number(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value={2}>2-point scale</option>
-              <option value={3}>3-point scale</option>
-              <option value={5}>5-point scale</option>
-              <option value={7}>7-point scale</option>
-              <option value={10}>10-point scale</option>
-            </select>
-          </div>
+          <FloatingLabelSelect
+            label="Rating Scale"
+            value={formData.scale.toString()}
+            onChange={(value) => handleScaleChange(Number(value))}
+            options={[
+              { value: "2", label: "2-point scale" },
+              { value: "3", label: "3-point scale" },
+              { value: "5", label: "5-point scale" },
+              { value: "7", label: "7-point scale" },
+              { value: "10", label: "10-point scale" }
+            ]}
+            className="w-full"
+          />
 
           {/* Labels */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Rating Labels
             </label>
             <div className="space-y-2">
               {Array.from({ length: formData.scale }, (_, i) => i + 1).map((rating) => (
                 <div key={rating} className="flex items-center space-x-2">
-                  <span className="w-8 text-sm font-medium text-gray-700">{rating}</span>
-                  <input
-                    type="text"
+                  <span className="w-8 text-sm font-medium text-foreground">{rating}</span>
+                  <FloatingLabelInput
+                    label={`Label for rating ${rating}`}
                     value={formData.labels[rating] || ''}
-                    onChange={(e) => setFormData(prev => ({
+                    onChange={(value) => setFormData(prev => ({
                       ...prev,
-                      labels: { ...prev.labels, [rating]: e.target.value }
+                      labels: { ...prev.labels, [rating]: value }
                     }))}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder={`Label for rating ${rating}`}
-                    required
+                    className="flex-1"
                   />
                 </div>
               ))}
@@ -397,13 +430,13 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onSave, onCan
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className="px-4 py-2 text-muted-foreground bg-muted rounded-lg hover:bg-secondary-100 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
             >
               {question ? 'Update Question' : 'Add Question'}
             </button>

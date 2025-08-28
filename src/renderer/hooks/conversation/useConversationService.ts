@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ConversationService, ConversationData } from '../../services/conversation/conversationService';
+import { ConversationService, type ConversationData } from '../../services/conversation';
 
 export const useConversationService = () => {
   const [conversations, setConversations] = useState<ConversationData[]>([]);
@@ -14,7 +14,7 @@ export const useConversationService = () => {
       setError(null);
       
       if (filePath) {
-        const conversationData = await conversationService.getConversationsFromFile(filePath);
+        const conversationData = await conversationService.getConversationIndex(filePath);
         setConversations(conversationData);
       }
     } catch (error) {

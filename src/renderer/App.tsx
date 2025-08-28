@@ -5,7 +5,7 @@ import Sidebar from './components/common/layout/Sidebar';
 import Footer from './components/common/layout/Footer';
 import ConversationSelectorPage from './pages/ConversationSelectorPage';
 import LabelConversations from './components/conversation/management/LabelConversations';
-import LabelingPage from './pages/LabelingPage';
+import ConversationPage from './pages/ConversationPage';
 import AIComparisonsPage from './pages/AIComparisonsPage';
 import SurveyQuestionsPage from './pages/SurveyQuestionsPage';
 import SurveyTemplatesPage from './pages/SurveyTemplatesPage';
@@ -106,7 +106,7 @@ function App() {
               <Route path="/" element={<ConversationSelectorPage />} />
               <Route path="/select-conversations" element={<ConversationSelectorPage />} />
               <Route path="/label-conversations" element={<LabelConversations />} />
-              <Route path="/conversation/:id" element={<LabelingPage />} />
+              <Route path="/conversation/:id" element={<ConversationPage />} />
               <Route path="/ai-comparisons" element={<AIComparisonsPage />} />
               <Route path="/survey-templates" element={<SurveyTemplatesPage />} />
               <Route path="/survey-template/:id" element={<SurveyQuestionsPage />} />

@@ -105,12 +105,12 @@ const SurveyTemplatesPage: React.FC = () => {
 
       {/* Error Display */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div className="mb-6 p-4 bg-error/10 border border-error/20 rounded-lg">
           <div className="flex items-center justify-between">
-            <div className="text-red-800">{error}</div>
+                          <div className="text-error/80">{error}</div>
             <button
               onClick={clearError}
-              className="text-red-600 hover:text-red-800"
+                              className="text-error hover:text-error/80"
             >
               ✕
             </button>
@@ -121,21 +121,21 @@ const SurveyTemplatesPage: React.FC = () => {
 
       {/* Create Template Form */}
       {isCreatingTemplate && (
-        <div className="mb-8 p-6 bg-gray-50 border border-gray-200 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Create New Template</h3>
+        <div className="mb-8 p-6 bg-muted border border-border rounded-lg">
+                      <h3 className="text-lg font-semibold text-foreground mb-4">Create New Template</h3>
           <div className="flex items-center space-x-4">
             <input
               type="text"
               value={newTemplateName}
               onChange={(e) => setNewTemplateName(e.target.value)}
               placeholder="Enter template name..."
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
               autoFocus
             />
             <button
               onClick={handleCreateTemplate}
               disabled={!newTemplateName.trim()}
-              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-6 py-2 bg-success text-white rounded-lg hover:bg-success/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Create Template
             </button>
@@ -144,7 +144,7 @@ const SurveyTemplatesPage: React.FC = () => {
                 setIsCreatingTemplate(false);
                 setNewTemplateName('');
               }}
-              className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              className="px-6 py-2 bg-secondary-600 text-white rounded-lg hover:bg-secondary-700 transition-colors"
             >
               Cancel
             </button>
@@ -155,16 +155,16 @@ const SurveyTemplatesPage: React.FC = () => {
       {/* Templates List using Design System */}
       {templates.length === 0 && !isCreatingTemplate ? (
         <div className="text-center py-12">
-          <p className="text-gray-600 mb-4">No survey templates found.</p>
+          <p className="text-muted-foreground mb-4">No survey templates found.</p>
           <button
             onClick={() => setIsCreatingTemplate(true)}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                          className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
           >
             Create Your First Template
           </button>
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-lg border border-border overflow-hidden">
           <List
             variant="with-dividers"
             listItemVariant="double"
@@ -173,13 +173,13 @@ const SurveyTemplatesPage: React.FC = () => {
           />
           
           {/* Create New Template Button at bottom */}
-          <div className="p-4 bg-orange-50 border-t border-orange-200">
+          <div className="p-4 bg-warning/10 border-t border-warning/20">
             <button
               onClick={() => {
                 setIsCreatingTemplate(true);
                 setNewTemplateName('');
               }}
-              className="w-full text-center text-orange-700 hover:text-orange-800 font-medium py-3 px-4 rounded-lg transition-colors"
+              className="w-full text-center text-warning/80 hover:text-warning font-medium py-3 px-4 rounded-lg transition-colors"
             >
               + Create new template
             </button>

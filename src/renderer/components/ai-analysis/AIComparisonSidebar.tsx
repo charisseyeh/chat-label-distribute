@@ -41,7 +41,7 @@ export const AIComparisonSidebar: React.FC<AIComparisonSidebarProps> = ({
   generateOpenAIPrompt
 }) => {
   return (
-    <aside className="border-l border-gray-200 h-full pl-4 pr-4">
+    <aside className="border-l border-gray-200 h-full">
       {/* Chat Selection */}
       <section>
         <ConversationSelector

@@ -1,4 +1,6 @@
 // Conversation services
-export { ConversationService, ConversationData } from './conversationService';
-export { default as conversationParser } from './conversationParser';
-export { default as messageExtractor } from './messageExtractor';
+export { ConversationService } from './conversationService';
+export type { ConversationData, RawConversationData } from './conversationService';
+export * from './messageProcessingService';
+export * from './conversationParser';
+export * from './messageExtractor';

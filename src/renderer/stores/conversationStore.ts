@@ -1,22 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-// Import the ConversationData type from the service
-export interface ConversationData {
-  id: string;
-  title: string;
-  createTime?: number;
-  createdAt?: string;
-  messageCount: number;
-  model?: string;
-  modelVersion?: string;
-  conversationPreview?: string;
-  sourceFilePath?: string;
-  aiRelevancy?: {
-    category: 'relevant' | 'not-relevant';
-    explanation: string;
-  };
-}
+import type { ConversationData } from '../services/conversation';
 
 export interface Conversation {
   id: string;

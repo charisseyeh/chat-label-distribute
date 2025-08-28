@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useConversationStore } from '../../../stores/conversationStore';
-import { ConversationData } from '../../../services/conversation/conversationService';
+import type { ConversationData } from '../../../services/conversation';
 import { AIRelevancyResult } from '../../../services/ai/ai-service';
 import { useNavigationStore } from '../../../stores/navigationStore';
 import { useSettingsStore } from '../../../stores/settingsStore';

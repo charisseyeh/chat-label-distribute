@@ -3,3 +3,4 @@ export * from './core';
 export * from './filtering';
 export * from './messages';
 export * from './management';
+export * from '../../hooks/conversation';

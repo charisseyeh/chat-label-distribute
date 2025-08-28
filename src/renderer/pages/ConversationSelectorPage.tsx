@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ConversationService, ConversationData } from '../services/conversation/conversationService';
+import { ConversationService, type ConversationData } from '../services/conversation';
 import { AIRelevancyResult } from '../services/ai/ai-service';
 import { AIFilteringPanel } from '../components/conversation/filtering';
 import { useConversationStore } from '../stores/conversationStore';
@@ -145,7 +145,7 @@ const ConversationSelectorPage: React.FC = () => {
             />
           ) : (
             <div className="p-4">
-              <div className="text-center text-gray-500 py-8">
+              <div className="text-center text-muted-foreground py-8">
                 <p>No file loaded</p>
                 <p>Load a conversations file to see filtering options</p>
               </div>
@@ -169,9 +169,9 @@ const ConversationSelectorPage: React.FC = () => {
     >
       {/* Show message when no file is selected OR no files are stored */}
       {(!currentSourceFile || storedFiles.length === 0) && (
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="p-4 bg-primary-50 border border-primary-200 rounded-lg">
           <div className="text-center">
-            <h3 className="text-h3 text-blue-800 mb-2">
+            <h3 className="text-h3 text-primary-800 mb-2">
               {storedFiles.length === 0 ? 'No Files Available' : 'No File Selected'}
             </h3>
             <p className="text-body-secondary mb-4">
@@ -182,7 +182,7 @@ const ConversationSelectorPage: React.FC = () => {
             </p>
             <button
               onClick={handleFileSelect}
-              className="bg-blue-600 hover:text-blue-700 text-white text-body py-2 px-4 rounded-lg transition-colors"
+              className="bg-primary-600 hover:text-primary-700 text-white text-body py-2 px-4 rounded-lg transition-colors"
             >
               {storedFiles.length === 0 ? 'Upload Conversations File' : 'Select Conversations File'}
             </button>
@@ -191,7 +191,7 @@ const ConversationSelectorPage: React.FC = () => {
       )}
 
       {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-800 border border-red-200 rounded-lg">
+        <div className="mb-4 p-3 bg-error/10 text-error/80 border border-error/20 rounded-lg">
           {error}
         </div>
       )}
@@ -199,7 +199,7 @@ const ConversationSelectorPage: React.FC = () => {
       {currentSourceFile && loadedConversations.length > 0 && (
         <div className="flex flex-col pl-4 pr-4">
           {/* Sticky Filter Controls - This will stick to the top during scroll */}
-          <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
+          <div className="sticky top-0 z-10 bg-white border-b border-border shadow-sm">
             <div className="flex items-center justify-between align-end p-4">
               <div className="flex gap-2">
                 <button
@@ -250,8 +250,8 @@ const ConversationSelectorPage: React.FC = () => {
 
             {/* AI Analysis Results Summary - Also sticky */}
             {aiRelevancyResults.length > 0 && (
-              <div className="px-4 py-2 bg-green-50 border-b border-green-200">
-                <div className="text-small text-green-800">
+              <div className="px-4 py-2 bg-success/10 border-b border-success/20">
+                <div className="text-small text-success/80">
                   <span className="text-body">AI Analysis Complete:</span> 
                   {aiRelevancyResults.filter(r => r.category === 'relevant').length} relevant, 
                   {aiRelevancyResults.filter(r => r.category !== 'relevant').length} not relevant
@@ -298,13 +298,13 @@ const ConversationSelectorPage: React.FC = () => {
       )}
 
       {currentSourceFile && loadedConversations.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-muted-foreground">
           No conversations found in the selected file.
         </div>
       )}
 
       {currentSourceFile && loadedConversations.length > 0 && filteredConversations.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-muted-foreground">
           <div className="text-h3 mb-2">No conversations meet the display criteria</div>
           <div className="text-small">
             Only conversations with more than 8 messages (user + bot exchanges) are displayed.

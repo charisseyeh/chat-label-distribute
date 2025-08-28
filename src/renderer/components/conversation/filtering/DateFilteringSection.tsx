@@ -1,5 +1,5 @@
 import React from 'react';
-import { ConversationData } from '../../../services/conversation/conversationService';
+import type { ConversationData } from '../../../services/conversation';
 import { DateFilterService, DateRange, DateFilterOptions } from '../../../services/core/dateFilterService';
 import { useConversationStore } from '../../../stores/conversationStore';
 import { FloatingLabelInput, FloatingLabelSelect } from '../../common';

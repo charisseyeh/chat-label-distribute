@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useSettingsStore } from '../../../stores/settingsStore';
 import { AIService, AIConversationSample, AIRelevancyResult } from '../../../services/ai/ai-service';
-import { ConversationData } from '../../../services/conversation/conversationService';
+import type { ConversationData } from '../../../services/conversation';
 import { DateFilterService } from '../../../services/core/dateFilterService';
 import { FloatingLabelInput, FloatingLabelSelect } from '../../common';
 
