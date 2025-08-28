@@ -8,7 +8,7 @@ interface FooterProps {
 }
 
 const Footer: React.FC<FooterProps> = ({ className = '' }) => {
-  const { selectedConversationIds, selectedConversations, currentSourceFile } = useConversationStore();
+  const { selectedConversationIds, selectedConversations, currentSourceFile, filteredConversations } = useConversationStore();
   const { currentPage, setSelectedConversations, setCurrentPage } = useNavigationStore();
   const navigate = useNavigate();
 
@@ -42,29 +42,19 @@ const Footer: React.FC<FooterProps> = ({ className = '' }) => {
 
   return (
     <footer className={`bg-background border-t border-border px-6 py-4 ${className}`}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          {/* Selection Information */}
-          <div className="flex items-center space-x-3">
-            <div className="text-sm text-foreground">
-              <strong>{selectedConversationIds.length} conversation(s) selected for labeling</strong>
-            </div>
-            <div className="text-xs text-muted-foreground">
-              Selected IDs: {selectedConversationIds.join(', ')}
-            </div>
-          </div>
+      <div className="flex items-center justify-end space-x-2">
+        {/* Selection Information */}
+        <div className="text-sm text-foreground">
+          <span>{selectedConversationIds.length}/{filteredConversations.length} selected</span>
         </div>
         
         {/* Action Button */}
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={handleGoToLabeling}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center space-x-2"
-          >
-            <span>Go to</span>
-            <span>Labeling</span>
-          </button>
-        </div>
+        <button
+          onClick={handleGoToLabeling}
+          className="btn-primary btn-md"
+        >
+          Add {selectedConversationIds.length} conversations to labeling
+        </button>
       </div>
     </footer>
   );

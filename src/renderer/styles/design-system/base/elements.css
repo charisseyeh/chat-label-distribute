@@ -1,0 +1,53 @@
+/* ===== BASE ELEMENT STYLES ===== */
+
+/* Global Border Color */
+* {
+  border-color: var(--border);
+}
+
+/* Body Typography */
+body {
+  line-height: var(--line-height-tight);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-normal);
+}
+
+/* Heading Hierarchy */
+h1 {
+  line-height: var(--line-height-tight);
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-semibold);
+}
+
+h2 {
+  line-height: var(--line-height-tight);
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-semibold);
+}
+
+h3 {
+  line-height: var(--line-height-tight);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Paragraph and Text Elements */
+p {
+  line-height: var(--line-height-tight);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-normal);
+}
+
+/* Link Styles */
+a {
+  font-weight: var(--font-weight-normal);
+}
+
+/* Strong and Emphasis */
+strong {
+  font-weight: var(--font-weight-semibold);
+}
+
+em {
+  font-weight: var(--font-weight-medium);
+}

@@ -56,7 +56,7 @@ const Header: React.FC<HeaderProps> = ({ isSidebarOpen, onToggleSidebar }) => {
         <div className="flex items-center space-x-4">
           <button
             onClick={onToggleSidebar}
-            className="p-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+            className="btn-icon btn-primary"
             aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
           >
             {isSidebarOpen ? <X size={20} /> : <List size={20} />}
@@ -68,7 +68,7 @@ const Header: React.FC<HeaderProps> = ({ isSidebarOpen, onToggleSidebar }) => {
               {currentConversationId ? (
                 <button
                   onClick={() => navigate('/label-conversations')}
-                  className="hover:text-primary transition-colors cursor-pointer"
+                  className="btn-link"
                   title="Click to go back to Label Conversations"
                 >
                   Label Conversations

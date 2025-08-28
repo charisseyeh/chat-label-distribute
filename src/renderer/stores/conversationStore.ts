@@ -80,6 +80,11 @@ interface ConversationState {
   filteredConversations: ConversationData[]; // The filtered conversations
   // Add this flag to prevent reloading after deletion
   preventReload: boolean;
+  // Add filtering state
+  activeFilters: {
+    relevant: boolean;
+    notRelevant: boolean;
+  };
 }
 
 interface ConversationActions {
@@ -113,6 +118,11 @@ interface ConversationActions {
   setLoadedConversations: (conversations: ConversationData[]) => void;
   setFilteredConversations: (conversations: ConversationData[]) => void;
   clearLoadedConversations: () => void;
+  
+  // Filtering management
+  toggleFilter: (filterType: 'relevant' | 'notRelevant') => void;
+  clearFilters: () => void;
+  applyFilters: () => void;
 
   // Convert temporary selection to permanent storage
   commitTemporarySelection: () => void;
@@ -140,6 +150,11 @@ export const useConversationStore = create<ConversationStore>()(
       filteredConversations: [],
       // Add this flag to prevent reloading after deletion
       preventReload: false,
+      // Add filtering state
+      activeFilters: {
+        relevant: false,
+        notRelevant: false,
+      },
 
       // State management
       setLoading: (loading) => set({ loading }),
@@ -279,6 +294,44 @@ export const useConversationStore = create<ConversationStore>()(
       setLoadedConversations: (conversations) => set({ loadedConversations: conversations }),
       setFilteredConversations: (conversations) => set({ filteredConversations: conversations }),
       clearLoadedConversations: () => set({ loadedConversations: [], filteredConversations: [] }),
+
+      // Filtering management
+      toggleFilter: (filterType) => {
+        const { activeFilters } = get();
+        const newFilters = { ...activeFilters };
+        newFilters[filterType] = !newFilters[filterType];
+        set({ activeFilters: newFilters });
+      },
+
+      clearFilters: () => {
+        set({ activeFilters: { relevant: false, notRelevant: false } });
+      },
+
+      applyFilters: () => {
+        const { loadedConversations, activeFilters } = get();
+        
+        if (!activeFilters.relevant && !activeFilters.notRelevant) {
+          // No filters active, show all conversations
+          set({ filteredConversations: loadedConversations });
+          return;
+        }
+
+        const filtered = loadedConversations.filter(conv => {
+          if (activeFilters.relevant && activeFilters.notRelevant) {
+            // Both filters active, show conversations with AI relevancy data
+            return conv.aiRelevancy;
+          } else if (activeFilters.relevant) {
+            // Only relevant filter active
+            return conv.aiRelevancy && conv.aiRelevancy.category === 'relevant';
+          } else if (activeFilters.notRelevant) {
+            // Only not-relevant filter active
+            return conv.aiRelevancy && conv.aiRelevancy.category === 'not-relevant';
+          }
+          return false;
+        });
+
+        set({ filteredConversations: filtered });
+      },
 
       // Convert temporary selection to permanent storage
       commitTemporarySelection: () => {

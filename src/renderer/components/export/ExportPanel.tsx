@@ -420,7 +420,7 @@ const ExportPanel: React.FC = () => {
         <button
           onClick={handleExport}
           disabled={loading || conversations.length === 0}
-          className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed px-8 py-3 text-lg"
+          className="btn-primary btn-xl"
         >
           {loading ? 'Exporting...' : 'Export Data'}
         </button>

@@ -28,7 +28,11 @@ const ConversationSelectorPage: React.FC = () => {
     loadedConversations,
     filteredConversations,
     currentSourceFile,
-    setFilteredConversations
+    setFilteredConversations,
+    activeFilters,
+    toggleFilter,
+    clearFilters,
+    applyFilters
   } = useConversationStore();
 
   // Check if we have loaded conversations on mount and restore them
@@ -37,6 +41,13 @@ const ConversationSelectorPage: React.FC = () => {
       // Restoring loaded conversations from store
     }
   }, [currentSourceFile, loadedConversations]);
+
+  // Apply filters when conversations or filters change
+  useEffect(() => {
+    if (loadedConversations.length > 0) {
+      applyFilters();
+    }
+  }, [loadedConversations, activeFilters, applyFilters]);
 
   // Load conversations from a stored file
   const loadConversationsFromStoredFile = async (filePath: string) => {
@@ -126,6 +137,11 @@ const ConversationSelectorPage: React.FC = () => {
                 
                 // Update filtered conversations with AI relevancy data
                 setFilteredConversations(updatedFilteredConversations);
+                
+                // Apply filters after updating AI relevancy data
+                setTimeout(() => {
+                  applyFilters();
+                }, 0);
               }}
             />
           ) : (
@@ -152,30 +168,28 @@ const ConversationSelectorPage: React.FC = () => {
         </>
       }
     >
-      <div className="mb-6">
-        {/* Show message when no file is selected OR no files are stored */}
-        {(!currentSourceFile || storedFiles.length === 0) && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="text-center">
-              <h3 className="text-lg font-medium text-blue-800 mb-2">
-                {storedFiles.length === 0 ? 'No Files Available' : 'No File Selected'}
-              </h3>
-              <p className="text-blue-600 mb-4">
-                {storedFiles.length === 0 
-                  ? 'Please upload a conversations.json file to get started.'
-                  : 'Please select a conversations.json file to view and select conversations for labeling.'
-                }
-              </p>
-              <button
-                onClick={handleFileSelect}
-                className="bg-blue-600 hover:text-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-              >
-                {storedFiles.length === 0 ? 'Upload Conversations File' : 'Select Conversations File'}
-              </button>
-            </div>
+      {/* Show message when no file is selected OR no files are stored */}
+      {(!currentSourceFile || storedFiles.length === 0) && (
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="text-center">
+            <h3 className="text-lg font-medium text-blue-800 mb-2">
+              {storedFiles.length === 0 ? 'No Files Available' : 'No File Selected'}
+            </h3>
+            <p className="text-blue-600 mb-4">
+              {storedFiles.length === 0 
+                ? 'Please upload a conversations.json file to get started.'
+                : 'Please select a conversations.json file to view and select conversations for labeling.'
+              }
+            </p>
+            <button
+              onClick={handleFileSelect}
+              className="bg-blue-600 hover:text-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            >
+              {storedFiles.length === 0 ? 'Upload Conversations File' : 'Select Conversations File'}
+            </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {error && (
         <div className="mb-4 p-3 bg-red-100 text-red-800 border border-red-200 rounded-lg">
@@ -184,20 +198,51 @@ const ConversationSelectorPage: React.FC = () => {
       )}
 
       {currentSourceFile && loadedConversations.length > 0 && (
-        <div className="h-full flex flex-col">
-          <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col pl-4 pr-4">
+          <div className="flex items-center justify-between align-end p-4 border-b border-gray-200">
             <div className="flex gap-2">
               <button
                 onClick={handleSelectAll}
-                className="text-sm text-blue-600 hover:text-blue-800 underline"
+                className="btn-outline btn-sm"
               >
                 Select All
               </button>
               <button
                 onClick={handleDeselectAll}
-                className="text-sm text-blue-600 hover:text-blue-800 underline"
+                className="btn-outline btn-sm"
               >
                 Deselect All
+              </button>
+            </div>
+            
+            {/* Filter Buttons */}
+            <div className="flex gap-2 items-center">
+              <button
+                onClick={() => {
+                  toggleFilter('relevant');
+                  setTimeout(applyFilters, 0);
+                }}
+                className={`btn-filter relevant btn-sm ${activeFilters.relevant ? 'active' : ''}`}
+              >
+                Relevant
+              </button>
+              <button
+                onClick={() => {
+                  toggleFilter('notRelevant');
+                  setTimeout(applyFilters, 0);
+                }}
+                className={`btn-filter not-relevant btn-sm ${activeFilters.notRelevant ? 'active' : ''}`}
+              >
+                Non-relevant
+              </button>
+              <button
+                onClick={() => {
+                  clearFilters();
+                  setTimeout(applyFilters, 0);
+                }}
+                className="btn-filter-clear btn-sm"
+              >
+                Clear filters
               </button>
             </div>
           </div>
@@ -219,7 +264,7 @@ const ConversationSelectorPage: React.FC = () => {
             </div>
           )}
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="overflow-y-auto">
             {/* Show all conversations with proper checkbox functionality */}
             <List
               variant="without-dividers"

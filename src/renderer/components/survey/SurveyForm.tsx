@@ -196,10 +196,10 @@ const SurveyForm: React.FC = () => {
               <button
                 key={position.id}
                 onClick={() => handlePositionChange(position.id as any)}
-                className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                className={`btn flex-1 ${
                   currentPosition === position.id
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                    ? 'btn-primary'
+                    : 'btn-secondary'
                 }`}
               >
                 <div className="font-semibold">{position.label}</div>
@@ -242,10 +242,10 @@ const SurveyForm: React.FC = () => {
                     <button
                       key={index}
                       onClick={() => handleRatingChange(dimension.id, index + 1)}
-                      className={`p-3 rounded-lg text-xs text-center transition-colors duration-200 ${
+                      className={`btn btn-sm ${
                         ratings[dimension.id] === index + 1
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                          ? 'btn-primary'
+                          : 'btn-secondary'
                       }`}
                     >
                       {option}

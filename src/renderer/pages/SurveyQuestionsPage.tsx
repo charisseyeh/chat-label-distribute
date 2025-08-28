@@ -141,13 +141,13 @@ const SurveyQuestionsPage: React.FC = () => {
             <button
               onClick={handleCreateTemplate}
               disabled={!newTemplateName.trim()}
-              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="btn-success btn-lg"
             >
               Create Template
             </button>
             <button
               onClick={() => navigate('/survey-templates')}
-              className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              className="btn-secondary btn-lg"
             >
               Back to Templates
             </button>
@@ -164,13 +164,13 @@ const SurveyQuestionsPage: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={() => navigate('/survey-templates')}
-            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-2 rounded-lg transition-colors"
+            className="btn-link"
           >
             ← Back to Templates
           </button>
           <button
             onClick={() => handleDeleteTemplate(currentTemplate!.id)}
-            className="px-4 py-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+            className="btn-outline btn-sm text-red-600 hover:text-red-700 hover:bg-red-50"
           >
             Delete Template
           </button>
@@ -207,7 +207,7 @@ const SurveyQuestionsPage: React.FC = () => {
             </h2>
             <button
               onClick={() => setIsEditingQuestion(true)}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              className="btn-success"
             >
               Add Question
             </button>

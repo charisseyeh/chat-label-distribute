@@ -1,6 +1,10 @@
 /* Design System - Import all styles */
+@import './base/index.css';
 @import './theme/index.css';
 @import './components/atoms.css';
+@import './components/buttons.css';
+@import './components/forms.css';
 @import './components/lists.css';
+@import './components/messages.css';
 @import './components/molecules.css';
 @import './components/navigation.css';
