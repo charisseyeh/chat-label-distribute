@@ -1,4 +1,7 @@
-/* Add performance optimizations at the top */
+/* Import Design System */
+@import './styles/design-system/index.css';
+
+/* Add performance optimizations */
 * {
   /* Optimize for performance */
   box-sizing: border-box;
@@ -68,8 +71,6 @@ button {
   }
 }
 
-/* Import Design System */
-@import './styles/design-system/index.css';
-
 @tailwind base;
+@tailwind components;
 @tailwind utilities;
