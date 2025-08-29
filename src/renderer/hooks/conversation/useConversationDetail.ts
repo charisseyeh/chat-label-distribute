@@ -83,16 +83,10 @@ export const useConversationDetail = () => {
         // Extract messages using the service
         let messages: Message[] = [];
         if (fullConversationData.mapping) {
-          console.log('🔍 Extracting messages from mapping...');
           messages = extractMessagesFromMapping(fullConversationData.mapping);
-          console.log('✅ Extracted messages from mapping:', messages.length);
         } else if (fullConversationData.messages) {
-          console.log('🔍 Using pre-existing messages array');
           messages = fullConversationData.messages;
-          console.log('✅ Using pre-existing messages:', messages.length);
         }
-        
-        console.log('🔍 Final messages array:', messages);
         setMessages(messages);
         setDisplayedMessages(messages.slice(0, messageLimit));
         
@@ -114,7 +108,6 @@ export const useConversationDetail = () => {
         throw new Error('Electron API not available');
       }
       
-      console.log('🔍 Loading conversation from file:', sourceFilePath, 'ID:', id);
       const result = await window.electronAPI.readSingleConversation(sourceFilePath, id);
       
       if (!result.success || !result.found) {
@@ -122,21 +115,14 @@ export const useConversationDetail = () => {
       }
       
       const conversationData = result.data;
-      console.log('🔍 Conversation data from file:', conversationData);
       
       // Extract messages using the service
       let messages: Message[] = [];
       if (conversationData.mapping) {
-        console.log('🔍 Extracting messages from file mapping...');
         messages = extractMessagesFromMapping(conversationData.mapping);
-        console.log('✅ Extracted messages from file mapping:', messages.length);
       } else if (conversationData.messages) {
-        console.log('🔍 Using pre-existing messages from file');
         messages = conversationData.messages;
-        console.log('✅ Using pre-existing messages from file:', messages.length);
       }
-      
-      console.log('🔍 Final messages from file:', messages);
       setMessages(messages);
       setDisplayedMessages(messages.slice(0, messageLimit));
       
@@ -189,48 +175,34 @@ export const useConversationDetail = () => {
   const loadConversation = useCallback(async () => {
     if (!id) return;
     
+    setLoading(true);
+    setError(null);
+    
     try {
-      setLoading(true);
-      setError(null);
-      
       // First try to get conversation from selected conversations
       let conversation: any = selectedConversations.find(conv => conv.id === id);
-      console.log('🔍 Looking for conversation:', id);
-      console.log('🔍 Selected conversations:', selectedConversations.length);
       
       if (conversation) {
-        console.log('✅ Found conversation in selected conversations:', conversation);
-        
         // Ensure all conversations are loaded from the source file
         const sourceFilePath = conversation.sourceFilePath;
         if (sourceFilePath) {
-          console.log('🔄 Ensuring conversations are loaded from:', sourceFilePath);
           const loadedConvs = await ensureConversationsLoaded(sourceFilePath);
-          console.log('✅ Loaded conversations from file:', loadedConvs.length);
-          console.log('✅ Loaded conversation IDs:', loadedConvs.map(c => c.id));
           
           // Also load the full conversation data for the current conversation
           const fullData = await loadFullConversationData(id, sourceFilePath);
-          if (fullData) {
-            console.log('✅ Full conversation data loaded for:', id);
-          } else {
-            console.warn('⚠️ Failed to load full conversation data for:', id);
+          if (!fullData) {
+            // Silent warning - no console log needed
           }
         }
       } else {
         // If not found in selected conversations, try loaded conversations
         conversation = loadedConversations.find(conv => conv.id === id);
-        console.log('🔍 Found in loaded conversations:', !!conversation);
-        console.log('🔍 Loaded conversations count:', loadedConversations.length);
-        console.log('🔍 Loaded conversation IDs:', loadedConversations.map(c => c.id));
         
         if (conversation) {
           // Ensure conversations are loaded for this source file
           const sourceFilePath = conversation.sourceFilePath || currentSourceFile;
           if (sourceFilePath) {
-            console.log('🔄 Ensuring conversations are loaded for loaded conversation from:', sourceFilePath);
             const loadedConvs = await ensureConversationsLoaded(sourceFilePath);
-            console.log('✅ Loaded conversations for loaded conversation:', loadedConvs.length);
           }
         }
       }
@@ -246,7 +218,6 @@ export const useConversationDetail = () => {
             messageCount: fullData.mapping ? Object.keys(fullData.mapping).length : 0,
             sourceFilePath: fullData.sourceFilePath || currentSourceFile
           };
-          console.log('🔍 Found in full conversation data:', !!conversation);
         }
       }
       
@@ -261,24 +232,19 @@ export const useConversationDetail = () => {
             messageCount: regularConv.messageCount,
             sourceFilePath: regularConv.filePath
           };
-          console.log('🔍 Found in regular conversations:', !!conversation);
         }
       }
       
       if (!conversation) {
-        console.error('❌ Conversation not found in any store');
         setError('Conversation not found in any store');
         return;
       }
-      
-      console.log('✅ Found conversation:', conversation);
       setCurrentConversation(conversation);
       
       // Load messages
       await loadMessages(conversation);
       
     } catch (error) {
-      console.error('Error loading conversation:', error);
       setError('Failed to load conversation');
     } finally {
       setLoading(false);

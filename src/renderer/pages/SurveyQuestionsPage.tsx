@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSurveyQuestions } from '../hooks/survey/useSurveyQuestions';
 import { usePendingChanges } from '../hooks/survey/usePendingChanges';
@@ -140,6 +140,17 @@ const SurveyQuestionsPage: React.FC = () => {
     }
   };
 
+  const handleTitleChange = useCallback(async (newTitle: string) => {
+    if (!currentTemplate || newTitle === currentTemplate.name) return;
+    
+    try {
+      await updateTemplate(currentTemplate.id, { name: newTitle });
+      // Silent success - no console log needed
+    } catch (error) {
+      // Silent error handling - no console log needed
+    }
+  }, [currentTemplate, updateTemplate]);
+
 
   if (loading) {
     return (
@@ -186,16 +197,7 @@ const SurveyQuestionsPage: React.FC = () => {
             globalScale={globalScale}
             onScaleChange={handleGlobalScaleChange}
             onAddQuestion={handleAddQuestion}
-            onTitleChange={(newTitle) => {
-              console.log('Title changed to:', newTitle);
-              console.log('Current template ID:', currentTemplate.id);
-              try {
-                updateTemplate(currentTemplate.id, { name: newTitle });
-                console.log('Template update called successfully');
-              } catch (error) {
-                console.error('Error updating template:', error);
-              }
-            }}
+            onTitleChange={handleTitleChange}
           />
 
           {/* Questions Display */}

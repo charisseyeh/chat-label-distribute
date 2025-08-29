@@ -13,6 +13,9 @@ interface ConversationDisplayProps {
   onLoadMore: () => void;
   onShowAll: () => void;
   onRetry: () => void;
+  // Add these new props to connect scroll tracking to parent
+  onTurn6Reached?: () => void;
+  onEndReached?: () => void;
 }
 
 const ConversationDisplay: React.FC<ConversationDisplayProps> = React.memo(({
@@ -24,18 +27,22 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = React.memo(({
   totalMessageCount,
   onLoadMore,
   onShowAll,
-  onRetry
+  onRetry,
+  onTurn6Reached,  // Add this
+  onEndReached     // Add this
 }) => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // Memoize callback functions to prevent infinite re-renders
   const handleTurn6Reached = useCallback(() => {
     console.log('🔄 Turn 6 reached in conversation display');
-  }, []);
+    onTurn6Reached?.(); // Call parent callback
+  }, [onTurn6Reached]);
 
   const handleEndReached = useCallback(() => {
     console.log('🔄 End reached in conversation display');
-  }, []);
+    onEndReached?.(); // Call parent callback
+  }, [onEndReached]);
 
   // Initialize message visibility tracking with intersection observer
   const { 
@@ -132,16 +139,6 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = React.memo(({
       // This prevents counting all messages as visible if the container is very tall
       const effectiveViewportHeight = Math.min(clientHeight, 800); // Max 800px for initial visibility
       
-      console.log('🎯 Scrollable container state:', {
-        scrollTop,
-        clientHeight,
-        scrollHeight,
-        effectiveViewportHeight,
-        isScrollable: scrollHeight > clientHeight,
-        containerTag: scrollableContainer.tagName,
-        containerClass: scrollableContainer.className
-      });
-      
       messageElements.forEach((element, index) => {
         const rect = element.getBoundingClientRect();
         const messageIndex = parseInt(element.getAttribute('data-message-index') || '0', 10);
@@ -160,11 +157,6 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = React.memo(({
         
         if (isVisible) {
           initiallyVisible.push(messageIndex);
-        }
-        
-        // Debug logging for first few messages
-        if (index < 5) {
-          // Debug logging removed for production
         }
       });
       
@@ -290,33 +282,22 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = React.memo(({
 
   return (
     <div className="flex-1 overflow-y-auto p-6 pb-44 messages-container min-h-0" ref={messagesContainerRef}>
-      {/* Debug info for message visibility tracking */}
-      <div className="text-xs text-muted-foreground mb-2 sticky top-0 bg-background p-2 rounded z-10">
-        Messages: {displayedMessages.length}/{totalMessageCount} | 
-        Visible: {visibleMessages.length} | 
-        Tracking: {isTracking ? 'ON' : 'OFF'}
-        <button 
-          onClick={testMessageVisibility}
-          className="ml-2 px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
-        >
-          Test Visibility
-        </button>
-      </div>
-
       {messageList}
       
       {lazyLoadingControls}
     </div>
   );
 }, (prevProps, nextProps) => {
-  // Custom comparison function to prevent unnecessary re-renders
+  // Update the comparison function to include new props
   return (
     prevProps.messages.length === nextProps.messages.length &&
     prevProps.displayedMessages.length === nextProps.displayedMessages.length &&
     prevProps.loading === nextProps.loading &&
     prevProps.error === nextProps.error &&
     prevProps.hasMoreMessages === nextProps.hasMoreMessages &&
-    prevProps.totalMessageCount === nextProps.totalMessageCount
+    prevProps.totalMessageCount === nextProps.totalMessageCount &&
+    prevProps.onTurn6Reached === nextProps.onTurn6Reached &&
+    prevProps.onEndReached === nextProps.onEndReached
   );
 });
 

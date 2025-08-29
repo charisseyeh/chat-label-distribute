@@ -72,14 +72,12 @@ export class AIPromptService {
     conversationContext: string,
     position: 'beginning' | 'turn6' | 'end'
   ): string {
-    console.log('🔍 Generating AI prompt with template:', template);
-    console.log('🔍 Template questions:', template.questions);
+    // Debug logging removed for production
     
-    const systemPrompt = this.generateSystemPrompt(template, position);
+    const systemPrompt = this.generateSystemPrompt(template);
     const userPrompt = this.generateUserPrompt(template, conversationContext, position);
     
     const fullPrompt = `${systemPrompt}\n\n${userPrompt}`;
-    console.log('🔍 Generated full prompt:', fullPrompt);
     
     return fullPrompt;
   }
@@ -87,13 +85,11 @@ export class AIPromptService {
   /**
    * Generates system prompt for OpenAI API
    */
-  private static generateSystemPrompt(template: SurveyTemplate, position: 'beginning' | 'turn6' | 'end'): string {
-    const positionText = this.getPositionText(position);
-    
+  private static generateSystemPrompt(template: SurveyTemplate): string {
     console.log('🔍 Generating system prompt for template with questions:', template.questions.length);
     
     let prompt = `You are an expert psychological assessor analyzing conversations. `;
-    prompt += `Your task is to rate psychological dimensions based on the conversation content at the ${positionText}.\n\n`;
+    prompt += `Your task is to rate psychological dimensions based on the conversation content.\n\n`;
     
     prompt += `You must:\n`;
     prompt += `- Analyze the emotional and psychological state of the conversation participants\n`;
@@ -141,74 +137,57 @@ export class AIPromptService {
   /**
    * Parses AI response to extract ratings
    */
-  static parseAIResponse(response: string, template: SurveyTemplate): Record<string, number> {
-    console.log('🔍 Parsing AI response:', response);
-    console.log('🔍 Template questions:', template.questions);
-    
-    const ratings: Record<string, number> = {};
-    
+  static async parseAIResponse(response: string, template: SurveyTemplate): Promise<Record<string, number>> {
     try {
-      // Try to parse as JSON first
+      const ratings: Record<string, number> = {};
+      
+      // Try to extract JSON first
       const jsonMatch = response.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        console.log('🔍 Found JSON match:', jsonMatch[0]);
-        const jsonResponse = JSON.parse(jsonMatch[0]);
-        console.log('🔍 Parsed JSON:', jsonResponse);
-        template.questions.forEach(question => {
-          if (jsonResponse[question.id] !== undefined) {
-            ratings[question.id] = parseInt(jsonResponse[question.id]);
+        try {
+          const jsonResponse = JSON.parse(jsonMatch[0]);
+          if (jsonResponse.ratings) {
+            Object.assign(ratings, jsonResponse.ratings);
           }
-        });
-        console.log('🔍 Extracted ratings from JSON:', ratings);
-        return ratings;
+        } catch (parseError) {
+          // Fall back to line parsing
+        }
       }
       
-      // Parse line-by-line format
-      const lines = response.split('\n').filter(line => line.trim());
-      console.log('🔍 Parsing lines:', lines);
-      
-      lines.forEach(line => {
-        const match = line.match(/Question\s+(\d+):\s*(\d+)/i);
-        if (match) {
-          const questionIndex = parseInt(match[1]) - 1;
-          const rating = parseInt(match[2]);
-          
-          console.log(`🔍 Matched Question ${questionIndex + 1}: ${rating}`);
-          
-          if (questionIndex >= 0 && questionIndex < template.questions.length) {
-            const question = template.questions[questionIndex];
-            ratings[question.id] = rating;
-            console.log(`🔍 Added rating for ${question.id}: ${rating}`);
-          }
-        }
-      });
-      
-      // Alternative format: "Question ID: rating"
-      if (Object.keys(ratings).length === 0) {
-        console.log('🔍 Trying alternative format parsing...');
-        lines.forEach(line => {
-          const parts = line.split(':').map(part => part.trim());
-          if (parts.length === 2) {
-            const questionId = parts[0];
-            const rating = parseInt(parts[1]);
+      // If JSON parsing failed or didn't provide enough ratings, try line parsing
+      if (Object.keys(ratings).length < template.questions.length) {
+        const lines = response.split('\n').filter(line => line.trim());
+        
+        for (const line of lines) {
+          const questionMatch = line.match(/Question\s+(\d+)[:\s]+(\d+)/i);
+          if (questionMatch) {
+            const questionIndex = parseInt(questionMatch[1], 10) - 1;
+            const rating = parseInt(questionMatch[2], 10);
             
-            console.log(`🔍 Alternative format - Question ID: ${questionId}, Rating: ${rating}`);
-            
-            if (template.questions.some(q => q.id === questionId) && !isNaN(rating)) {
-              ratings[questionId] = rating;
-              console.log(`🔍 Added rating for ${questionId}: ${rating}`);
+            if (questionIndex >= 0 && questionIndex < template.questions.length) {
+              const question = template.questions[questionIndex];
+              ratings[question.id] = rating;
             }
           }
-        });
+        }
+        
+        // Try alternative format parsing
+        if (Object.keys(ratings).length < template.questions.length) {
+          for (const line of lines) {
+            const altMatch = line.match(/(\d+)[:\s]+(\d+)/);
+            if (altMatch) {
+              const questionId = altMatch[1];
+              const rating = parseInt(altMatch[2], 10);
+              ratings[questionId] = rating;
+            }
+          }
+        }
       }
       
-      console.log('🔍 Final extracted ratings:', ratings);
-      
+      return ratings;
     } catch (error) {
-      console.error('Error parsing AI response:', error);
+      throw new Error(`Failed to parse AI response: ${error}`);
     }
-    
-    return ratings;
   }
 
   /**

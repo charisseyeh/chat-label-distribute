@@ -45,13 +45,10 @@ const ConversationSelectorPage: React.FC = () => {
   // Apply filters when conversations or filters change
   useEffect(() => {
     if (loadedConversations.length > 0) {
-      console.log('🔍 Loaded conversations count:', loadedConversations.length);
-      console.log('🔍 Sample conversation message counts:', loadedConversations.slice(0, 5).map(conv => ({ id: conv.id, title: conv.title, messageCount: conv.messageCount })));
-      
       // Only apply filters if we have conversations with more than 9 messages
       const validConversations = loadedConversations.filter(conv => conv.messageCount > 9);
       if (validConversations.length !== loadedConversations.length) {
-        console.warn('⚠️ Some conversations have fewer than 9 messages:', loadedConversations.filter(conv => conv.messageCount <= 9).map(conv => ({ id: conv.id, title: conv.title, messageCount: conv.messageCount })));
+        // Silent warning - no console log needed
       }
       
       applyFilters();

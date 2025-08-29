@@ -12,7 +12,7 @@ export interface Message {
  */
 export const extractMessagesFromMapping = (mapping: Record<string, any>): Message[] => {
   try {
-    console.log('🔍 Extracting messages from mapping:', mapping);
+    // Debug logging removed for production
     const messages: Message[] = [];
     
     // Convert mapping to array and sort by create_time if available
@@ -30,11 +30,11 @@ export const extractMessagesFromMapping = (mapping: Record<string, any>): Messag
         return timeA - timeB;
       });
     
-    console.log('🔍 Filtered message entries:', messageEntries.length);
+    // Debug logging removed for production
     
     messageEntries.forEach(([id, msg]) => {
       if (msg.message) {
-        console.log('🔍 Processing message:', id, msg.message);
+        // Debug logging removed for production
         
         // Get content from parts array directly, not from .text property
         const content = msg.message.content.parts[0];
@@ -61,13 +61,13 @@ export const extractMessagesFromMapping = (mapping: Record<string, any>): Messag
             create_time: msg.message.create_time || Date.now() / 1000
           };
           
-          console.log('🔍 Created message:', message);
+          // Debug logging removed for production
           messages.push(message);
         }
       }
     });
     
-    console.log('🔍 Extracted messages:', messages.length);
+    // Debug logging removed for production
     return messages;
   } catch (error) {
     console.error('Error extracting messages from mapping:', error);

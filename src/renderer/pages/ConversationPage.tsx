@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   useConversationStore,
@@ -38,6 +38,23 @@ const ConversationPage: React.FC = () => {
   const { selectedConversations, setSelectedConversations, setCurrentConversationId } = useNavigationStore();
   const { responses: surveyResponses } = useSurveyStore();
 
+  // Add state to track scroll tracking events
+  const [scrollTrackingState, setScrollTrackingState] = useState({
+    turn6Reached: false,
+    endReached: false
+  });
+
+  // Add callback handlers for scroll tracking events
+  const handleTurn6Reached = useCallback(() => {
+    console.log('🎯 Turn 6 reached - showing survey section');
+    setScrollTrackingState(prev => ({ ...prev, turn6Reached: true }));
+  }, []);
+
+  const handleEndReached = useCallback(() => {
+    console.log('🎯 End reached - showing survey section');
+    setScrollTrackingState(prev => ({ ...prev, endReached: true }));
+  }, []);
+
   // Set current conversation ID in navigation store
   useEffect(() => {
     if (id) {
@@ -56,10 +73,10 @@ const ConversationPage: React.FC = () => {
       try {
         const result = await loadSelectedConversationsFromStorage();
         if (result) {
-          console.log('✅ Successfully loaded selected conversations from storage');
+          // Silent success - no console log needed
         }
       } catch (error) {
-        console.warn('Failed to load selected conversations from storage:', error);
+        // Silent error handling - no console log needed
       }
     };
     loadFromStorage();
@@ -83,29 +100,37 @@ const ConversationPage: React.FC = () => {
     if (id && storeSelectedConversations.length > 0) {
       const currentConv = storeSelectedConversations.find(conv => conv.id === id);
       if (currentConv?.sourceFilePath && currentConv.sourceFilePath !== currentSourceFile) {
-        console.log('🔄 Setting current source file:', currentConv.sourceFilePath);
+        // Silent logging - no console log needed
         setCurrentSourceFile(currentConv.sourceFilePath);
         
         // Ensure conversations are loaded for this source file
         ensureConversationsLoaded(currentConv.sourceFilePath).then((loadedConvs) => {
-          console.log('✅ Conversations loaded for source file:', currentConv.sourceFilePath, 'Count:', loadedConvs.length);
+          // Silent success - no console log needed
           
           // Also load the full conversation data for the current conversation
           if (id) {
             loadFullConversationData(id, currentConv.sourceFilePath).then((data) => {
               if (data) {
-                console.log('✅ Full conversation data loaded for:', id);
+                // Silent success - no console log needed
               } else {
-                console.warn('⚠️ Failed to load full conversation data for:', id);
+                // Silent warning - no console log needed
               }
             });
           }
         }).catch(error => {
-          console.error('❌ Failed to load conversations:', error);
+          // Silent error handling - no console log needed
         });
       }
     }
   }, [id, storeSelectedConversations, currentSourceFile, setCurrentSourceFile, ensureConversationsLoaded, loadFullConversationData]);
+
+  // Reset scroll tracking state when conversation changes
+  useEffect(() => {
+    setScrollTrackingState({
+      turn6Reached: false,
+      endReached: false
+    });
+  }, [id]);
 
   // Get survey completion status
   const getSurveyCompletionStatus = () => {
@@ -176,12 +201,17 @@ const ConversationPage: React.FC = () => {
       sidebarContent={
         <SurveySidebar 
           conversationId={id || ''}
-          messages={[]} // Messages are now handled by ConversationDetail component
+          messages={[]}
+          turn6Reached={scrollTrackingState.turn6Reached}  // Pass boolean instead of callback
+          endReached={scrollTrackingState.endReached}      // Pass boolean instead of callback
         />
       }
       className="conversation-page"
     >
-      <ConversationDetail />
+      <ConversationDetail 
+        onTurn6Reached={handleTurn6Reached}
+        onEndReached={handleEndReached}
+      />
     </TwoPanelLayout>
   );
 };

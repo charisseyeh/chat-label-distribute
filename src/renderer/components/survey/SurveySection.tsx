@@ -41,7 +41,50 @@ const SurveySection: React.FC<SurveySectionProps> = ({
   const currentQuestion = section.questions[currentQuestionIndex];
 
   const handleQuestionResponse = (questionId: string, rating: number) => {
+    // Get the current question text for better context
+    const currentQuestion = section.questions.find(q => q.id === questionId);
+    const questionText = currentQuestion?.text || questionId;
+    
+    console.log('📝 Survey Response Submitted:', {
+      turn: section.position,
+      question: `${currentQuestionIndex + 1}/${section.questions.length}`,
+      questionId: questionId,
+      questionText: questionText.substring(0, 50) + '...', // First 50 chars
+      rating: rating,
+      conversationId: conversationId
+    });
+    
     onResponse(questionId, section.position, rating);
+    
+    // Only log localStorage after a response is submitted
+    setTimeout(() => {
+      const responseStorage = localStorage.getItem('survey-response-storage');
+      if (responseStorage) {
+        const parsed = JSON.parse(responseStorage);
+        const latestResponse = parsed.state?.responses?.[parsed.state.responses.length - 1];
+        
+        if (latestResponse) {
+          console.log('💾 Response Stored Successfully:', {
+            turn: latestResponse.position,
+            questionId: latestResponse.questionId,
+            rating: latestResponse.rating,
+            timestamp: latestResponse.timestamp,
+            conversationId: latestResponse.conversationId
+          });
+        }
+        
+        // Show summary for this specific conversation
+        const conversationResponses = parsed.state?.conversationData?.[conversationId]?.responses || [];
+        const turnResponses = conversationResponses.filter((r: any) => r.position === section.position);
+        
+        console.log('📊 Current Turn Summary:', {
+          turn: section.position,
+          questionsAnswered: turnResponses.length,
+          totalQuestions: section.questions.length,
+          completion: `${turnResponses.length}/${section.questions.length}`
+        });
+      }
+    }, 200);
   };
 
   const goToNextQuestion = () => {

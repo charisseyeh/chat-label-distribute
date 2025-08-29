@@ -131,20 +131,10 @@ export class DateFilterService {
     customEndDate?: Date,
     useCustomRange: boolean = false
   ): any[] {
-    console.log('🔍 DateFilterService.filterByDateRanges called with:', {
-      conversationsCount: conversations.length,
-      useCustomRange,
-      customStartDate,
-      customEndDate
-    });
-    
     if (useCustomRange && (customStartDate || customEndDate)) {
-      console.log('🔍 Using custom date range filtering');
       const filtered = conversations.filter(conv => {
         const convDate = this.extractConversationDate(conv);
-        console.log('🔍 Conversation:', conv.title, 'Date extracted:', convDate, 'Original data:', { createTime: conv.createTime, createdAt: conv.createdAt });
         if (!convDate) {
-          console.log('🔍 Skipping conversation without valid date:', conv.title);
           return false; // Skip conversations without valid dates
         }
         
@@ -157,10 +147,8 @@ export class DateFilterService {
           isInRange = false;
         }
         
-        console.log('🔍 Conversation in range:', conv.title, isInRange, 'Date:', convDate, 'Range:', customStartDate || 'no start', 'to', customEndDate || 'no end');
         return isInRange;
       });
-      console.log('🔍 Custom range filtering result:', filtered.length, 'conversations');
       return filtered;
     }
 

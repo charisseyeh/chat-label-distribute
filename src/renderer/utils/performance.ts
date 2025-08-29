@@ -27,9 +27,6 @@ class PerformanceMonitor {
       renderEnd: 0,
     });
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`🚀 Navigation started for route: ${route}`);
-    }
   }
 
   /**
@@ -42,10 +39,6 @@ class PerformanceMonitor {
     if (metric) {
       metric.navigationEnd = performance.now();
       const duration = metric.navigationEnd - metric.navigationStart;
-      
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`✅ Navigation completed for route: ${route} in ${duration.toFixed(2)}ms`);
-      }
     }
   }
 
@@ -72,10 +65,7 @@ class PerformanceMonitor {
       metric.renderEnd = performance.now();
       const renderDuration = metric.renderEnd - metric.renderStart;
       const totalDuration = metric.renderEnd - metric.navigationStart;
-      
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`🎨 Render completed for route: ${route} in ${renderDuration.toFixed(2)}ms (total: ${totalDuration.toFixed(2)}ms)`);
-      }
+
     }
   }
 
