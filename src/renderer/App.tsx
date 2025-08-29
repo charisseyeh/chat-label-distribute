@@ -94,9 +94,9 @@ function App() {
   return (
     <Router>
       <div className="flex h-screen bg-background">
-        <Sidebar isOpen={isSidebarOpen} />
+        <Sidebar isOpen={isSidebarOpen} onToggleSidebar={toggleSidebar} />
         <div className="flex-1 flex flex-col">
-          <Header isSidebarOpen={isSidebarOpen} onToggleSidebar={toggleSidebar} />
+          <Header isSidebarOpen={isSidebarOpen} />
           <main className="flex-1 overflow-hidden">
             <NavigationSync />
             <Routes>

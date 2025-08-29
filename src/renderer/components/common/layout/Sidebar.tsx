@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Sidebar as SidebarIcon, X, ClipboardText, Tag, FileText, Robot, SidebarSimpleIcon } from '@phosphor-icons/react';
 import { useNavigationStore } from '../../../stores/navigationStore';
 import { useConversationStore } from '../../../stores/conversationStore';
 import { useSurveyQuestions } from '../../../hooks/survey/useSurveyQuestions';
@@ -7,9 +8,10 @@ import { NavigationItem, NavigationItemNested, NavigationSection } from '../navi
 
 interface SidebarProps {
   isOpen: boolean;
+  onToggleSidebar: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggleSidebar }) => {
   const { currentPage, setCurrentPage, selectedConversations, removeSelectedConversation, currentConversationId, currentTemplateId } = useNavigationStore();
   const { selectedConversationIds, removeSelectedConversation: removeFromStore, saveSelectedConversationsToStorage } = useConversationStore();
   const { templates } = useSurveyQuestions();
@@ -130,13 +132,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     {
       id: 'select-conversations',
       label: 'Select Conversations',
-      icon: '📋',
+      icon: <ClipboardText size={20} weight="bold" />,
       onClick: () => handlePageNavigation('select-conversations')
     },
     {
       id: 'label-conversations',
       label: 'Label Conversations',
-      icon: '🏷️',
+      icon: <Tag size={20} weight="bold" />,
       onClick: () => handlePageNavigation('label-conversations'),
       subItems: getSelectedConversationTitles().slice(0, 3).map(conv => ({
         id: conv.id,
@@ -147,7 +149,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     {
       id: 'survey-templates',
       label: 'Survey Templates',
-      icon: '📝',
+      icon: <FileText size={20} weight="bold" />,
       onClick: () => handlePageNavigation('survey-templates'),
       subItems: getSelectedTemplateTitles().slice(0, 3).map(template => ({
         id: template.id,
@@ -158,7 +160,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     {
       id: 'ai-comparisons',
       label: 'AI Comparisons',
-      icon: '🤖',
+      icon: <Robot size={20} weight="bold" />,
       onClick: () => handlePageNavigation('ai-comparisons')
     }
   ];
@@ -166,12 +168,55 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
   return (
     <aside
       className={`bg-muted border-r border-border transition-all duration-300 ease-in-out ${
-        isOpen ? 'w-64' : 'w-0'
-      } overflow-hidden`}
+        isOpen ? 'w-64' : 'w-16'
+      } ${isOpen ? '' : 'overflow-visible'}`}
     >
-      <div className="pl-1 pr-1 pt-6 min-w-64">
-        <h2 className="text-lg font-semibold text-foreground ml-4 mb-2">Chat Labeling</h2>
-        
+      {/* Header with toggle button */}
+      <div className={`flex items-center justify-between mt-2 p-4 ${
+        isOpen ? '' : 'justify-center'
+      }`}>
+        <h2 className={`text-lg font-semibold text-foreground transition-all duration-300 ${
+          isOpen ? 'opacity-100' : 'opacity-0 w-0'
+        }`}>
+          Chat Labeling
+        </h2>
+        <button
+          onClick={onToggleSidebar}
+          className="btn-icon"
+          aria-label={isOpen ? 'Close sidebar' : 'Open sidebar'}
+        >
+          {isOpen ? <SidebarSimpleIcon size={20} weight="fill" />  : <SidebarSimpleIcon size={20} weight="bold" />}
+        </button>
+      </div>
+      
+      {/* Collapsed state navigation - icons only */}
+      {!isOpen && (
+        <div className="flex flex-col items-center space-y-2">
+          {navigationItems.map((item) => {
+            // Clone the icon and change weight to "fill" if active
+            const iconElement = React.cloneElement(item.icon as React.ReactElement, {
+              weight: isNavigationItemActive(item.id) ? "fill" : "bold"
+            });
+
+            return (
+              <button
+                key={item.id}
+                onClick={item.onClick}
+                className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
+                  isNavigationItemActive(item.id)
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted-foreground/10'
+                }`}
+                title={item.label}
+              >
+                {iconElement}
+              </button>
+            );
+          })}
+        </div>
+      )}
+      
+      <div className={`pl-1 pr-1 pt-6 ${!isOpen ? 'hidden' : ''}`}>
         <NavigationSection>
           {navigationItems.map((item) => (
             <div key={item.id}>

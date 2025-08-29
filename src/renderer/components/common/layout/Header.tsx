@@ -6,10 +6,9 @@ import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
   isSidebarOpen: boolean;
-  onToggleSidebar: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ isSidebarOpen, onToggleSidebar }) => {
+const Header: React.FC<HeaderProps> = ({ isSidebarOpen }) => {
   const { currentPage, currentConversationId } = useNavigationStore();
   const { selectedConversations } = useConversationStore();
   const navigate = useNavigate();
@@ -52,16 +51,8 @@ const Header: React.FC<HeaderProps> = ({ isSidebarOpen, onToggleSidebar }) => {
 
   return (
     <header className="bg-background border-b border-border px-6 py-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={onToggleSidebar}
-            className="btn-icon"
-            aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
-          >
-            {isSidebarOpen ? <X size={20} /> : <List size={20} />}
-          </button>
-          
+      <div className="flex space-y-2">
+        <div className="flex flex-col items-left">
           {/* Breadcrumb Navigation */}
           <div className="flex items-center space-x-2">
             <h1 className="text-2xl font-bold text-foreground">
