@@ -17,9 +17,36 @@ const ConversationSelector: React.FC<ConversationSelectorProps> = ({
   const { selectedConversationIds } = useConversationStore();
 
   const formatDate = useCallback((timestamp: number | string | undefined) => {
-    if (!timestamp) return '';
-    const date = new Date(timestamp);
-    return date.toLocaleDateString();
+    if (!timestamp) return 'No date';
+    
+    try {
+      let date: Date;
+      
+      if (typeof timestamp === 'number') {
+        // If it's a Unix timestamp (seconds), convert to milliseconds
+        // Check if it's likely seconds (before year 2100) or milliseconds
+        if (timestamp < 10000000000) {
+          date = new Date(timestamp * 1000);
+        } else {
+          date = new Date(timestamp);
+        }
+      } else {
+        date = new Date(timestamp);
+      }
+      
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        return 'Invalid date';
+      }
+      
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } catch (error) {
+      return 'Invalid date';
+    }
   }, []);
 
   const handleConversationToggle = useCallback((conversationId: string) => {
@@ -31,6 +58,9 @@ const ConversationSelector: React.FC<ConversationSelectorProps> = ({
       const isPermanentlyStored = selectedConversations.includes(conversation.id);
       const isCurrentlySelected = selectedConversationIds.includes(conversation.id);
       
+      // Format the date properly
+      const formattedDate = formatDate(conversation.createTime || conversation.createdAt);
+      
       return (
         <ListItem
           key={conversation.id}
@@ -38,7 +68,7 @@ const ConversationSelector: React.FC<ConversationSelectorProps> = ({
           title={conversation.title || 'Untitled Conversation'}
           metadata={isPermanentlyStored 
             ? 'Selected for labeling'
-            : `${formatDate(conversation.createTime || conversation.createdAt || Date.now())}${conversation.modelVersion ? ` • ${conversation.modelVersion}` : ''}`}
+            : formattedDate}
           chip={isPermanentlyStored 
             ? undefined
             : conversation.aiRelevancy ? {
