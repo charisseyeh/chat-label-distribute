@@ -363,16 +363,14 @@ export const useConversationStore = create<ConversationStore>()(
         mergeAIRelevancyResults: (results: any[]) => {
           const { loadedConversations, filteredConversations } = get();
           
-          console.log('🔍 Merging AI relevancy results:', results);
-          console.log('🔍 Current loaded conversations count:', loadedConversations.length);
-          console.log('🔍 Current filtered conversations count:', filteredConversations.length);
+              // Debug logging removed for production
           
           // Merge AI relevancy results with both loaded and filtered conversations
           const mergeResults = (conversations: any[]) => {
             return conversations.map(conv => {
               const relevancyResult = results.find((result: any) => result.conversationId === conv.id);
               if (relevancyResult) {
-                console.log(`🔍 Found relevancy result for conversation ${conv.id}:`, relevancyResult);
+                // Debug logging removed for production
                 return {
                   ...conv,
                   aiRelevancy: {
@@ -392,8 +390,7 @@ export const useConversationStore = create<ConversationStore>()(
           const updatedLoadedConversations = mergeResults(loadedConversations);
           const updatedFilteredConversations = mergeResults(filteredConversations);
           
-          console.log('🔍 Updated loaded conversations with AI relevancy:', updatedLoadedConversations.filter(c => c.aiRelevancy).length);
-          console.log('🔍 Updated filtered conversations with AI relevancy:', updatedFilteredConversations.filter(c => c.aiRelevancy).length);
+                // Debug logging removed for production
           
           set({ 
             loadedConversations: updatedLoadedConversations,

@@ -7,6 +7,7 @@ export interface MessageListProps {
     role: 'user' | 'assistant' | 'system';
     content: string;
     timestamp: number;
+    messageIndex?: number; // Add messageIndex for tracking
   }>;
   layout?: 'single' | 'two-column' | 'grid';
   columns?: number;
@@ -42,6 +43,7 @@ const MessageList: React.FC<MessageListProps> = ({
           variant={messageVariant}
           showRole={showRole}
           showTimestamp={showTimestamp}
+          messageIndex={message.messageIndex}
         />
       ))}
     </div>
@@ -51,13 +53,14 @@ const MessageList: React.FC<MessageListProps> = ({
     return (
       <div className="space-y-4">
         {displayMessages.map((message) => (
-                      <Message
-              key={message.id}
-              {...message}
-              variant={messageVariant}
-              showRole={showRole}
-              showTimestamp={showTimestamp}
-            />
+          <Message
+            key={message.id}
+            {...message}
+            variant={messageVariant}
+            showRole={showRole}
+            showTimestamp={showTimestamp}
+            messageIndex={message.messageIndex}
+          />
         ))}
       </div>
     );
@@ -72,6 +75,7 @@ const MessageList: React.FC<MessageListProps> = ({
           variant={messageVariant}
           showRole={showRole}
           showTimestamp={showTimestamp}
+          messageIndex={message.messageIndex}
         />
       ))}
     </div>

@@ -2,16 +2,22 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useSurveyQuestions } from '../../hooks/survey/useSurveyQuestions';
 import { useSurveyResponses } from '../../hooks/survey/useSurveyResponses';
 import { useConversationStore } from '../../stores/conversationStore';
-import { useScrollTracking } from '../../hooks/core/useScrollTracking';
 import { SurveySection as SurveySectionType } from '../../types/survey';
 import SurveySection from './SurveySection';
 
 interface SurveySidebarProps {
   conversationId: string;
   messages: any[];
+  onTurn6Reached?: () => void;
+  onEndReached?: () => void;
 }
 
-const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages }) => {
+const SurveySidebar: React.FC<SurveySidebarProps> = ({ 
+  conversationId, 
+  messages, 
+  onTurn6Reached, 
+  onEndReached 
+}) => {
   const { currentTemplate } = useSurveyQuestions();
   const { 
     responses, 
@@ -19,7 +25,6 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages 
     getPositionProgress,
     autoSaveResponse 
   } = useSurveyResponses(conversationId);
-
 
   // Track visible survey sections
   const [visibleSections, setVisibleSections] = useState({
@@ -31,59 +36,36 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages 
   // Memoize the callback functions to prevent infinite re-renders
   const handleTurn6Reached = useCallback(() => {
     setVisibleSections(prev => ({ ...prev, turn6: true }));
-  }, []);
+    onTurn6Reached?.();
+  }, [onTurn6Reached]);
 
   const handleEndReached = useCallback(() => {
     setVisibleSections(prev => ({ ...prev, end: true }));
-  }, []);
+    onEndReached?.();
+  }, [onEndReached]);
 
-  // Scroll tracking for progressive disclosure
-  const { 
-    turn6Reached, 
-    endReached, 
-    trackMessageVisibility,
-    startTracking,
-    stopTracking,
-    resetTracking
-  } = useScrollTracking({
-    onTurn6Reached: handleTurn6Reached,
-    onEndReached: handleEndReached
-  });
-
-  // Start scroll tracking when component mounts
+  // Listen for scroll tracking events from ConversationDisplay
   useEffect(() => {
-    // Delay starting tracking to ensure DOM is ready
-    const timer = setTimeout(() => {
-      startTracking();
-    }, 100);
-    
-    return () => {
-      clearTimeout(timer);
-      stopTracking();
-    };
-  }, [startTracking, stopTracking]);
+    if (onTurn6Reached) {
+      handleTurn6Reached();
+    }
+  }, [onTurn6Reached, handleTurn6Reached]);
 
-  // Reset tracking when conversation changes
   useEffect(() => {
-    console.log('🔄 SurveySidebar: Conversation changed, resetting tracking for:', conversationId);
-    resetTracking();
-    // Reset visible sections when switching conversations
+    if (onEndReached) {
+      handleEndReached();
+    }
+  }, [onEndReached, handleEndReached]);
+
+  // Reset visible sections when conversation changes
+  useEffect(() => {
+    console.log('🔄 SurveySidebar: Conversation changed:', conversationId);
     setVisibleSections({
       beginning: true, // Always visible
       turn6: false,    // Hidden until scroll threshold
       end: false       // Hidden until scroll threshold
     });
-    
-    // Restart tracking for the new conversation after a short delay
-    const timer = setTimeout(() => {
-      console.log('🔄 SurveySidebar: Restarting tracking for conversation:', conversationId);
-      startTracking();
-    }, 150); // Slightly longer delay to ensure DOM is ready
-    
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [conversationId]); // Remove resetTracking and startTracking dependencies to prevent infinite loops
+  }, [conversationId]);
 
   // Update visible sections based on message visibility tracking
   useEffect(() => {
@@ -133,19 +115,6 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages 
       console.error('Failed to save survey response:', error);
     }
   };
-
-  // Update visible sections when scroll tracking changes - use refs to prevent infinite loops
-  useEffect(() => {
-    if (turn6Reached) {
-      setVisibleSections(prev => ({ ...prev, turn6: true }));
-    }
-  }, [turn6Reached]);
-
-  useEffect(() => {
-    if (endReached) {
-      setVisibleSections(prev => ({ ...prev, end: true }));
-    }
-  }, [endReached]);
 
   if (!currentTemplate) {
     return (

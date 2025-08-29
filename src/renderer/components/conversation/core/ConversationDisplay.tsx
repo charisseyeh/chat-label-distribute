@@ -26,8 +26,6 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = React.memo(({
   onShowAll,
   onRetry
 }) => {
-  const lastMessageCountRef = useRef<number>(0);
-  const previousDisplayedCountRef = useRef<number>(0);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // Memoize callback functions to prevent infinite re-renders
@@ -39,93 +37,192 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = React.memo(({
     console.log('🔄 End reached in conversation display');
   }, []);
 
-  // Initialize message visibility tracking
+  // Initialize message visibility tracking with intersection observer
   const { 
     startTracking, 
     stopTracking, 
     resetTracking,
-    trackMessageVisibility,
-    setMessageCount
+    setupIntersectionObserver,
+    setMessageCount,
+    setInitialVisibleMessages,
+    visibleMessages,
+    isTracking
   } = useScrollTracking({
     autoStart: false, // We'll start manually after messages are loaded
     onTurn6Reached: handleTurn6Reached,
-    onEndReached: handleEndReached
+    onEndReached: handleEndReached,
+    intersectionThreshold: 0.1 // 10% of message needs to be visible
   });
 
   // Start tracking when messages are loaded - only when messages.length changes
   useEffect(() => {
     if (messages.length > 0) {
-      console.log('🎯 ConversationDisplay: Messages loaded, setting up message visibility tracking');
-      console.log('🎯 ConversationDisplay: Total messages:', messages.length);
-      
       // Set the message count for turn 6 detection
       setMessageCount(messages.length);
       
       // Start tracking
       startTracking();
       
-      // Reset the previous displayed count
-      previousDisplayedCountRef.current = 0;
-      
       return () => {
-        console.log('🔄 ConversationDisplay: Cleaning up message visibility tracking');
         stopTracking();
       };
     }
-  }, [messages.length]); // Only depend on messages.length, not the functions
+  }, [messages.length, startTracking, stopTracking, setMessageCount]);
 
-  // Reset tracking when messages change - but only if the count actually changes significantly
-  useEffect(() => {
-    if (messages.length > 0 && messages.length !== lastMessageCountRef.current) {
-      console.log('🔄 Message count changed, resetting message visibility tracking');
-      lastMessageCountRef.current = messages.length;
-      resetTracking();
-      setMessageCount(messages.length);
-    }
-  }, [messages.length]); // Only depend on messages.length, not the functions
-
-  // Monitor actual scroll events on the messages container
+  // Set up intersection observer when messages container is ready
   useEffect(() => {
     const container = messagesContainerRef.current;
-    if (!container || messages.length === 0) return;
+    if (!container || messages.length === 0 || !isTracking) return;
 
-    const handleScroll = () => {
-      const scrollTop = container.scrollTop;
-      const scrollHeight = container.scrollHeight;
-      const clientHeight = container.clientHeight;
-      
-      // Calculate which message should be visible based on scroll position
-      const scrollPercentage = scrollTop / (scrollHeight - clientHeight);
-      const estimatedMessageIndex = Math.floor(scrollPercentage * messages.length);
-      
-      // Clamp to valid range
-      const messageIndex = Math.max(0, Math.min(estimatedMessageIndex, messages.length - 1));
-      
-      console.log(`🎯 Scroll event: position ${scrollTop}/${scrollHeight - clientHeight} (${Math.round(scrollPercentage * 100)}%), estimated message ${messageIndex + 1}/${messages.length}`);
-      
-      // Track message visibility based on actual scroll position
-      trackMessageVisibility(messageIndex);
-    };
-
-    // Add scroll event listener
-    container.addEventListener('scroll', handleScroll, { passive: true });
+    // Find the actual scrollable container - it's the TwoPanelLayout's main content div
+    let scrollableContainer: HTMLElement = container;
+    let parent: HTMLElement | null = container.parentElement;
     
-    // Initial call to set baseline
-    handleScroll();
-
-    return () => {
-      container.removeEventListener('scroll', handleScroll);
+    // Walk up the DOM tree to find the scrollable container
+    while (parent && parent !== document.body) {
+      const computedStyle = window.getComputedStyle(parent);
+      const overflowY = computedStyle.overflowY;
+      
+      // Check if this parent is scrollable
+      if (overflowY === 'auto' || overflowY === 'scroll') {
+        if (parent.scrollHeight > parent.clientHeight) {
+          scrollableContainer = parent;
+          break;
+        }
+      }
+      
+      parent = parent.parentElement;
+    }
+    
+    // Set up intersection observer for all message elements
+    setupIntersectionObserver(container, scrollableContainer);
+    
+    // Set up scroll listener on the actual scrollable container
+    let hasUserScrolled = false;
+    const handleScroll = () => {
+      if (!hasUserScrolled) {
+        hasUserScrolled = true;
+      }
     };
-  }, [messages.length, trackMessageVisibility]);
+    
+    // Add scroll listener to the scrollable container
+    scrollableContainer.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Also set up a window scroll listener as backup
+    const handleWindowScroll = () => {
+      if (!hasUserScrolled) {
+        hasUserScrolled = true;
+      }
+    };
+    
+    window.addEventListener('scroll', handleWindowScroll, { passive: true });
+    
+    // After a short delay, determine which messages are initially visible
+    // This helps establish the baseline before any scrolling occurs
+    const initialVisibilityTimer = setTimeout(() => {
+      const messageElements = container.querySelectorAll('[data-message-index]');
+      const initiallyVisible: number[] = [];
+      
+      // Get the scrollable container's current scroll position and dimensions
+      const scrollTop = scrollableContainer.scrollTop;
+      const clientHeight = scrollableContainer.clientHeight;
+      const scrollHeight = scrollableContainer.scrollHeight;
+      
+      // Use a reasonable viewport height for initial visibility calculation
+      // This prevents counting all messages as visible if the container is very tall
+      const effectiveViewportHeight = Math.min(clientHeight, 800); // Max 800px for initial visibility
+      
+      console.log('🎯 Scrollable container state:', {
+        scrollTop,
+        clientHeight,
+        scrollHeight,
+        effectiveViewportHeight,
+        isScrollable: scrollHeight > clientHeight,
+        containerTag: scrollableContainer.tagName,
+        containerClass: scrollableContainer.className
+      });
+      
+      messageElements.forEach((element, index) => {
+        const rect = element.getBoundingClientRect();
+        const messageIndex = parseInt(element.getAttribute('data-message-index') || '0', 10);
+        
+        // Calculate the element's position relative to the scrollable container
+        const elementTop = rect.top - scrollableContainer.getBoundingClientRect().top + scrollTop;
+        const elementBottom = elementTop + rect.height;
+        
+        // A message is initially visible if it's within the effective viewport
+        // This prevents counting all messages as visible on very tall containers
+        const isVisible = (
+          elementTop < effectiveViewportHeight && // Top of message is above effective viewport
+          elementBottom > 0 && // Bottom of message is below top of viewport
+          rect.height > 0 // Message has actual height
+        );
+        
+        if (isVisible) {
+          initiallyVisible.push(messageIndex);
+        }
+        
+        // Debug logging for first few messages
+        if (index < 5) {
+          // Debug logging removed for production
+        }
+      });
+      
+      // Set the initial visible messages (these won't trigger turn 6 until user scrolls)
+      setInitialVisibleMessages(initiallyVisible);
+    }, 100);
+    
+    // Also set up a mutation observer to watch for new messages being added
+    const mutationObserver = new MutationObserver((mutations) => {
+      let shouldReSetup = false;
+      
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'childList') {
+          // Check if new message elements were added
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeType === Node.ELEMENT_NODE && 
+                (node as Element).hasAttribute('data-message-index')) {
+              shouldReSetup = true;
+            }
+          });
+        }
+      });
+      
+      if (shouldReSetup) {
+        setupIntersectionObserver(container, scrollableContainer);
+      }
+    });
+    
+    mutationObserver.observe(container, {
+      childList: true,
+      subtree: true
+    });
+    
+    return () => {
+      clearTimeout(initialVisibilityTimer);
+      mutationObserver.disconnect();
+      scrollableContainer.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', handleWindowScroll);
+    };
+  }, [messages.length, isTracking, setupIntersectionObserver, setInitialVisibleMessages]);
+
+  // Debug function to test message visibility tracking
+  const testMessageVisibility = useCallback(() => {
+    const container = messagesContainerRef.current;
+    if (container) {
+      // Debug logging removed for production
+    }
+  }, [visibleMessages]);
 
   // Memoize the message list to prevent unnecessary re-renders
   const messageList = React.useMemo(() => (
     <MessageList
-      messages={displayedMessages.map(msg => ({
+      messages={displayedMessages.map((msg, index) => ({
         id: msg.id,
         role: msg.role,
         content: msg.content,
-        timestamp: msg.create_time
+        timestamp: msg.create_time,
+        messageIndex: index // Pass message index for tracking
       }))}
       layout="two-column"
       messageVariant="bubble"
@@ -195,7 +292,15 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = React.memo(({
     <div className="flex-1 overflow-y-auto p-6 pb-44 messages-container min-h-0" ref={messagesContainerRef}>
       {/* Debug info for message visibility tracking */}
       <div className="text-xs text-muted-foreground mb-2 sticky top-0 bg-background p-2 rounded z-10">
-        Messages: {displayedMessages.length}/{totalMessageCount} | Tracking message visibility
+        Messages: {displayedMessages.length}/{totalMessageCount} | 
+        Visible: {visibleMessages.length} | 
+        Tracking: {isTracking ? 'ON' : 'OFF'}
+        <button 
+          onClick={testMessageVisibility}
+          className="ml-2 px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+        >
+          Test Visibility
+        </button>
       </div>
 
       {messageList}

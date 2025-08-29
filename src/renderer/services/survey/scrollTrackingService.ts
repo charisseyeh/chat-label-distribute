@@ -1,5 +1,5 @@
 export interface ScrollTracker {
-  trackMessageVisibility: (messageIndex: number) => void;
+  trackMessageVisibility: (messageIndex: number, isVisible: boolean) => void;
   onTurn6Reached: (callback: () => void) => void;
   onEndReached: (callback: () => void) => void;
   startTracking: () => void;
@@ -8,10 +8,13 @@ export interface ScrollTracker {
   destroy: () => void;
   setMessageCount: (count: number) => void;
   getState: () => any;
+  getVisibleMessages: () => number[];
+  setInitialVisibleMessages: (visibleIndices: number[]) => void;
 }
 
 export interface ScrollTrackingOptions {
   turn6Threshold?: number; // Number of messages to trigger turn 6 survey
+  intersectionThreshold?: number; // How much of a message needs to be visible (0-1)
 }
 
 export class ScrollTrackingService implements ScrollTracker {
@@ -21,11 +24,15 @@ export class ScrollTrackingService implements ScrollTracker {
   private endReached = false;
   private options: Required<ScrollTrackingOptions>;
   private messageCount = 0;
-  private currentMessageIndex = 0;
+  private visibleMessages: Set<number> = new Set();
+  private intersectionObserver: IntersectionObserver | null = null;
+  private initialVisibleMessages: Set<number> = new Set();
+  private hasUserScrolled = false;
 
   constructor(options: ScrollTrackingOptions = {}) {
     this.options = {
       turn6Threshold: options.turn6Threshold || 6,
+      intersectionThreshold: options.intersectionThreshold || 0.1, // 10% of message visible
     };
   }
 
@@ -34,25 +41,124 @@ export class ScrollTrackingService implements ScrollTracker {
    */
   setMessageCount(count: number): void {
     this.messageCount = count;
-    console.log(`🎯 Scroll tracking: Set message count to ${count}`);
   }
 
   /**
-   * Track message visibility using message index
+   * Set the initially visible messages (on page load, before any scrolling)
    */
-  trackMessageVisibility(messageIndex: number): void {
-    this.currentMessageIndex = messageIndex;
+  setInitialVisibleMessages(visibleIndices: number[]): void {
+    this.initialVisibleMessages.clear();
+    visibleIndices.forEach(index => this.initialVisibleMessages.add(index));
+  }
+
+  /**
+   * Track message visibility using message index and visibility state
+   */
+  trackMessageVisibility(messageIndex: number, isVisible: boolean): void {
+    // Only track changes from the initial state, not the initial load
+    if (!this.hasUserScrolled) {
+      // This is the initial load - just store the initial state
+      if (isVisible) {
+        this.initialVisibleMessages.add(messageIndex);
+      } else {
+        this.initialVisibleMessages.delete(messageIndex);
+      }
+      return;
+    }
+
+    // User has scrolled - track actual visibility changes
+    if (isVisible) {
+      this.visibleMessages.add(messageIndex);
+    } else {
+      this.visibleMessages.delete(messageIndex);
+    }
+    
+    // Get the highest visible message index (most recent visible message)
+    const highestVisibleIndex = Math.max(...this.visibleMessages, -1);
     
     // Check if we've reached turn 6 threshold
-    if (!this.turn6Reached && this.messageCount > 0 && messageIndex >= this.options.turn6Threshold) {
-      console.log(`🎯 Scroll tracking: Turn 6 threshold reached (${messageIndex}/${this.messageCount})`);
+    if (!this.turn6Reached && this.messageCount > 0 && highestVisibleIndex >= this.options.turn6Threshold) {
+      console.log(`🎯 Turn 6 threshold reached (message ${highestVisibleIndex}/${this.messageCount})`);
       this.triggerTurn6();
     }
     
     // Check if we've reached the end (last message is visible)
-    if (!this.endReached && this.messageCount > 0 && messageIndex >= this.messageCount - 1) {
-      console.log(`🎯 Scroll tracking: End reached (${messageIndex}/${this.messageCount})`);
+    if (!this.endReached && this.messageCount > 0 && highestVisibleIndex >= this.messageCount - 1) {
+      console.log(`🎯 End of conversation reached (message ${highestVisibleIndex}/${this.messageCount})`);
       this.triggerEnd();
+    }
+  }
+
+  /**
+   * Mark that the user has started scrolling (called on first scroll event)
+   */
+  markUserScrolled(): void {
+    if (!this.hasUserScrolled) {
+      this.hasUserScrolled = true;
+      
+      // Initialize visible messages with current intersection state
+      this.visibleMessages.clear();
+      this.initialVisibleMessages.forEach(index => this.visibleMessages.add(index));
+    }
+  }
+
+  /**
+   * Get array of currently visible message indices
+   */
+  getVisibleMessages(): number[] {
+    return Array.from(this.visibleMessages).sort((a, b) => a - b);
+  }
+
+  /**
+   * Set up intersection observer for message elements
+   */
+  setupIntersectionObserver(container: HTMLElement, scrollableContainer?: HTMLElement): void {
+    if (this.intersectionObserver) {
+      this.intersectionObserver.disconnect();
+    }
+
+    // Use the scrollable container as root if provided, otherwise use viewport
+    const root = scrollableContainer || null;
+
+    this.intersectionObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const messageIndex = parseInt(entry.target.getAttribute('data-message-index') || '0', 10);
+          const isVisible = entry.isIntersecting;
+          
+          this.trackMessageVisibility(messageIndex, isVisible);
+        });
+      },
+      {
+        root: root, // Use scrollable container as root if provided
+        rootMargin: '0px',
+        threshold: this.options.intersectionThreshold,
+      }
+    );
+
+    // Observe all message elements
+    const messageElements = container.querySelectorAll('[data-message-index]');
+    messageElements.forEach((element) => {
+      this.intersectionObserver?.observe(element);
+    });
+    
+    // Set up scroll listener to detect when user starts scrolling
+    // Use the scrollable container if provided, otherwise fall back to window
+    const targetContainer = scrollableContainer || window;
+    const handleScroll = () => {
+      this.markUserScrolled();
+      // Remove scroll listener after first scroll
+      if (scrollableContainer) {
+        scrollableContainer.removeEventListener('scroll', handleScroll);
+      } else {
+        window.removeEventListener('scroll', handleScroll);
+      }
+    };
+    
+    if (scrollableContainer) {
+      scrollableContainer.addEventListener('scroll', handleScroll, { passive: true });
+    } else {
+      window.addEventListener('scroll', handleScroll, { passive: true });
     }
   }
 
@@ -71,17 +177,20 @@ export class ScrollTrackingService implements ScrollTracker {
   }
 
   /**
-   * Start tracking (no-op since we only track message visibility)
+   * Start tracking with intersection observer
    */
   startTracking(): void {
-    console.log('🎯 Scroll tracking: Started tracking message visibility');
+    // Tracking started
   }
 
   /**
-   * Stop tracking (no-op since we only track message visibility)
+   * Stop tracking
    */
   stopTracking(): void {
-    console.log('🎯 Scroll tracking: Stopped tracking message visibility');
+    if (this.intersectionObserver) {
+      this.intersectionObserver.disconnect();
+      this.intersectionObserver = null;
+    }
   }
 
   /**
@@ -90,8 +199,14 @@ export class ScrollTrackingService implements ScrollTracker {
   reset(): void {
     this.turn6Reached = false;
     this.endReached = false;
-    this.currentMessageIndex = 0;
-    console.log('🔄 Scroll tracking: Reset tracking state');
+    this.visibleMessages.clear();
+    this.initialVisibleMessages.clear();
+    this.hasUserScrolled = false;
+    
+    if (this.intersectionObserver) {
+      this.intersectionObserver.disconnect();
+      this.intersectionObserver = null;
+    }
   }
 
   /**
@@ -130,9 +245,11 @@ export class ScrollTrackingService implements ScrollTracker {
    * Clean up resources
    */
   destroy(): void {
+    this.stopTracking();
     this.turn6Callbacks = [];
     this.endCallbacks = [];
-    console.log('🎯 Scroll tracking: Destroyed');
+    this.visibleMessages.clear();
+    this.initialVisibleMessages.clear();
   }
 
   /**
@@ -142,7 +259,9 @@ export class ScrollTrackingService implements ScrollTracker {
     return {
       turn6Reached: this.turn6Reached,
       endReached: this.endReached,
-      currentMessageIndex: this.currentMessageIndex,
+      visibleMessages: this.getVisibleMessages(),
+      initialVisibleMessages: Array.from(this.initialVisibleMessages).sort((a, b) => a - b),
+      hasUserScrolled: this.hasUserScrolled,
       messageCount: this.messageCount,
       options: this.options
     };

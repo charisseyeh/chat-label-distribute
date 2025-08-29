@@ -9,6 +9,7 @@ export interface MessageProps {
   variant?: 'default' | 'bubble' | 'minimal';
   showRole?: boolean;
   showTimestamp?: boolean;
+  messageIndex?: number; // Add messageIndex for tracking
 }
 
 const Message: React.FC<MessageProps> = ({
@@ -20,6 +21,7 @@ const Message: React.FC<MessageProps> = ({
   variant = 'bubble',
   showRole = false,
   showTimestamp = false,
+  messageIndex,
 }) => {
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -57,9 +59,15 @@ const Message: React.FC<MessageProps> = ({
     ));
   };
 
+  // Add data-message-index attribute for intersection observer tracking
+  const messageAttributes: React.HTMLAttributes<HTMLDivElement> = {};
+  if (messageIndex !== undefined) {
+    messageAttributes['data-message-index'] = messageIndex;
+  }
+
   if (variant === 'minimal') {
     return (
-      <div className={`flex space-x-3 ${className}`}>
+      <div className={`flex space-x-3 ${className}`} {...messageAttributes}>
         <div className="flex-1">
           <div className="prose prose-sm max-w-none">
             {formatMessageContent(content)}
@@ -73,7 +81,7 @@ const Message: React.FC<MessageProps> = ({
     const isUser = role === 'user';
     
     return (
-      <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} ${className}`}>
+      <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} ${className}`} {...messageAttributes}>
         <div className={`max-w-[70%] ${isUser ? 'order-2' : 'order-1'}`}>
           {/* Role and Timestamp Header */}
           {(showRole || showTimestamp) && (
@@ -102,19 +110,10 @@ const Message: React.FC<MessageProps> = ({
     );
   }
 
-  // Default variant (current styling)
+  // Default variant
   return (
-    <div className={`flex space-x-3 ${className}`}>
+    <div className={`flex space-x-3 ${className}`} {...messageAttributes}>
       <div className="flex-1">
-        <div className="flex items-center space-x-2 mb-2">
-          <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getRoleColor(role)}`}>
-            {getRoleDisplayName(role)}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            {new Date(timestamp * 1000).toLocaleTimeString()}
-          </span>
-        </div>
-        
         <div className="prose prose-sm max-w-none">
           {formatMessageContent(content)}
         </div>

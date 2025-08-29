@@ -78,8 +78,7 @@ export const useConversationDetail = () => {
       // First try to get the full conversation data from the store
       const fullConversationData = getFullConversationDataById(id);
       if (fullConversationData) {
-        console.log('✅ Using stored full conversation data for:', id);
-        console.log('🔍 Full conversation data structure:', fullConversationData);
+              // Debug logging removed for production
         
         // Extract messages using the service
         let messages: Message[] = [];

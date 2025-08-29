@@ -27,7 +27,9 @@ class PerformanceMonitor {
       renderEnd: 0,
     });
 
-    console.log(`🚀 Navigation started: ${route}`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🚀 Navigation started for route: ${route}`);
+    }
   }
 
   /**
@@ -41,10 +43,8 @@ class PerformanceMonitor {
       metric.navigationEnd = performance.now();
       const duration = metric.navigationEnd - metric.navigationStart;
       
-      if (duration > 100) {
-        console.warn(`⚠️ Slow navigation detected: ${route} took ${duration.toFixed(2)}ms`);
-      } else {
-        console.log(`✅ Navigation completed: ${route} in ${duration.toFixed(2)}ms`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`✅ Navigation completed for route: ${route} in ${duration.toFixed(2)}ms`);
       }
     }
   }
@@ -73,7 +73,9 @@ class PerformanceMonitor {
       const renderDuration = metric.renderEnd - metric.renderStart;
       const totalDuration = metric.renderEnd - metric.navigationStart;
       
-      console.log(`🎨 Render completed: ${route} in ${renderDuration.toFixed(2)}ms (total: ${totalDuration.toFixed(2)}ms)`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🎨 Render completed for route: ${route} in ${renderDuration.toFixed(2)}ms (total: ${totalDuration.toFixed(2)}ms)`);
+      }
     }
   }
 
@@ -108,69 +110,3 @@ class PerformanceMonitor {
 
 // Export singleton instance
 export const performanceMonitor = new PerformanceMonitor();
-
-/**
- * Hook for measuring component render performance
- */
-export const usePerformanceMonitor = (route: string) => {
-  React.useEffect(() => {
-    performanceMonitor.startRender(route);
-    
-    return () => {
-      performanceMonitor.endRender(route);
-    };
-  }, [route]);
-};
-
-/**
- * Utility to measure function execution time
- */
-export const measureExecutionTime = <T extends (...args: any[]) => any>(
-  fn: T,
-  name: string
-): T => {
-  return ((...args: Parameters<T>): ReturnType<T> => {
-    const start = performance.now();
-    const result = fn(...args);
-    const end = performance.now();
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`⏱️ ${name} executed in ${(end - start).toFixed(2)}ms`);
-    }
-    
-    return result;
-  }) as T;
-};
-
-/**
- * Debounce utility for performance optimization
- */
-export const debounce = <T extends (...args: any[]) => any>(
-  func: T,
-  wait: number
-): ((...args: Parameters<T>) => void) => {
-  let timeout: NodeJS.Timeout;
-  
-  return (...args: Parameters<T>) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-};
-
-/**
- * Throttle utility for performance optimization
- */
-export const throttle = <T extends (...args: any[]) => any>(
-  func: T,
-  limit: number
-): ((...args: Parameters<T>) => void) => {
-  let inThrottle: boolean;
-  
-  return (...args: Parameters<T>) => {
-    if (!inThrottle) {
-      func(...args);
-      inThrottle = true;
-      setTimeout(() => inThrottle = false, limit);
-    }
-  };
-};
