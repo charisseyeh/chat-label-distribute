@@ -231,15 +231,15 @@ export const useConversationStore = create<ConversationStore>()(
 
         // Selection management
         toggleConversationSelection: (id) => {
-          const { selectedConversationIds } = get();
+          const { selectedConversationIds, loadedConversations } = get();
           const isSelected = selectedConversationIds.includes(id);
           
           if (isSelected) {
-            // Remove from temporary selection only
+            // Remove from temporary selection
             const newSelectedIds = selectedConversationIds.filter(selectedId => selectedId !== id);
             set({ selectedConversationIds: newSelectedIds });
           } else {
-            // Add to temporary selection only
+            // Add to temporary selection
             const newSelectedIds = [...selectedConversationIds, id];
             set({ selectedConversationIds: newSelectedIds });
           }

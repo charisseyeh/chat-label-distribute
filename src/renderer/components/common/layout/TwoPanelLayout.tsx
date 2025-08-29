@@ -21,7 +21,7 @@ const TwoPanelLayout: React.FC<TwoPanelLayoutProps> = ({
       </div>
 
       {/* Right Sidebar Panel - Fixed width */}
-      <div className={`${sidebarWidth} flex flex-col h-full`}>
+      <div className={`${sidebarWidth} flex flex-col h-full border-l border-gray-200`}>
         {sidebarContent}
       </div>
     </div>

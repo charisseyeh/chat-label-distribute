@@ -165,7 +165,7 @@ const SurveyTemplatesPage: React.FC = () => {
         </div>
       ) : (
         <div 
-          className="bg-white border border-border overflow-hidden"
+          className="border border-border overflow-hidden"
           style={{ borderRadius: 'var(--radius-lg)' }}
         >
           <List

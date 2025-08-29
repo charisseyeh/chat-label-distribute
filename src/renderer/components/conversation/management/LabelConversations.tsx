@@ -2,15 +2,21 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useConversationStore } from '../../../stores/conversationStore';
 import { useNavigationStore } from '../../../stores/navigationStore';
+import { useSurveyResponseStore } from '../../../stores/surveyResponseStore';
+import { useSurveyQuestions } from '../../../hooks/survey/useSurveyQuestions';
+import { List } from '../../common/molecules/list/List';
 
 const LabelConversations: React.FC = () => {
   const { 
     selectedConversationIds, 
     selectedConversations: storeSelectedConversations,
+    loadedConversations,
     loadSelectedConversationsFromStorage,
     clearAllSelectedAndSave
   } = useConversationStore();
   const { selectedConversations, setSelectedConversations } = useNavigationStore();
+  const { getProgress } = useSurveyResponseStore();
+  const { currentTemplate } = useSurveyQuestions();
   const navigate = useNavigate();
 
   // Load selected conversations from permanent storage on mount
@@ -46,6 +52,27 @@ const LabelConversations: React.FC = () => {
     navigate('/select-conversations');
   };
 
+  // Transform conversations to list items format with real data
+  const listItems = selectedConversations.map((conversation) => {
+    // Find the full conversation data from loaded conversations
+    const fullConversation = loadedConversations.find(conv => conv.id === conversation.id);
+    
+    // Format the date
+    const dateCreated = fullConversation?.createdAt 
+      ? new Date(fullConversation.createdAt).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        })
+      : 'Unknown date';
+    
+    return {
+      title: conversation.title || 'Untitled Conversation',
+      metadata: [dateCreated],
+      onClick: () => handleConversationClick(conversation.id)
+    };
+  });
+
   if (selectedConversations.length === 0) {
     return (
       <div className="max-w-4xl mx-auto p-6">
@@ -66,21 +93,14 @@ const LabelConversations: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-
-      <div className="space-y-4">
-        {selectedConversations.map((conversation) => (
-          <div 
-            key={conversation.id} 
-            className="bg-white rounded-lg border border-gray-200 p-4 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer"
-            onClick={() => handleConversationClick(conversation.id)}
-          >
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              {conversation.title || 'Untitled Conversation'}
-            </h3>
-          </div>
-        ))}
-      </div>
+    <div className="max-w-4xl mx-auto mt-6 border border-border overflow-hidden"
+    style={{ borderRadius: 'var(--radius-lg)' }}>
+      <List
+        variant="with-dividers"
+        items={listItems}
+        listItemVariant="double"
+        spacious
+      />
     </div>
   );
 };

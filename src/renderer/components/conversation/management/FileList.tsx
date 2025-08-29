@@ -29,7 +29,7 @@ export const FileList: React.FC<FileListProps> = ({
   };
 
   return (
-    <div className="mb-4 border border-gray-200 rounded-lg p-4">
+    <div className="m-4 border border-gray-200 rounded-lg p-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-h3">Files for conversationss</h3>
         <button

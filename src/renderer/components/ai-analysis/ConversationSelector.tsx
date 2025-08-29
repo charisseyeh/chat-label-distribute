@@ -34,7 +34,7 @@ const ConversationSelector: React.FC<ConversationSelectorProps> = ({
         />
       ))}
       {conversations.length === 0 && (
-        <p className="text-body-secondary text-left py-4">
+        <p className="text-body-secondary text-left p-4">
           No conversations with survey responses found. Please complete surveys in conversations first.
         </p>
       )}
