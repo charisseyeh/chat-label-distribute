@@ -13,6 +13,8 @@ export default defineConfig({
         main: path.resolve(__dirname, 'index.html'),
       },
     },
+    sourcemap: false,
+    minify: false,
   },
   resolve: {
     alias: {
@@ -31,10 +33,21 @@ export default defineConfig({
     hmr: {
       port: 5173,
     },
+    // Optimize for faster development
+    watch: {
+      usePolling: false,
+      interval: 100,
+    },
   },
   optimizeDeps: {
     exclude: ['electron'],
     force: true,
+    // Pre-bundle dependencies for faster startup
+    include: ['react', 'react-dom', 'react-router-dom', 'zustand'],
   },
   clearScreen: false,
+  // Improve development performance
+  esbuild: {
+    target: 'es2020',
+  },
 });

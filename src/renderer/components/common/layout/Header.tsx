@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { List, X, CaretRight } from '@phosphor-icons/react';
 import { useNavigationStore } from '../../../stores/navigationStore';
 import { useConversationStore } from '../../../stores/conversationStore';
@@ -8,12 +8,12 @@ interface HeaderProps {
   isSidebarOpen: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ isSidebarOpen }) => {
+const Header: React.FC<HeaderProps> = React.memo(({ isSidebarOpen }) => {
   const { currentPage, currentConversationId } = useNavigationStore();
   const { selectedConversations } = useConversationStore();
   const navigate = useNavigate();
 
-  const getPageTitle = (page: string) => {
+  const getPageTitle = useCallback((page: string) => {
     switch (page) {
       case 'select-conversations':
         return 'Select Conversations';
@@ -26,9 +26,9 @@ const Header: React.FC<HeaderProps> = ({ isSidebarOpen }) => {
       default:
         return 'Unknown Page';
     }
-  };
+  }, []);
 
-  const getPageDescription = (page: string) => {
+  const getPageDescription = useCallback((page: string) => {
     switch (page) {
       case 'select-conversations':
         return 'Select conversations to analyze and label';
@@ -41,13 +41,18 @@ const Header: React.FC<HeaderProps> = ({ isSidebarOpen }) => {
       default:
         return 'Navigation and analysis tools';
     }
-  };
+  }, []);
 
-  const getCurrentConversationTitle = () => {
+  const getCurrentConversationTitle = useCallback(() => {
     if (!currentConversationId) return null;
     const conversation = selectedConversations.find(conv => conv.id === currentConversationId);
     return conversation?.title || 'Unknown Conversation';
-  };
+  }, [currentConversationId, selectedConversations]);
+
+  // Memoize expensive calculations
+  const pageTitle = useMemo(() => getPageTitle(currentPage), [getPageTitle, currentPage]);
+  const pageDescription = useMemo(() => getPageDescription(currentPage), [getPageDescription, currentPage]);
+  const conversationTitle = useMemo(() => getCurrentConversationTitle(), [getCurrentConversationTitle]);
 
   return (
     <header className="bg-background border-b border-border px-6 py-4">
@@ -55,25 +60,21 @@ const Header: React.FC<HeaderProps> = ({ isSidebarOpen }) => {
         <div className="flex flex-col items-left">
           {/* Breadcrumb Navigation */}
           <div className="flex items-center space-x-2">
-            <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-h3 text-foreground">
               {currentConversationId ? (
-                <button
-                  onClick={() => navigate('/label-conversations')}
-                  className="btn-link"
-                  title="Click to go back to Label Conversations"
-                >
+                <span className="text-h3 text-foreground">
                   Label Conversations
-                </button>
+                </span>
               ) : (
-                getPageTitle(currentPage)
+                pageTitle
               )}
             </h1>
             
             {currentConversationId && (
               <>
                 <CaretRight size={20} className="text-muted-foreground" />
-                <span className="text-xl font-semibold text-foreground">
-                  {getCurrentConversationTitle()}
+                <span className="text-h3 text-foreground">
+                  {conversationTitle}
                 </span>
               </>
             )}
@@ -82,7 +83,7 @@ const Header: React.FC<HeaderProps> = ({ isSidebarOpen }) => {
           <span className="text-sm text-muted-foreground">
             {currentConversationId 
               ? ``
-              : getPageDescription(currentPage)
+              : pageDescription
             }
           </span>
         </div>
@@ -90,6 +91,8 @@ const Header: React.FC<HeaderProps> = ({ isSidebarOpen }) => {
       </div>
     </header>
   );
-};
+});
+
+Header.displayName = 'Header';
 
 export default Header;

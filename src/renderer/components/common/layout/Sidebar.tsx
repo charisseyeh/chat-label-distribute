@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sidebar as SidebarIcon, X, ClipboardText, Tag, FileText, Robot, SidebarSimpleIcon } from '@phosphor-icons/react';
 import { useNavigationStore } from '../../../stores/navigationStore';
@@ -11,13 +11,13 @@ interface SidebarProps {
   onToggleSidebar: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggleSidebar }) => {
+const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar }) => {
   const { currentPage, setCurrentPage, selectedConversations, removeSelectedConversation, currentConversationId, currentTemplateId } = useNavigationStore();
   const { selectedConversationIds, removeSelectedConversation: removeFromStore, saveSelectedConversationsToStorage } = useConversationStore();
   const { templates } = useSurveyQuestions();
   const navigate = useNavigate();
 
-  const getPageTitle = (page: string) => {
+  const getPageTitle = useCallback((page: string) => {
     switch (page) {
       case 'select-conversations':
         return 'Select Conversations';
@@ -32,45 +32,45 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggleSidebar }) => {
       default:
         return 'Unknown Page';
     }
-  };
+  }, []);
 
-  const truncateTitle = (title: string, maxLength: number = 20) => {
+  const truncateTitle = useCallback((title: string, maxLength: number = 20) => {
     if (!title) return 'Untitled';
     return title.length > maxLength ? `${title.substring(0, maxLength)}...` : title;
-  };
+  }, []);
 
-  const getSelectedConversationTitles = () => {
+  const getSelectedConversationTitles = useMemo(() => {
     if (selectedConversations.length === 0) return [];
     
     return selectedConversations.slice(0, 3).map(conv => ({
       id: conv.id,
       title: conv.title
     }));
-  };
+  }, [selectedConversations]);
 
-  const getSelectedTemplateTitles = () => {
+  const getSelectedTemplateTitles = useMemo(() => {
     if (templates.length === 0) return [];
     
     return templates.slice(0, 3).map(template => ({
       id: template.id,
       title: template.name || 'Untitled Template'
     }));
-  };
+  }, [templates]);
 
-  const handlePageNavigation = (page: 'select-conversations' | 'label-conversations' | 'ai-comparisons' | 'survey-templates' | 'survey-questions') => {
+  const handlePageNavigation = useCallback((page: 'select-conversations' | 'label-conversations' | 'ai-comparisons' | 'survey-templates' | 'survey-questions') => {
     setCurrentPage(page);
     navigate(`/${page === 'select-conversations' ? 'select-conversations' : page}`);
-  };
+  }, [setCurrentPage, navigate]);
 
-  const handleConversationClick = (conversationId: string) => {
+  const handleConversationClick = useCallback((conversationId: string) => {
     navigate(`/conversation/${conversationId}`);
-  };
+  }, [navigate]);
 
-  const handleTemplateClick = (templateId: string) => {
+  const handleTemplateClick = useCallback((templateId: string) => {
     navigate(`/survey-template/${templateId}`);
-  };
+  }, [navigate]);
 
-  const handleRemoveConversation = async (conversationId: string) => {
+  const handleRemoveConversation = useCallback(async (conversationId: string) => {
     try {
       // Get conversation title for confirmation
       const conversation = selectedConversations.find(conv => conv.id === conversationId);
@@ -110,10 +110,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggleSidebar }) => {
     } catch (error) {
       console.error('❌ handleRemoveConversation: Failed to remove conversation:', error);
     }
-  };
+  }, [selectedConversations, currentPage, removeSelectedConversation, removeFromStore, saveSelectedConversationsToStorage, navigate]);
 
   // Helper function to determine if a navigation item should be active
-  const isNavigationItemActive = (itemId: string) => {
+  const isNavigationItemActive = useCallback((itemId: string) => {
     // If we're viewing a specific conversation, only that should be active
     if (currentConversationId) {
       return false;
@@ -126,9 +126,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggleSidebar }) => {
     
     // Otherwise, check if the current page matches the item
     return currentPage === itemId;
-  };
+  }, [currentConversationId, currentTemplateId, currentPage]);
 
-  const navigationItems = [
+  const navigationItems = useMemo(() => [
     {
       id: 'select-conversations',
       label: 'Select Conversations',
@@ -140,7 +140,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggleSidebar }) => {
       label: 'Label Conversations',
       icon: <Tag size={20} weight="bold" />,
       onClick: () => handlePageNavigation('label-conversations'),
-      subItems: getSelectedConversationTitles().slice(0, 3).map(conv => ({
+      subItems: getSelectedConversationTitles.slice(0, 3).map(conv => ({
         id: conv.id,
         label: truncateTitle(conv.title),
         onClick: () => handleConversationClick(conv.id)
@@ -151,7 +151,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggleSidebar }) => {
       label: 'Survey Templates',
       icon: <FileText size={20} weight="bold" />,
       onClick: () => handlePageNavigation('survey-templates'),
-      subItems: getSelectedTemplateTitles().slice(0, 3).map(template => ({
+      subItems: getSelectedTemplateTitles.slice(0, 3).map(template => ({
         id: template.id,
         label: truncateTitle(template.title),
         onClick: () => handleTemplateClick(template.id)
@@ -163,11 +163,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggleSidebar }) => {
       icon: <Robot size={20} weight="bold" />,
       onClick: () => handlePageNavigation('ai-comparisons')
     }
-  ];
+  ], [getSelectedConversationTitles, getSelectedTemplateTitles, truncateTitle, handlePageNavigation, handleConversationClick, handleTemplateClick]);
 
   return (
     <aside
-      className={`bg-muted border-r border-border transition-all duration-300 ease-in-out ${
+      className={`bg-muted border-r border-border transition-all duration-200 ease-out ${
         isOpen ? 'w-64' : 'w-16'
       } ${isOpen ? '' : 'overflow-visible'}`}
     >
@@ -175,8 +175,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggleSidebar }) => {
       <div className={`flex items-center justify-between mt-2 p-4 ${
         isOpen ? '' : 'justify-center'
       }`}>
-        <h2 className={`text-lg font-semibold text-foreground transition-all duration-300 ${
-          isOpen ? 'opacity-100' : 'opacity-0 w-0'
+        <h2 className={`text-lg font-semibold text-foreground transition-all duration-200 delay-100 ${
+          isOpen ? 'opacity-100 max-w-none' : 'opacity-0 max-w-0 overflow-hidden'
         }`}>
           Chat Labeling
         </h2>
@@ -216,72 +216,83 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggleSidebar }) => {
         </div>
       )}
       
-      <div className={`pl-1 pr-1 pt-6 ${!isOpen ? 'hidden' : ''}`}>
+      <div className={`pl-1 pr-1 pt-6 transition-all duration-200 delay-100 ${
+        isOpen ? 'opacity-100 max-h-none' : 'opacity-0 max-h-0 overflow-hidden'
+      }`}>
         <NavigationSection>
-          {navigationItems.map((item) => (
-            <div key={item.id}>
-              <NavigationItem
-                icon={item.icon}
-                label={item.label}
-                isActive={isNavigationItemActive(item.id)}
-                onClick={item.onClick}
-              />
-              
-              {/* Sub-items for label conversations */}
-              {item.id === 'label-conversations' && item.subItems && item.subItems.length > 0 && (
-                <div>
-                  {item.subItems.map((subItem) => (
-                    <NavigationItemNested
-                      key={subItem.id}
-                      label={subItem.label}
-                      isActive={currentConversationId === subItem.id}
-                      onClick={subItem.onClick}
-                      onRemove={() => handleRemoveConversation(subItem.id)}
-                    />
-                  ))}
-                  
-                  {getSelectedConversationTitles().length > 3 && (
-                    <button
-                      onClick={() => handlePageNavigation('label-conversations')}
-                      className="nav-item text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 text-left"
-                    >
-                      <span className="text-xs">→</span>
-                      <span>See all ({getSelectedConversationTitles().length})</span>
-                    </button>
-                  )}
-                </div>
-              )}
+          {navigationItems.map((item) => {
+            // Clone the icon and change weight to "fill" if active (same logic as collapsed state)
+            const iconElement = React.cloneElement(item.icon as React.ReactElement, {
+              weight: isNavigationItemActive(item.id) ? "fill" : "bold"
+            });
 
-              {/* Sub-items for survey templates */}
-              {item.id === 'survey-templates' && item.subItems && item.subItems.length > 0 && (
-                <div>
-                  {item.subItems.map((subItem) => (
-                    <NavigationItemNested
-                      key={subItem.id}
-                      label={subItem.label}
-                      isActive={currentTemplateId === subItem.id}
-                      onClick={subItem.onClick}
-                    />
-                  ))}
-                  
-                  {getSelectedTemplateTitles().length > 3 && (
-                    <button
-                      onClick={() => handlePageNavigation('survey-templates')}
-                      className="nav-item text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 text-left"
-                    >
-                      <span className="text-xs">→</span>
-                      <span>See all ({getSelectedTemplateTitles().length})</span>
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
+            return (
+              <div key={item.id}>
+                <NavigationItem
+                  icon={iconElement}
+                  label={item.label}
+                  isActive={isNavigationItemActive(item.id)}
+                  onClick={item.onClick}
+                />
+                
+                {/* Sub-items for label conversations */}
+                {item.id === 'label-conversations' && item.subItems && item.subItems.length > 0 && (
+                  <div>
+                    {item.subItems.map((subItem) => (
+                      <NavigationItemNested
+                        key={subItem.id}
+                        label={subItem.label}
+                        isActive={currentConversationId === subItem.id}
+                        onClick={subItem.onClick}
+                        onRemove={() => handleRemoveConversation(subItem.id)}
+                      />
+                    ))}
+                    
+                    {getSelectedConversationTitles.length > 3 && (
+                      <button
+                        onClick={() => handlePageNavigation('label-conversations')}
+                        className="nav-item text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 text-left"
+                      >
+                        <span className="text-xs">→</span>
+                        <span>See all ({getSelectedConversationTitles.length})</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Sub-items for survey templates */}
+                {item.id === 'survey-templates' && item.subItems && item.subItems.length > 0 && (
+                  <div>
+                    {item.subItems.map((subItem) => (
+                      <NavigationItemNested
+                        key={subItem.id}
+                        label={subItem.label}
+                        isActive={currentTemplateId === subItem.id}
+                        onClick={subItem.onClick}
+                      />
+                    ))}
+                    
+                    {getSelectedTemplateTitles.length > 3 && (
+                      <button
+                        onClick={() => handlePageNavigation('survey-templates')}
+                        className="nav-item text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 text-left"
+                      >
+                        <span className="text-xs">→</span>
+                        <span>See all ({getSelectedTemplateTitles.length})</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </NavigationSection>
         
       </div>
     </aside>
   );
-};
+});
+
+Sidebar.displayName = 'Sidebar';
 
 export default Sidebar;

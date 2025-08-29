@@ -17,6 +17,8 @@ export interface NavigationState {
   clearSelectedConversations: () => void;
   setCurrentConversationId: (id: string | null) => void;
   setCurrentTemplateId: (id: string | null) => void;
+  // New: Batch update for better performance
+  batchUpdate: (updates: Partial<Pick<NavigationState, 'currentPage' | 'currentConversationId' | 'currentTemplateId'>>) => void;
 }
 
 export const useNavigationStore = create<NavigationState>((set) => ({
@@ -42,4 +44,7 @@ export const useNavigationStore = create<NavigationState>((set) => ({
   setCurrentConversationId: (id) => set({ currentConversationId: id }),
   
   setCurrentTemplateId: (id) => set({ currentTemplateId: id }),
+  
+  // Batch update for better performance - reduces multiple re-renders
+  batchUpdate: (updates) => set((state) => ({ ...state, ...updates })),
 }));

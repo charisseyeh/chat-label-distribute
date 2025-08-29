@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Header from './components/common/layout/Header';
 import Sidebar from './components/common/layout/Sidebar';
@@ -11,50 +11,60 @@ import SurveyQuestionsPage from './pages/SurveyQuestionsPage';
 import SurveyTemplatesPage from './pages/SurveyTemplatesPage';
 import { useConversationStore } from './stores/conversationStore';
 import { useNavigationStore } from './stores/navigationStore';
+import { performanceMonitor } from './utils/performance';
 
 // Component to sync navigation store with route changes
-const NavigationSync: React.FC = () => {
+const NavigationSync: React.FC = React.memo(() => {
   const location = useLocation();
-  const { setCurrentPage, setCurrentConversationId, setCurrentTemplateId } = useNavigationStore();
+  const { batchUpdate } = useNavigationStore();
 
-  useEffect(() => {
+  // Memoize the navigation logic to prevent unnecessary recalculations
+  const navigationConfig = useMemo(() => {
     const path = location.pathname;
     
-    // Map routes to page types
     if (path === '/' || path === '/select-conversations') {
-      setCurrentPage('select-conversations');
-      setCurrentConversationId(null);
-      setCurrentTemplateId(null);
+      return { page: 'select-conversations' as const, conversationId: null, templateId: null };
     } else if (path === '/label-conversations') {
-      setCurrentPage('label-conversations');
-      setCurrentConversationId(null);
-      setCurrentTemplateId(null);
+      return { page: 'label-conversations' as const, conversationId: null, templateId: null };
     } else if (path === '/ai-comparisons') {
-      setCurrentPage('ai-comparisons');
-      setCurrentConversationId(null);
-      setCurrentTemplateId(null);
+      return { page: 'ai-comparisons' as const, conversationId: null, templateId: null };
     } else if (path === '/survey-templates') {
-      setCurrentPage('survey-templates');
-      setCurrentConversationId(null);
-      setCurrentTemplateId(null);
+      return { page: 'survey-templates' as const, conversationId: null, templateId: null };
     } else if (path.startsWith('/conversation/')) {
-      // Extract conversation ID from path
       const conversationId = path.split('/conversation/')[1];
-      setCurrentConversationId(conversationId);
-      setCurrentTemplateId(null);
-      // Keep current page as 'label-conversations' for breadcrumb context
+      return { page: 'label-conversations' as const, conversationId, templateId: null };
     } else if (path.startsWith('/survey-template/')) {
-      // Extract template ID from path
       const templateId = path.split('/survey-template/')[1];
-      setCurrentTemplateId(templateId);
-      setCurrentConversationId(null);
-      // Set current page as 'survey-questions' for the footer save button
-      setCurrentPage('survey-questions');
+      return { page: 'survey-questions' as const, conversationId: null, templateId };
     }
-  }, [location.pathname, setCurrentPage, setCurrentConversationId, setCurrentTemplateId]);
+    
+    return { page: 'select-conversations' as const, conversationId: null, templateId: null };
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const { page, conversationId, templateId } = navigationConfig;
+    
+    // Track navigation performance
+    const route = location.pathname;
+    performanceMonitor.startNavigation(route);
+    
+    // Use batch update for better performance - single state update instead of three
+    batchUpdate({
+      currentPage: page,
+      currentConversationId: conversationId,
+      currentTemplateId: templateId
+    });
+    
+    // Mark navigation as complete after state update
+    requestAnimationFrame(() => {
+      performanceMonitor.endNavigation(route);
+    });
+  }, [navigationConfig, batchUpdate, location.pathname]);
 
   return null;
-};
+});
+
+NavigationSync.displayName = 'NavigationSync';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -87,9 +97,9 @@ function App() {
     }
   }, [selectedConversations, setSelectedConversations]);
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarOpen(prev => !prev);
+  }, []);
 
   return (
     <Router>

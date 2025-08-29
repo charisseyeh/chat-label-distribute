@@ -1,3 +1,73 @@
+/* Add performance optimizations at the top */
+* {
+  /* Optimize for performance */
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Reduce layout thrashing during navigation */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  /* Optimize rendering */
+  text-rendering: optimizeSpeed;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
+/* Optimize transitions and animations */
+.transition-all {
+  will-change: auto;
+}
+
+/* Optimize sidebar transitions */
+aside {
+  will-change: width;
+  transform: translateZ(0);
+}
+
+/* Optimize navigation items */
+.nav-item {
+  will-change: background-color, color;
+  transform: translateZ(0);
+}
+
+/* Optimize buttons */
+button {
+  will-change: background-color, color, transform;
+  transform: translateZ(0);
+}
+
+/* Optimize hover states */
+*:hover {
+  transition: none;
+}
+
+/* Only apply transitions to specific elements that need them */
+.transition-colors,
+.transition-all,
+.transition-opacity,
+.transition-transform {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Optimize for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Import Design System */
 @import './styles/design-system/index.css';
 
