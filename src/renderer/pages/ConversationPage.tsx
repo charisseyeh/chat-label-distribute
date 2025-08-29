@@ -1,6 +1,13 @@
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useConversationStore } from '../stores/conversationStore';
+import { 
+  useConversationStore,
+  useSelectedConversations,
+  useLoadedConversations,
+  useCurrentSourceFile,
+  useConversationLoading,
+  useConversationError
+} from '../stores/conversationStore';
 import { useNavigationStore } from '../stores/navigationStore';
 import { useSurveyStore } from '../stores/surveyStore';
 import { TwoPanelLayout } from '../components/common';
@@ -10,14 +17,18 @@ import ConversationDetail from '../components/conversation/core/ConversationDeta
 const ConversationPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  
+  // Use optimized selectors to prevent unnecessary re-renders
+  const storeSelectedConversations = useSelectedConversations();
+  const loadedConversations = useLoadedConversations();
+  const currentSourceFile = useCurrentSourceFile();
+  const conversationsLoading = useConversationLoading();
+  const conversationsError = useConversationError();
+  
+  // Only get the functions we need from the store
   const { 
     conversations, 
     getConversationById,
-    selectedConversations: storeSelectedConversations,
-    loadedConversations,
-    currentSourceFile,
-    loading: conversationsLoading,
-    error: conversationsError,
     loadSelectedConversationsFromStorage,
     setCurrentSourceFile,
     ensureConversationsLoaded,
@@ -76,8 +87,8 @@ const ConversationPage: React.FC = () => {
         setCurrentSourceFile(currentConv.sourceFilePath);
         
         // Ensure conversations are loaded for this source file
-        ensureConversationsLoaded(currentConv.sourceFilePath).then(() => {
-          console.log('✅ Conversations loaded for source file:', currentConv.sourceFilePath);
+        ensureConversationsLoaded(currentConv.sourceFilePath).then((loadedConvs) => {
+          console.log('✅ Conversations loaded for source file:', currentConv.sourceFilePath, 'Count:', loadedConvs.length);
           
           // Also load the full conversation data for the current conversation
           if (id) {

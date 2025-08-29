@@ -5,14 +5,12 @@ export interface UseScrollTrackingOptions extends ScrollTrackingOptions {
   autoStart?: boolean;
   onTurn6Reached?: () => void;
   onEndReached?: () => void;
-  scrollElement?: Element | null;
 }
 
 export interface ScrollTrackingState {
   turn6Reached: boolean;
   endReached: boolean;
   isTracking: boolean;
-  scrollPercentage: number;
 }
 
 export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
@@ -20,7 +18,6 @@ export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
     autoStart = true,
     onTurn6Reached,
     onEndReached,
-    scrollElement,
     ...trackingOptions
   } = options;
 
@@ -35,17 +32,19 @@ export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
   const [state, setState] = useState<ScrollTrackingState>({
     turn6Reached: false,
     endReached: false,
-    isTracking: false,
-    scrollPercentage: 0
+    isTracking: false
   });
 
-  // Create scroll tracker
+  // Memoize tracking options to prevent unnecessary recreations
+  const memoizedTrackingOptions = useRef(trackingOptions);
+  
+  // Create scroll tracker - memoized with no dependencies
   const createTracker = useCallback(() => {
     if (trackerRef.current) {
       trackerRef.current.destroy();
     }
 
-    trackerRef.current = createScrollTracker(trackingOptions);
+    trackerRef.current = createScrollTracker(memoizedTrackingOptions.current);
 
     // Register callbacks using ref to avoid dependency issues
     if (callbacksRef.current.onTurn6Reached) {
@@ -62,28 +61,10 @@ export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
       });
     }
 
-    // Set scroll element if provided
-    if (scrollElement) {
-      trackerRef.current.setScrollElement(scrollElement);
-    }
-
-    // Set up interval to update scroll percentage
-    const intervalId = setInterval(() => {
-      if (trackerRef.current) {
-        const trackerState = trackerRef.current.getState();
-        if (trackerState && trackerState.scrollPercentage !== state.scrollPercentage) {
-          setState(prev => ({ ...prev, scrollPercentage: trackerState.scrollPercentage }));
-        }
-      }
-    }, 100); // Update every 100ms
-
-    // Store interval ID for cleanup
-    (trackerRef.current as any)._intervalId = intervalId;
-
     return trackerRef.current;
-  }, [trackingOptions, state.scrollPercentage, scrollElement]); // Add scrollElement dependency
+  }, []); // No dependencies needed since we use refs
 
-  // Start tracking
+  // Start tracking - memoized with no dependencies
   const startTracking = useCallback(() => {
     if (!trackerRef.current) {
       createTracker();
@@ -95,15 +76,15 @@ export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
     }
   }, []); // No dependencies needed since we use refs
 
-  // Stop tracking
+  // Stop tracking - memoized with no dependencies
   const stopTracking = useCallback(() => {
     if (trackerRef.current) {
       trackerRef.current.stopTracking();
       setState(prev => ({ ...prev, isTracking: false }));
     }
-  }, []);
+  }, []); // No dependencies needed since we use refs
 
-  // Reset tracking state
+  // Reset tracking state - memoized with no dependencies
   const resetTracking = useCallback(() => {
     console.log('🔄 useScrollTracking: Resetting tracking state');
     if (trackerRef.current) {
@@ -111,56 +92,34 @@ export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
       setState(prev => ({
         turn6Reached: false,
         endReached: false,
-        isTracking: prev.isTracking, // Preserve current tracking state
-        scrollPercentage: 0
+        isTracking: prev.isTracking // Preserve current tracking state
       }));
     }
-  }, []); // Remove dependency on state.isTracking
+  }, []); // No dependencies needed since we use refs
 
-  // Manually trigger turn 6
-  const triggerTurn6 = useCallback(() => {
-    if (trackerRef.current) {
-      trackerRef.current.triggerTurn6();
-    }
-  }, []);
-
-  // Manually trigger end reached
-  const triggerEnd = useCallback(() => {
-    if (trackerRef.current) {
-      trackerRef.current.triggerEnd();
-    }
-  }, []);
-
-  // Track message visibility
+  // Track message visibility - memoized with no dependencies
   const trackMessageVisibility = useCallback((messageIndex: number) => {
     if (trackerRef.current) {
       trackerRef.current.trackMessageVisibility(messageIndex);
     }
-  }, []);
+  }, []); // No dependencies needed since we use refs
 
-  // Track conversation end
-  const trackConversationEnd = useCallback(() => {
+  // Set message count - memoized with no dependencies
+  const setMessageCount = useCallback((count: number) => {
     if (trackerRef.current) {
-      trackerRef.current.trackConversationEnd();
+      trackerRef.current.setMessageCount(count);
     }
-  }, []);
+  }, []); // No dependencies needed since we use refs
 
-  // Set scroll element
-  const setScrollElement = useCallback((element: Element | null) => {
-    if (trackerRef.current) {
-      trackerRef.current.setScrollElement(element);
-    }
-  }, []);
-
-  // Get current tracking state
+  // Get current tracking state - memoized with no dependencies
   const getTrackingState = useCallback(() => {
     if (trackerRef.current) {
       return trackerRef.current.getState();
     }
     return null;
-  }, []);
+  }, []); // No dependencies needed since we use refs
 
-  // Initialize tracking
+  // Initialize tracking - only run once on mount
   useEffect(() => {
     if (autoStart) {
       createTracker();
@@ -168,48 +127,33 @@ export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
 
     return () => {
       if (trackerRef.current) {
-        // Clean up interval
-        const intervalId = (trackerRef.current as any)._intervalId;
-        if (intervalId) {
-          clearInterval(intervalId);
-        }
         trackerRef.current.destroy();
         trackerRef.current = null;
       }
     };
-  }, [autoStart]); // Remove createTracker dependency
+  }, []); // Only run once
 
-  // Auto-start tracking when tracker is created
+  // Auto-start tracking when tracker is created - only run once
   useEffect(() => {
     if (trackerRef.current && autoStart) {
       startTracking();
     }
-  }, [autoStart]); // Remove startTracking dependency
-
-  // Update scroll element when it changes
-  useEffect(() => {
-    if (scrollElement && trackerRef.current) {
-      trackerRef.current.setScrollElement(scrollElement);
-    }
-  }, [scrollElement]);
+  }, []); // Only run once
 
   return {
     // State
     ...state,
     
-    // Actions
+    // Actions - all memoized and stable
     startTracking,
     stopTracking,
     resetTracking,
-    triggerTurn6,
-    triggerEnd,
     
-    // Tracking functions
+    // Tracking functions - all memoized and stable
     trackMessageVisibility,
-    trackConversationEnd,
-    setScrollElement,
+    setMessageCount,
     
-    // Utility
+    // Utility - memoized and stable
     getTrackingState,
     
     // Tracker reference (for advanced usage)

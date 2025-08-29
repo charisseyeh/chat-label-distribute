@@ -41,7 +41,6 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages 
   const { 
     turn6Reached, 
     endReached, 
-    scrollPercentage,
     trackMessageVisibility,
     startTracking,
     stopTracking,
@@ -84,22 +83,15 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages 
     return () => {
       clearTimeout(timer);
     };
-  }, [conversationId, resetTracking, startTracking]);
+  }, [conversationId]); // Remove resetTracking and startTracking dependencies to prevent infinite loops
 
-  // Update visible sections based on scroll percentage
+  // Update visible sections based on message visibility tracking
   useEffect(() => {
     if (messages.length === 0) return;
 
-    // Turn 6 should appear around 30-40% through the conversation
-    if (scrollPercentage >= 30 && !visibleSections.turn6) {
-      setVisibleSections(prev => ({ ...prev, turn6: true }));
-    }
-    
-    // End should appear when near the bottom (90%+)
-    if (scrollPercentage >= 90 && !visibleSections.end) {
-      setVisibleSections(prev => ({ ...prev, end: true }));
-    }
-  }, [messages.length, scrollPercentage, visibleSections.turn6, visibleSections.end]);
+    // Turn 6 and end sections are now controlled by message visibility tracking
+    // No need to manually check scroll percentage
+  }, [messages.length]); // Only depend on messages.length
 
   // Create survey sections data
   const surveySections: SurveySectionType[] = [
@@ -142,9 +134,7 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({ conversationId, messages 
     }
   };
 
-
-
-  // Update visible sections when scroll tracking changes
+  // Update visible sections when scroll tracking changes - use refs to prevent infinite loops
   useEffect(() => {
     if (turn6Reached) {
       setVisibleSections(prev => ({ ...prev, turn6: true }));
