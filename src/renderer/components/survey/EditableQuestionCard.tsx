@@ -54,7 +54,6 @@ const EditableQuestionCard: React.FC<EditableQuestionCardProps> = ({
     // Only update if the display scale is different from the current form data scale
     // and if the question scale has actually changed
     if (displayScale !== question.scale) {
-      console.log(`🔄 Scale change detected: question scale ${question.scale} -> display scale ${displayScale}`);
       // Generate new labels for the new scale
       const newLabels = generateDefaultLabels(displayScale);
       setFormData(prev => ({
@@ -62,7 +61,6 @@ const EditableQuestionCard: React.FC<EditableQuestionCardProps> = ({
         scale: displayScale,
         labels: newLabels
       }));
-      console.log(`✅ Updated form data with new scale ${displayScale} and labels:`, newLabels);
     }
   }, [displayScale, question.scale]); // Only depend on displayScale and question.scale, not formData.scale
 

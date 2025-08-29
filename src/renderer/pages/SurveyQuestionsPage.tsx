@@ -25,7 +25,8 @@ const SurveyQuestionsPage: React.FC = () => {
     initializeTemplate,
     clearError,
     loadTemplates,
-    loadTemplate
+    loadTemplate,
+    generateDefaultLabels
   } = useSurveyQuestions();
 
   const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
@@ -43,69 +44,55 @@ const SurveyQuestionsPage: React.FC = () => {
     if (!currentTemplate || pendingChanges.size === 0) return;
     
     try {
-      console.log('💾 Saving all pending changes...');
       const updatePromises = Array.from(pendingChanges.entries()).map(([questionId, questionData]) => 
         updateQuestion(currentTemplate.id, questionId, questionData)
       );
       
       await Promise.all(updatePromises);
       setPendingChanges(new Map());
-      console.log('✅ All changes saved successfully');
     } catch (error) {
-      console.error('❌ Failed to save changes:', error);
+      console.error('Failed to save changes:', error);
     }
   }, [currentTemplate, pendingChanges, updateQuestion]);
   
   // Set up save handler when template changes
   useEffect(() => {
     if (currentTemplate) {
-      console.log('🔧 Setting up save handler for template:', currentTemplate.id);
       setSaveHandler(saveAllChanges);
     }
     
     return () => {
       // Don't clear the save handler on cleanup - let it persist
-      console.log('🧹 Component unmounting, but keeping save handler');
     };
-  }, [currentTemplate?.id, saveAllChanges, setSaveHandler]);
+  }, [currentTemplate?.id]); // Only depend on template ID, not saveAllChanges or setSaveHandler
   
   // Only clear save handler when component actually unmounts
   useEffect(() => {
     return () => {
-      console.log('🧹 Component unmounting, clearing save handler');
       clearSaveHandler();
       setPendingChangesCount(0);
     };
   }, [clearSaveHandler, setPendingChangesCount]);
   
-  // Debug: Log when pending changes change
+  // Track pending changes (no logging)
   useEffect(() => {
-    console.log('📝 Pending changes updated:', pendingChanges.size, 'changes');
-    if (pendingChanges.size > 0) {
-      console.log('📋 Pending changes:', Array.from(pendingChanges.keys()));
-    }
+    // Silent tracking of pending changes
   }, [pendingChanges]);
   
   // Sync pending changes count
   useEffect(() => {
-    console.log('🔄 Syncing pending changes count:', pendingChanges.size);
     setPendingChangesCount(pendingChanges.size);
   }, [pendingChanges.size, setPendingChangesCount]);
   
-  // Debug: Log when save handler changes
-  useEffect(() => {
-    console.log('🔧 Save handler updated, pending changes:', pendingChanges.size);
-  }, [saveAllChanges, pendingChanges.size]);
+  // Remove this useEffect entirely - it's redundant
 
   // Load templates from file storage on mount
   useEffect(() => {
     const loadTemplatesOnMount = async () => {
       try {
-        console.log('🚀 Loading templates from file storage...');
         await loadTemplates();
-        console.log('✅ Templates loaded successfully');
       } catch (error) {
-        console.error('❌ Failed to load templates:', error);
+        console.error('Failed to load templates:', error);
       }
     };
     
@@ -116,12 +103,10 @@ const SurveyQuestionsPage: React.FC = () => {
   useEffect(() => {
     const initTemplate = async () => {
       if (!templateId && templates.length === 0) {
-        console.log('📝 No templates found, initializing default template...');
         try {
           await initializeTemplate();
-          console.log('✅ Default template initialized');
         } catch (error) {
-          console.error('❌ Failed to initialize default template:', error);
+          console.error('Failed to initialize default template:', error);
         }
       }
     };
@@ -131,25 +116,32 @@ const SurveyQuestionsPage: React.FC = () => {
 
   // Set current template when templateId changes or templates load
   useEffect(() => {
-    console.log('🔄 Template loading effect triggered:', { templateId, templatesLength: templates.length });
-    
     if (templateId && templates.length > 0) {
       const template = templates.find(t => t.id === templateId);
       if (template) {
-        console.log('📋 Setting current template:', template.name);
         setCurrentTemplate(template);
         // Set global scale from the first question or default to 7
         const scale = template.questions[0]?.scale || 7;
         setGlobalScale(scale);
-        console.log('📏 Set global scale to:', scale);
+        
+        // Update the template to match the global scale if there's a mismatch
+        if (template.questions.some(q => q.scale !== scale)) {
+          const updatedTemplate = {
+            ...template,
+            questions: template.questions.map(q => ({
+              ...q,
+              scale: scale,
+              labels: generateDefaultLabels(scale)
+            }))
+          };
+          // Only update if the template is actually different
+          if (JSON.stringify(updatedTemplate) !== JSON.stringify(template)) {
+            setCurrentTemplate(updatedTemplate);
+          }
+        }
       } else {
-        console.log('❌ Template not found for ID:', templateId);
-        console.log('📋 Available templates:', templates.map(t => ({ id: t.id, name: t.name })));
+        console.warn('Template not found for ID:', templateId);
       }
-    } else if (templateId && templates.length === 0) {
-      console.log('⏳ Template ID exists but no templates loaded yet');
-    } else if (!templateId) {
-      console.log('📝 No template ID provided');
     }
   }, [templateId, templates, setCurrentTemplate]);
   
@@ -158,7 +150,6 @@ const SurveyQuestionsPage: React.FC = () => {
     if (templateId && templates.length > 0 && !currentTemplate) {
       const template = templates.find(t => t.id === templateId);
       if (template) {
-        console.log('🔄 Loading template after templates loaded:', template.name);
         setCurrentTemplate(template);
         const scale = template.questions[0]?.scale || 7;
         setGlobalScale(scale);
@@ -183,13 +174,11 @@ const SurveyQuestionsPage: React.FC = () => {
 
   // Handle global scale change
   const handleGlobalScaleChange = async (newScale: number) => {
-    console.log(`🌍 Global scale change: ${globalScale} -> ${newScale}`);
     setGlobalScale(newScale);
     
     // Update all questions with the new scale and default labels
     if (currentTemplate) {
       const defaultLabels = generateDefaultLabels(newScale);
-      console.log(`📝 Generated new labels for scale ${newScale}:`, defaultLabels);
       
       const updatedQuestions = currentTemplate.questions.map(question => ({
         ...question,
@@ -200,7 +189,6 @@ const SurveyQuestionsPage: React.FC = () => {
       // Update the template with new questions
       try {
         await updateTemplate(currentTemplate.id, { questions: updatedQuestions });
-        console.log(`💾 Template updated successfully with new scale ${newScale}`);
         
         // Update local state immediately so components can react to the change
         const updatedTemplate = {
@@ -247,17 +235,15 @@ const SurveyQuestionsPage: React.FC = () => {
       newPendingChanges.delete(questionId);
       setPendingChanges(newPendingChanges);
     } catch (error) {
-      console.error('❌ Failed to update question:', error);
+      console.error('Failed to update question:', error);
     }
   };
 
   // Track changes in a question
   const trackQuestionChanges = (questionId: string, questionData: Partial<SurveyQuestion>) => {
-    console.log('📝 Tracking changes for question:', questionId, questionData);
     const newPendingChanges = new Map(pendingChanges);
     newPendingChanges.set(questionId, questionData);
     setPendingChanges(newPendingChanges);
-    console.log('📊 Total pending changes:', newPendingChanges.size);
   };
 
   // Handle question deletion
