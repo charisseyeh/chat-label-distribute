@@ -101,7 +101,7 @@ const SurveyTemplatesPage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto p-6 h-screen overflow-y-auto pb-40">
 
       {/* Error Display */}
       {error && (
@@ -164,7 +164,10 @@ const SurveyTemplatesPage: React.FC = () => {
           </button>
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-border overflow-hidden">
+        <div 
+          className="bg-white border border-border overflow-hidden"
+          style={{ borderRadius: 'var(--radius-lg)' }}
+        >
           <List
             variant="with-dividers"
             listItemVariant="double"
@@ -173,13 +176,15 @@ const SurveyTemplatesPage: React.FC = () => {
           />
           
           {/* Create New Template Button at bottom */}
-          <div className="p-4 bg-warning/10 border-t border-warning/20">
+          <div 
+            className="border-t border-primary/20 bg-primary-100 hover:bg-primary-200 transition-colors"
+          >
             <button
               onClick={() => {
                 setIsCreatingTemplate(true);
                 setNewTemplateName('');
               }}
-              className="w-full text-center text-warning/80 hover:text-warning font-medium py-3 px-4 rounded-lg transition-colors"
+              className="w-full text-left text-primary-800 hover:text-primary-900 py-3 px-4 transition-colors"
             >
               + Create new template
             </button>

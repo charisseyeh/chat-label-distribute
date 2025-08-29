@@ -139,7 +139,8 @@
 /* Icon Button Variants */
 .btn-icon {
   @apply btn 
-         p-2;
+         p-2 
+         bg-transparent;
 }
 
 .btn-icon-sm {

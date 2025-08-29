@@ -37,10 +37,6 @@ const NavigationSync: React.FC = () => {
       setCurrentPage('survey-templates');
       setCurrentConversationId(null);
       setCurrentTemplateId(null);
-    } else if (path === '/survey-questions') {
-      setCurrentPage('survey-questions');
-      setCurrentConversationId(null);
-      setCurrentTemplateId(null);
     } else if (path.startsWith('/conversation/')) {
       // Extract conversation ID from path
       const conversationId = path.split('/conversation/')[1];
@@ -52,7 +48,8 @@ const NavigationSync: React.FC = () => {
       const templateId = path.split('/survey-template/')[1];
       setCurrentTemplateId(templateId);
       setCurrentConversationId(null);
-      // Keep current page as 'survey-templates' for breadcrumb context
+      // Set current page as 'survey-questions' for the footer save button
+      setCurrentPage('survey-questions');
     }
   }, [location.pathname, setCurrentPage, setCurrentConversationId, setCurrentTemplateId]);
 
@@ -110,7 +107,6 @@ function App() {
               <Route path="/ai-comparisons" element={<AIComparisonsPage />} />
               <Route path="/survey-templates" element={<SurveyTemplatesPage />} />
               <Route path="/survey-template/:id" element={<SurveyQuestionsPage />} />
-              <Route path="/survey-questions" element={<SurveyQuestionsPage />} />
               <Route path="*" element={<ConversationSelectorPage />} />
             </Routes>
           </main>

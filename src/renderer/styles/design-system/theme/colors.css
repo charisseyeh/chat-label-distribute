@@ -11,6 +11,9 @@
   --primary-800: #075985;
   --primary-900: #0c4a6e;
   
+  /* Primary Background */
+  --primary-bg: #ffffff;
+  
   /* Secondary Color Palette */
   --secondary-50: #f8fafc;
   --secondary-100: #f1f5f9;

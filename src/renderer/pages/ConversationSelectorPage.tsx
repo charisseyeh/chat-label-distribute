@@ -199,7 +199,7 @@ const ConversationSelectorPage: React.FC = () => {
       {currentSourceFile && loadedConversations.length > 0 && (
         <div className="flex flex-col pl-4 pr-4">
           {/* Sticky Filter Controls - This will stick to the top during scroll */}
-          <div className="sticky top-0 z-10 bg-white border-b border-border shadow-sm">
+          <div className="sticky top-0 z-10 bg-primary-bg border-b border-border">
             <div className="flex items-center justify-between align-end p-4">
               <div className="flex gap-2">
                 <button

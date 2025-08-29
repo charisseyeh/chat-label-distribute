@@ -56,7 +56,7 @@ const Header: React.FC<HeaderProps> = ({ isSidebarOpen, onToggleSidebar }) => {
         <div className="flex items-center space-x-4">
           <button
             onClick={onToggleSidebar}
-            className="btn-icon btn-primary"
+            className="btn-icon"
             aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
           >
             {isSidebarOpen ? <X size={20} /> : <List size={20} />}
