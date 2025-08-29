@@ -10,6 +10,7 @@ export interface ScrollTracker {
   triggerEnd: () => void;
   destroy: () => void;
   getState: () => any;
+  setScrollElement: (element: Element | null) => void;
 }
 
 export interface ScrollTrackingOptions {
@@ -39,6 +40,16 @@ export class ScrollTrackingService implements ScrollTracker {
   }
 
   /**
+   * Set the scroll element directly
+   */
+  setScrollElement(element: Element | null): void {
+    this.scrollElement = element;
+    if (element) {
+      console.log('🎯 Scroll tracking: Set scroll element:', element);
+    }
+  }
+
+  /**
    * Set the total message count for turn 6 detection
    */
   setMessageCount(count: number): void {
@@ -63,7 +74,10 @@ export class ScrollTrackingService implements ScrollTracker {
     if (this.endReached) return;
 
     const scrollElement = this.getScrollElement();
-    if (!scrollElement) return;
+    if (!scrollElement) {
+      console.warn('⚠️ Scroll tracking: No scroll element found for tracking');
+      return;
+    }
 
     const { scrollTop, scrollHeight, clientHeight } = scrollElement;
     const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
@@ -74,7 +88,13 @@ export class ScrollTrackingService implements ScrollTracker {
     // Update scroll percentage in state
     this.scrollPercentage = Math.min(100, Math.max(0, scrollPercentage));
 
+    // Debug logging
+    if (this.scrollPercentage % 10 < 1) { // Log every 10% to avoid spam
+      console.log(`🎯 Scroll tracking: ${Math.round(this.scrollPercentage)}% (${scrollTop}/${scrollHeight - clientHeight})`);
+    }
+
     if (distanceFromBottom <= this.options.endThreshold) {
+      console.log('🎯 Scroll tracking: End threshold reached');
       this.triggerEnd();
     }
   }
@@ -119,6 +139,8 @@ export class ScrollTrackingService implements ScrollTracker {
 
     // Store reference for cleanup
     (scrollElement as any)._scrollHandler = handleScroll;
+
+    console.log('🎯 Scroll tracking: Started tracking on element:', scrollElement);
   }
 
   /**
@@ -138,7 +160,7 @@ export class ScrollTrackingService implements ScrollTracker {
       this.scrollThrottle = null;
     }
 
-    // Removed excessive logging
+    console.log('🎯 Scroll tracking: Stopped tracking');
   }
 
   /**
@@ -149,7 +171,7 @@ export class ScrollTrackingService implements ScrollTracker {
     this.endReached = false;
     this.currentMessageIndex = 0;
     this.scrollPercentage = 0; // Reset scroll percentage
-    // Removed excessive logging
+    console.log('🔄 Scroll tracking: Reset tracking state');
   }
 
   /**
@@ -188,6 +210,11 @@ export class ScrollTrackingService implements ScrollTracker {
    * Get the scrollable element
    */
   private getScrollElement(): Element | null {
+    // If we have a manually set scroll element, use it
+    if (this.scrollElement) {
+      return this.scrollElement;
+    }
+
     // The main scrollable area is the main content panel from TwoPanelLayout
     // Look for the flex-1 div that contains the conversation content
     const mainContentPanel = document.querySelector('.flex-1.flex.flex-col > div');
@@ -241,7 +268,7 @@ export class ScrollTrackingService implements ScrollTracker {
     this.scrollElement = null;
     this.turn6Callbacks = [];
     this.endCallbacks = [];
-    // Removed excessive logging
+    console.log('🎯 Scroll tracking: Destroyed');
   }
 
   /**

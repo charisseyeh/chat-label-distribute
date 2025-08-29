@@ -1,6 +1,7 @@
 
 
 export interface AIConversationSample {
+  id: string;
   title: string;
   firstMessage: string;
   conversationPreview?: string; // Add conversation preview field
@@ -116,9 +117,9 @@ export class AIService {
         const results = JSON.parse(content);
         if (Array.isArray(results)) {
           return {
-            category: results[0]?.category || 'not_relevant', // Use AI's category, default to not_relevant
+            category: results[0]?.category === 'relevant' ? 'relevant' : 'not-relevant', // Normalize category values
             explanation: results[0]?.reasoning || 'No reasoning provided',
-            conversationId: sample.title,
+            conversationId: sample.id,
             relevancyScore: results[0]?.relevancyScore || 0,
             qualityScore: results[0]?.qualityScore || 0,
             reasoning: results[0]?.reasoning || 'No reasoning provided',
@@ -154,10 +155,10 @@ Please provide a JSON response with:
 1. relevancyScore (0-10): How relevant is this conversation for understanding human experiences and emotions?
 2. qualityScore (0-10): How well-structured and coherent is this conversation?
 3. reasoning: Brief explanation for your scores, specifically mentioning what content you found or why it lacks personal/emotional content
-4. category: "relevant" if relevancyScore >= 6, "not_relevant" if < 6
+4. category: "relevant" if relevancyScore >= 6, "not-relevant" if < 6
 
 Please respond with only valid JSON in this format:
-[{"relevancyScore": number, "qualityScore": number, "reasoning": "string", "category": "relevant"|"not_relevant"}]`;
+[{"relevancyScore": number, "qualityScore": number, "reasoning": "string", "category": "relevant"|"not-relevant"}]`;
   }
 
   updateConfig(newConfig: Partial<AIServiceConfig>): void {

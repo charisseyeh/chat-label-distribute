@@ -27,9 +27,11 @@ export const useConversationLoader = () => {
         throw new Error('Invalid conversation data received - expected array');
       }
       
-      setLoadedConversations(conversationData);
-      const filteredData = conversationData.filter(conv => conv.messageCount > 8);
-      setFilteredConversations(filteredData);
+      // Filter conversations to only include those with more than 9 messages total
+      const conversationsWithEnoughMessages = conversationData.filter(conv => conv.messageCount > 9);
+      
+      setLoadedConversations(conversationsWithEnoughMessages);
+      setFilteredConversations(conversationsWithEnoughMessages);
       clearSelection();
       setCurrentSourceFile(filePath);
       

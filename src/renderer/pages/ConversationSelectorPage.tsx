@@ -8,7 +8,8 @@ import { useConversationLoader } from '../hooks/conversation/useConversationLoad
 import { useFileManager } from '../hooks/core/useFileManager';
 import { FileList } from '../components/conversation/management';
 import { TwoPanelLayout } from '../components/common';
-import { ListItem, List } from '../components/common';
+import { ListItem } from '../components/common';
+import ConversationSelector from '../components/ai-analysis/ConversationSelector';
 
 const ConversationSelectorPage: React.FC = () => {
   const [aiRelevancyResults, setAiRelevancyResults] = useState<AIRelevancyResult[]>([]);
@@ -44,6 +45,15 @@ const ConversationSelectorPage: React.FC = () => {
   // Apply filters when conversations or filters change
   useEffect(() => {
     if (loadedConversations.length > 0) {
+      console.log('🔍 Loaded conversations count:', loadedConversations.length);
+      console.log('🔍 Sample conversation message counts:', loadedConversations.slice(0, 5).map(conv => ({ id: conv.id, title: conv.title, messageCount: conv.messageCount })));
+      
+      // Only apply filters if we have conversations with more than 9 messages
+      const validConversations = loadedConversations.filter(conv => conv.messageCount > 9);
+      if (validConversations.length !== loadedConversations.length) {
+        console.warn('⚠️ Some conversations have fewer than 9 messages:', loadedConversations.filter(conv => conv.messageCount <= 9).map(conv => ({ id: conv.id, title: conv.title, messageCount: conv.messageCount })));
+      }
+      
       applyFilters();
     }
   }, [loadedConversations, activeFilters, applyFilters]);
@@ -115,32 +125,11 @@ const ConversationSelectorPage: React.FC = () => {
               onRelevancyResults={(results: AIRelevancyResult[]) => {
                 setAiRelevancyResults(results);
                 
-                // Merge AI relevancy results with conversations
-                const updatedFilteredConversations = filteredConversations.map(conv => {
-                  const relevancyResult = results.find((result: AIRelevancyResult) => result.conversationId === conv.title);
-                  if (relevancyResult) {
-                    return {
-                      ...conv,
-                      aiRelevancy: {
-                        category: relevancyResult.category,
-                        explanation: relevancyResult.explanation,
-                        relevancyScore: relevancyResult.relevancyScore,
-                        qualityScore: relevancyResult.qualityScore,
-                        reasoning: relevancyResult.reasoning,
-                        timestamp: relevancyResult.timestamp
-                      }
-                    };
-                  }
-                  return conv;
-                });
+                // Use the store function to merge AI relevancy results
+                useConversationStore.getState().mergeAIRelevancyResults(results);
                 
-                // Update filtered conversations with AI relevancy data
-                setFilteredConversations(updatedFilteredConversations);
-                
-                // Apply filters after updating AI relevancy data
-                setTimeout(() => {
-                  applyFilters();
-                }, 0);
+                // Don't call applyFilters here - let the user manually apply filters
+                // The date filters should remain active
               }}
             />
           ) : (
@@ -199,7 +188,7 @@ const ConversationSelectorPage: React.FC = () => {
       {currentSourceFile && loadedConversations.length > 0 && (
         <div className="flex flex-col pl-4 pr-4">
           {/* Sticky Filter Controls - This will stick to the top during scroll */}
-          <div className="sticky top-0 z-10 bg-primary-bg border-b border-border">
+          <div className="sticky top-0 z-10 border-b border-border bg-primary">
             <div className="flex items-center justify-between align-end p-4">
               <div className="flex gap-2">
                 <button
@@ -268,31 +257,19 @@ const ConversationSelectorPage: React.FC = () => {
           {/* Scrollable Conversation List */}
           <div className="overflow-y-auto flex-1">
             {/* Show all conversations with proper checkbox functionality */}
-            <List
-              variant="without-dividers"
-              listItemVariant="check-chip-single"
-              items={filteredConversations.map((conversation) => {
-                const isPermanentlyStored = selectedConversations.some(selected => selected.id === conversation.id);
-                const isCurrentlySelected = selectedConversationIds.includes(conversation.id);
-                
-                return {
-                  title: conversation.title || 'Untitled Conversation',
-                  metadata: isPermanentlyStored 
-                    ? 'Selected for labeling'
-                    : `${formatDate(conversation.createTime || conversation.createdAt || Date.now())}${conversation.model ? ` • ${conversation.model}` : ''}`,
-                  chip: isPermanentlyStored 
-                    ? undefined
-                    : conversation.aiRelevancy ? {
-                        variant: conversation.aiRelevancy.category === 'relevant' ? 'relevant' : 'not-relevant',
-                        text: conversation.aiRelevancy.category === 'relevant' ? '✓ Relevant' : '✗ Not Relevant'
-                      } : undefined,
-                  checked: isPermanentlyStored || isCurrentlySelected,
-                  onCheckChange: isPermanentlyStored ? () => {} : () => toggleConversationSelection(conversation.id),
-                  selected: isPermanentlyStored || isCurrentlySelected,
-                  onClick: isPermanentlyStored ? () => {} : () => toggleConversationSelection(conversation.id)
-                };
-              })}
+            <ConversationSelector
+              conversations={filteredConversations}
+              selectedConversations={selectedConversations.map(conv => conv.id)}
+              onConversationToggle={toggleConversationSelection}
             />
+            {/* Debug info */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="mt-4 p-2 bg-gray-100 text-xs">
+                <div>Debug: Filtered conversations count: {filteredConversations.length}</div>
+                <div>Debug: Message count range: {filteredConversations.length > 0 ? `${Math.min(...filteredConversations.map(c => c.messageCount))} - ${Math.max(...filteredConversations.map(c => c.messageCount))}` : 'N/A'}</div>
+                <div>Debug: Conversations with ≤9 messages: {filteredConversations.filter(c => c.messageCount <= 9).length}</div>
+              </div>
+            )}
           </div>
         </div>
       )}

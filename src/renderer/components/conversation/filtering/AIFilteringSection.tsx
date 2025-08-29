@@ -47,13 +47,13 @@ export const AIFilteringSection: React.FC<AIFilteringSectionProps> = ({
   };
 
   const getConversationsToAnalyzeCount = () => {
-    // First filter by message count (more than 8 messages)
-    let count = conversations.filter(conv => conv.messageCount > 8).length;
+    // First filter by message count (more than 9 messages)
+    let count = conversations.filter(conv => conv.messageCount > 9).length;
     
     // Then apply date filtering if specified
     if (dateFilterOptions.selectedRanges.length > 0 || dateFilterOptions.useCustomRange) {
       const dateFiltered = DateFilterService.filterByDateRanges(
-        conversations.filter(conv => conv.messageCount > 8),
+        conversations.filter(conv => conv.messageCount > 9),
         dateFilterOptions.selectedRanges,
         dateFilterOptions.customStartDate,
         dateFilterOptions.customEndDate,
@@ -80,8 +80,8 @@ export const AIFilteringSection: React.FC<AIFilteringSectionProps> = ({
     setError(null);
 
     try {
-      // First filter by message count (more than 8 messages)
-      let conversationsToAnalyze = conversations.filter(conv => conv.messageCount > 8);
+      // First filter by message count (more than 9 messages)
+      let conversationsToAnalyze = conversations.filter(conv => conv.messageCount > 9);
       
       // Then apply date filtering if specified
       if (dateFilterOptions.selectedRanges.length > 0 || dateFilterOptions.useCustomRange) {
@@ -96,7 +96,7 @@ export const AIFilteringSection: React.FC<AIFilteringSectionProps> = ({
 
       // Check if we have any conversations to analyze after filtering
       if (conversationsToAnalyze.length === 0) {
-        setError('No conversations meet the filtering criteria (more than 8 messages and date range).');
+        setError('No conversations meet the filtering criteria (more than 9 messages and date range).');
         setIsAnalyzing(false);
         return;
       }
@@ -136,6 +136,7 @@ export const AIFilteringSection: React.FC<AIFilteringSectionProps> = ({
         // Debug logging to see what content we're sending
         
         return {
+          id: conv.id,
           title: conv.title,
           firstMessage: content,
           conversationPreview: content

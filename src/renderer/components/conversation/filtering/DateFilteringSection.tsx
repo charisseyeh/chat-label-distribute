@@ -35,7 +35,7 @@ export const DateFilteringSection: React.FC<DateFilteringSectionProps> = ({
       };
       onDateFilterOptionsChange(newOptions);
       // Reset to original conversations (with message count filter applied)
-      const resetFiltered = originalConversations.filter(conv => conv.messageCount > 8);
+      const resetFiltered = originalConversations.filter(conv => conv.messageCount > 9);
       onFilteredConversations(resetFiltered);
       setFilteredConversations(resetFiltered);
       return;
@@ -117,7 +117,7 @@ export const DateFilteringSection: React.FC<DateFilteringSectionProps> = ({
       console.log('🔍 Date-filtered conversations count:', filteredConversations.length);
       
       // Apply message count filter to date-filtered results
-      const finalFiltered = filteredConversations.filter(conv => conv.messageCount > 8);
+      const finalFiltered = filteredConversations.filter(conv => conv.messageCount > 9);
       
       console.log('🔍 Final filtered conversations count:', finalFiltered.length);
       

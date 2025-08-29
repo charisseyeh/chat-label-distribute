@@ -14,9 +14,14 @@ const ConversationPage: React.FC = () => {
     conversations, 
     getConversationById,
     selectedConversations: storeSelectedConversations,
+    loadedConversations,
+    currentSourceFile,
     loading: conversationsLoading,
     error: conversationsError,
-    loadSelectedConversationsFromStorage
+    loadSelectedConversationsFromStorage,
+    setCurrentSourceFile,
+    ensureConversationsLoaded,
+    loadFullConversationData
   } = useConversationStore();
   
   const { selectedConversations, setSelectedConversations, setCurrentConversationId } = useNavigationStore();
@@ -39,6 +44,9 @@ const ConversationPage: React.FC = () => {
     const loadFromStorage = async () => {
       try {
         const result = await loadSelectedConversationsFromStorage();
+        if (result) {
+          console.log('✅ Successfully loaded selected conversations from storage');
+        }
       } catch (error) {
         console.warn('Failed to load selected conversations from storage:', error);
       }
@@ -58,6 +66,35 @@ const ConversationPage: React.FC = () => {
       setSelectedConversations([]);
     }
   }, [storeSelectedConversations, setSelectedConversations]);
+
+  // Ensure current source file is set for the conversation
+  useEffect(() => {
+    if (id && storeSelectedConversations.length > 0) {
+      const currentConv = storeSelectedConversations.find(conv => conv.id === id);
+      if (currentConv?.sourceFilePath && currentConv.sourceFilePath !== currentSourceFile) {
+        console.log('🔄 Setting current source file:', currentConv.sourceFilePath);
+        setCurrentSourceFile(currentConv.sourceFilePath);
+        
+        // Ensure conversations are loaded for this source file
+        ensureConversationsLoaded(currentConv.sourceFilePath).then(() => {
+          console.log('✅ Conversations loaded for source file:', currentConv.sourceFilePath);
+          
+          // Also load the full conversation data for the current conversation
+          if (id) {
+            loadFullConversationData(id, currentConv.sourceFilePath).then((data) => {
+              if (data) {
+                console.log('✅ Full conversation data loaded for:', id);
+              } else {
+                console.warn('⚠️ Failed to load full conversation data for:', id);
+              }
+            });
+          }
+        }).catch(error => {
+          console.error('❌ Failed to load conversations:', error);
+        });
+      }
+    }
+  }, [id, storeSelectedConversations, currentSourceFile, setCurrentSourceFile, ensureConversationsLoaded, loadFullConversationData]);
 
   // Get survey completion status
   const getSurveyCompletionStatus = () => {
@@ -94,6 +131,29 @@ const ConversationPage: React.FC = () => {
         >
           Try Again
         </button>
+      </div>
+    );
+  }
+
+  // Check if we have the necessary data
+  if (!id || storeSelectedConversations.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="text-error mb-4">No conversation data available</div>
+          <div className="text-sm text-muted-foreground mb-4">
+            ID: {id}<br/>
+            Selected conversations: {storeSelectedConversations.length}<br/>
+            Loaded conversations: {loadedConversations.length}<br/>
+            Current source file: {currentSourceFile || 'None'}
+          </div>
+          <button 
+            onClick={handleBackToLabeling}
+            className="btn-primary"
+          >
+            Back to Labeling
+          </button>
+        </div>
       </div>
     );
   }

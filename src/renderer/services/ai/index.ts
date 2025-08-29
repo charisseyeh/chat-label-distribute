@@ -1,3 +1,4 @@
 // AI services
-export { AIService, AIConversationSample, AIRelevancyResult } from './ai-service';
+export { AIService } from './ai-service';
+export type { AIConversationSample, AIRelevancyResult } from './ai-service';
 export { ComparisonData, TrialComparison } from './aiComparisonService';

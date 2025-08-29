@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { MessageList } from '../messages';
 import { Message } from '../../../services/conversation/messageProcessingService';
+import { useScrollTracking } from '../../../hooks/core/useScrollTracking';
 
 interface ConversationDisplayProps {
   messages: Message[];
@@ -25,6 +26,67 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = ({
   onShowAll,
   onRetry
 }) => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Initialize scroll tracking with the scroll element reference
+  const { 
+    startTracking, 
+    stopTracking, 
+    resetTracking,
+    trackMessageVisibility,
+    scrollPercentage,
+    setScrollElement
+  } = useScrollTracking({
+    autoStart: false, // We'll start manually after DOM is ready
+    scrollElement: scrollContainerRef.current, // Pass the scroll element reference
+    onTurn6Reached: () => {
+      console.log('🔄 Turn 6 reached in conversation display');
+    },
+    onEndReached: () => {
+      console.log('🔄 End reached in conversation display');
+    }
+  });
+
+  // Start scroll tracking when component mounts and messages are loaded
+  useEffect(() => {
+    if (messages.length > 0 && scrollContainerRef.current) {
+      console.log('🎯 ConversationDisplay: Messages loaded, setting up scroll tracking');
+      console.log('🎯 ConversationDisplay: Scroll container:', scrollContainerRef.current);
+      console.log('🎯 ConversationDisplay: Container scrollable:', scrollContainerRef.current.scrollHeight > scrollContainerRef.current.clientHeight);
+      
+      // Set the scroll element in the tracker
+      setScrollElement(scrollContainerRef.current);
+      
+      // Small delay to ensure DOM is fully rendered
+      const timer = setTimeout(() => {
+        console.log('🔄 Starting scroll tracking for conversation display');
+        startTracking();
+      }, 100);
+
+      return () => {
+        clearTimeout(timer);
+        stopTracking();
+      };
+    }
+  }, [messages.length, startTracking, stopTracking, setScrollElement]);
+
+  // Reset tracking when messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      console.log('🔄 Resetting scroll tracking for new messages');
+      resetTracking();
+    }
+  }, [messages.length, resetTracking]);
+
+  // Track message visibility as user scrolls
+  useEffect(() => {
+    if (displayedMessages.length > 0) {
+      // Track the last visible message
+      const lastVisibleIndex = displayedMessages.length - 1;
+      trackMessageVisibility(lastVisibleIndex);
+    }
+  }, [displayedMessages.length, trackMessageVisibility]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -56,7 +118,15 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = ({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 pb-44 messages-container min-h-0">
+    <div 
+      ref={scrollContainerRef}
+      className="flex-1 overflow-y-auto p-6 pb-44 messages-container min-h-0"
+    >
+      {/* Debug info for scroll tracking */}
+      <div className="text-xs text-muted-foreground mb-2 sticky top-0 bg-background p-2 rounded">
+        Scroll: {Math.round(scrollPercentage)}% | Messages: {displayedMessages.length}/{totalMessageCount}
+      </div>
+
       <MessageList
         messages={displayedMessages.map(msg => ({
           id: msg.id,

@@ -9,6 +9,7 @@ module.exports = {
       colors: {
         // Custom color palette - replace with your actual colors
         primary: {
+          DEFAULT: 'var(--primary-bg)', // This will make bg-primary work
           50: 'var(--primary-50)',
           100: 'var(--primary-100)',
           200: 'var(--primary-200)',

@@ -1,2 +1,3 @@
 // Core services
-export { DateFilterService, DateRange, DateFilterOptions } from './dateFilterService';
+export { DateFilterService } from './dateFilterService';
+export type { DateRange, DateFilterOptions } from './dateFilterService';

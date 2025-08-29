@@ -70,6 +70,8 @@ interface ConversationState {
     relevant: boolean;
     notRelevant: boolean;
   };
+  // Add full conversation data storage
+  fullConversationData: Map<string, any>; // Store full conversation data by ID
 }
 
 interface ConversationActions {
@@ -84,6 +86,7 @@ interface ConversationActions {
   removeConversation: (id: string) => void;
   setCurrentConversation: (conversation: Conversation | null) => void;
   getConversationById: (id: string) => Conversation | undefined;
+  getFullConversationData: (id: string) => ConversationData | undefined;
   
   // Selection management
   toggleConversationSelection: (id: string) => void;
@@ -104,10 +107,16 @@ interface ConversationActions {
   setFilteredConversations: (conversations: ConversationData[]) => void;
   clearLoadedConversations: () => void;
   
+  // Full conversation data management
+  storeFullConversationData: (conversationId: string, data: any) => void;
+  getFullConversationDataById: (conversationId: string) => any;
+  clearFullConversationData: () => void;
+
   // Filtering management
   toggleFilter: (filterType: 'relevant' | 'notRelevant') => void;
   clearFilters: () => void;
   applyFilters: () => void;
+  mergeAIRelevancyResults: (results: any[]) => void;
 
   // Convert temporary selection to permanent storage
   commitTemporarySelection: () => void;
@@ -116,6 +125,8 @@ interface ConversationActions {
   loadSelectedConversationsFromStorage: () => Promise<boolean>;
   saveSelectedConversationsToStorage: () => Promise<boolean>;
   clearAllSelectedAndSave: () => Promise<boolean>;
+  ensureConversationsLoaded: (sourceFilePath: string) => Promise<ConversationData[]>;
+  loadFullConversationData: (conversationId: string, sourceFilePath: string) => Promise<any | null>;
 }
 
 type ConversationStore = ConversationState & ConversationActions;
@@ -141,6 +152,8 @@ export const useConversationStore = create<ConversationStore>()(
           relevant: false,
           notRelevant: false,
         },
+        // Add full conversation data storage
+        fullConversationData: new Map(),
 
         // State management
         setLoading: (loading) => set({ loading }),
@@ -229,6 +242,32 @@ export const useConversationStore = create<ConversationStore>()(
           return undefined;
         },
 
+        // Get full conversation data by ID (including source file path)
+        getFullConversationData: (id: string) => {
+          const { loadedConversations, selectedConversations } = get();
+          
+          // First look in loaded conversations
+          let found = loadedConversations.find(c => c.id === id);
+          if (found) {
+            return found;
+          }
+          
+          // Then look in selected conversations and convert to ConversationData format
+          const selected = selectedConversations.find(c => c.id === id);
+          if (selected) {
+            // Convert SelectedConversation to ConversationData format
+            const converted: ConversationData = {
+              id: selected.id,
+              title: selected.title,
+              messageCount: 0, // Default value for selected conversations
+              sourceFilePath: selected.sourceFilePath
+            };
+            return converted;
+          }
+          
+          return undefined;
+        },
+
         // Selection management
         toggleConversationSelection: (id) => {
           const { selectedConversationIds, loadedConversations } = get();
@@ -281,6 +320,11 @@ export const useConversationStore = create<ConversationStore>()(
         setFilteredConversations: (conversations) => set({ filteredConversations: conversations }),
         clearLoadedConversations: () => set({ loadedConversations: [], filteredConversations: [] }),
 
+        // Full conversation data management
+        storeFullConversationData: (conversationId, data) => set({ fullConversationData: get().fullConversationData.set(conversationId, data) }),
+        getFullConversationDataById: (conversationId) => get().fullConversationData.get(conversationId),
+        clearFullConversationData: () => set({ fullConversationData: new Map() }),
+
         // Filtering management
         toggleFilter: (filterType) => {
           const { activeFilters } = get();
@@ -294,26 +338,67 @@ export const useConversationStore = create<ConversationStore>()(
         },
 
         applyFilters: () => {
-          const { loadedConversations, activeFilters } = get();
+          const { loadedConversations, activeFilters, filteredConversations } = get();
           
-          if (!activeFilters.relevant && !activeFilters.notRelevant) {
-            // No filters active, show all conversations
-            set({ filteredConversations: loadedConversations });
-            return;
+          // Start with the current filtered conversations (which may already have date filters applied)
+          // If no conversations are currently filtered, start with loaded conversations
+          let filtered = filteredConversations.length > 0 ? filteredConversations : loadedConversations.filter(conv => conv.messageCount > 9);
+          
+          // Apply AI relevancy filters if any are active
+          if (activeFilters.relevant || activeFilters.notRelevant) {
+            filtered = filtered.filter(conv => {
+              if (activeFilters.relevant && conv.aiRelevancy?.category === 'relevant') {
+                return true;
+              }
+              if (activeFilters.notRelevant && conv.aiRelevancy?.category === 'not-relevant') {
+                return true;
+              }
+              return false;
+            });
           }
           
-          // Apply filters
-          const filtered = loadedConversations.filter(conv => {
-            if (activeFilters.relevant && conv.aiRelevancy?.category === 'relevant') {
-              return true;
-            }
-            if (activeFilters.notRelevant && conv.aiRelevancy?.category === 'not-relevant') {
-              return true;
-            }
-            return false;
-          });
-          
           set({ filteredConversations: filtered });
+        },
+
+        mergeAIRelevancyResults: (results: any[]) => {
+          const { loadedConversations, filteredConversations } = get();
+          
+          console.log('🔍 Merging AI relevancy results:', results);
+          console.log('🔍 Current loaded conversations count:', loadedConversations.length);
+          console.log('🔍 Current filtered conversations count:', filteredConversations.length);
+          
+          // Merge AI relevancy results with both loaded and filtered conversations
+          const mergeResults = (conversations: any[]) => {
+            return conversations.map(conv => {
+              const relevancyResult = results.find((result: any) => result.conversationId === conv.id);
+              if (relevancyResult) {
+                console.log(`🔍 Found relevancy result for conversation ${conv.id}:`, relevancyResult);
+                return {
+                  ...conv,
+                  aiRelevancy: {
+                    category: relevancyResult.category,
+                    explanation: relevancyResult.explanation,
+                    relevancyScore: relevancyResult.relevancyScore,
+                    qualityScore: relevancyResult.qualityScore,
+                    reasoning: relevancyResult.reasoning,
+                    timestamp: relevancyResult.timestamp
+                  }
+                };
+              }
+              return conv;
+            });
+          };
+          
+          const updatedLoadedConversations = mergeResults(loadedConversations);
+          const updatedFilteredConversations = mergeResults(filteredConversations);
+          
+          console.log('🔍 Updated loaded conversations with AI relevancy:', updatedLoadedConversations.filter(c => c.aiRelevancy).length);
+          console.log('🔍 Updated filtered conversations with AI relevancy:', updatedFilteredConversations.filter(c => c.aiRelevancy).length);
+          
+          set({ 
+            loadedConversations: updatedLoadedConversations,
+            filteredConversations: updatedFilteredConversations
+          });
         },
 
         // Convert temporary selection to permanent storage
@@ -347,6 +432,70 @@ export const useConversationStore = create<ConversationStore>()(
           } catch (error) {
             console.error('Failed to load selected conversations from storage:', error);
             return false;
+          }
+        },
+
+        // Ensure conversations are loaded for a specific source file
+        ensureConversationsLoaded: async (sourceFilePath: string) => {
+          try {
+            const { loadedConversations, currentSourceFile } = get();
+            
+            // If we already have conversations loaded for this file, return them
+            if (currentSourceFile === sourceFilePath && loadedConversations.length > 0) {
+              return loadedConversations;
+            }
+            
+            // If we don't have conversations loaded, try to load them
+            if (!window.electronAPI) return [];
+            
+            const result = await window.electronAPI.getConversationIndex(sourceFilePath);
+            if (result.success && result.data) {
+              const conversations = result.data;
+              
+              // Filter conversations to only include those with more than 9 messages total
+              const conversationsWithEnoughMessages = conversations.filter(conv => conv.messageCount > 9);
+              
+              // Store the full conversation data for each conversation
+              for (const conv of conversationsWithEnoughMessages) {
+                try {
+                  // Load the full conversation data
+                  const fullResult = await window.electronAPI.readSingleConversation(sourceFilePath, conv.id);
+                  if (fullResult.success && fullResult.found) {
+                    get().storeFullConversationData(conv.id, fullResult.data);
+                  }
+                } catch (error) {
+                  console.warn(`Failed to load full data for conversation ${conv.id}:`, error);
+                }
+              }
+              
+              set({ 
+                loadedConversations: conversationsWithEnoughMessages,
+                currentSourceFile: sourceFilePath 
+              });
+              return conversationsWithEnoughMessages;
+            }
+            
+            return [];
+          } catch (error) {
+            console.error('Failed to ensure conversations are loaded:', error);
+            return [];
+          }
+        },
+
+        // Load full conversation data for a specific conversation
+        loadFullConversationData: async (conversationId: string, sourceFilePath: string) => {
+          try {
+            if (!window.electronAPI) return null;
+            
+            const result = await window.electronAPI.readSingleConversation(sourceFilePath, conversationId);
+            if (result.success && result.found) {
+              get().storeFullConversationData(conversationId, result.data);
+              return result.data;
+            }
+            return null;
+          } catch (error) {
+            console.error('Failed to load full conversation data:', error);
+            return null;
           }
         },
 
@@ -384,7 +533,24 @@ export const useConversationStore = create<ConversationStore>()(
         partialize: (state) => ({
           selectedConversations: state.selectedConversations,
           currentSourceFile: state.currentSourceFile,
+          loadedConversations: state.loadedConversations, // Add loadedConversations to persistence
+          fullConversationData: Array.from(state.fullConversationData.entries()), // Convert Map to array for persistence
         }),
+        merge: (persistedState: any, currentState) => {
+          // Rehydrate the Map from persisted array
+          const rehydratedData = new Map<string, any>();
+          if (persistedState.fullConversationData) {
+            persistedState.fullConversationData.forEach(([key, value]: [string, any]) => {
+              rehydratedData.set(key, value);
+            });
+          }
+          
+          return {
+            ...currentState,
+            ...persistedState,
+            fullConversationData: rehydratedData,
+          };
+        },
       }
     )
   )

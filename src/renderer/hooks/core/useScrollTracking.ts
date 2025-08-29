@@ -5,6 +5,7 @@ export interface UseScrollTrackingOptions extends ScrollTrackingOptions {
   autoStart?: boolean;
   onTurn6Reached?: () => void;
   onEndReached?: () => void;
+  scrollElement?: Element | null;
 }
 
 export interface ScrollTrackingState {
@@ -19,6 +20,7 @@ export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
     autoStart = true,
     onTurn6Reached,
     onEndReached,
+    scrollElement,
     ...trackingOptions
   } = options;
 
@@ -60,6 +62,11 @@ export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
       });
     }
 
+    // Set scroll element if provided
+    if (scrollElement) {
+      trackerRef.current.setScrollElement(scrollElement);
+    }
+
     // Set up interval to update scroll percentage
     const intervalId = setInterval(() => {
       if (trackerRef.current) {
@@ -74,7 +81,7 @@ export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
     (trackerRef.current as any)._intervalId = intervalId;
 
     return trackerRef.current;
-  }, [trackingOptions, state.scrollPercentage]); // Only depend on trackingOptions, not callbacks
+  }, [trackingOptions, state.scrollPercentage, scrollElement]); // Add scrollElement dependency
 
   // Start tracking
   const startTracking = useCallback(() => {
@@ -138,6 +145,13 @@ export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
     }
   }, []);
 
+  // Set scroll element
+  const setScrollElement = useCallback((element: Element | null) => {
+    if (trackerRef.current) {
+      trackerRef.current.setScrollElement(element);
+    }
+  }, []);
+
   // Get current tracking state
   const getTrackingState = useCallback(() => {
     if (trackerRef.current) {
@@ -172,6 +186,13 @@ export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
     }
   }, [autoStart]); // Remove startTracking dependency
 
+  // Update scroll element when it changes
+  useEffect(() => {
+    if (scrollElement && trackerRef.current) {
+      trackerRef.current.setScrollElement(scrollElement);
+    }
+  }, [scrollElement]);
+
   return {
     // State
     ...state,
@@ -186,6 +207,7 @@ export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
     // Tracking functions
     trackMessageVisibility,
     trackConversationEnd,
+    setScrollElement,
     
     // Utility
     getTrackingState,

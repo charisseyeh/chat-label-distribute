@@ -11,6 +11,10 @@ export interface ConversationData {
   aiRelevancy?: {
     category: 'relevant' | 'not-relevant';
     explanation: string;
+    relevancyScore?: number;
+    qualityScore?: number;
+    reasoning?: string;
+    timestamp?: string;
   };
 }
 
