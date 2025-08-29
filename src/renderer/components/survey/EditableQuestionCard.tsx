@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SurveyQuestion } from '../../types/survey';
 import { generateDefaultLabels } from '../../utils/surveyUtils';
 
@@ -27,6 +27,21 @@ const EditableQuestionCard: React.FC<EditableQuestionCardProps> = ({
 
   // Use global scale for rendering, but keep local scale for tracking changes
   const displayScale = globalScale;
+
+  // Sync local formData with question prop changes (especially when scale changes)
+  useEffect(() => {
+    // Only sync if the scale or labels have actually changed
+    if (formData.scale !== question.scale || 
+        JSON.stringify(formData.labels) !== JSON.stringify(question.labels) ||
+        formData.text !== question.text) {
+      
+      setFormData({
+        text: question.text,
+        scale: question.scale,
+        labels: { ...question.labels }
+      });
+    }
+  }, [question.scale, question.labels, question.text]); // Remove formData from dependencies to prevent loops
 
   const handleScaleChange = (newScale: number) => {
     const labels = generateDefaultLabels(newScale);

@@ -49,7 +49,7 @@ const Footer: React.FC<FooterProps> = React.memo(({ className = '' }) => {
       try {
         await saveHandler();
       } catch (error) {
-        console.error('Failed to save changes:', error);
+        console.error('❌ Save failed:', error);
       }
     }
   }, [saveHandler]);

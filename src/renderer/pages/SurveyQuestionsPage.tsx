@@ -74,6 +74,7 @@ const SurveyQuestionsPage: React.FC = () => {
     // Update all questions with the new scale and default labels
     if (currentTemplate) {
       const defaultLabels = generateDefaultLabels(newScale);
+      
       const updatedQuestions = currentTemplate.questions.map(question => ({
         ...question,
         scale: newScale,
@@ -112,7 +113,7 @@ const SurveyQuestionsPage: React.FC = () => {
       newPendingChanges.delete(questionId);
       setPendingChanges(newPendingChanges);
     } catch (error) {
-      console.error('Failed to update question:', error);
+      console.error('❌ Failed to update question:', error);
     }
   };
 
@@ -204,7 +205,7 @@ const SurveyQuestionsPage: React.FC = () => {
           <div className="space-y-4">
             {currentTemplate.questions.map((question, index) => (
               <EditableQuestionCard
-                key={question.id}
+                key={`${question.id}-${globalScale}`}
                 question={question}
                 index={index}
                 globalScale={globalScale}

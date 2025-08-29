@@ -28,7 +28,7 @@ export const usePendingChanges = (
         
         setPendingChanges(new Map());
       } catch (error) {
-        console.error('Failed to save changes:', error);
+        console.error('❌ Failed to save changes:', error);
         throw error;
       }
     };
@@ -46,5 +46,10 @@ export const usePendingChanges = (
     setPendingChangesCount(pendingChanges.size);
   }, [pendingChanges.size, setPendingChangesCount]);
 
-  return { pendingChanges, setPendingChanges };
+  return { 
+    pendingChanges, 
+    setPendingChanges: (changes: Map<string, Partial<SurveyQuestion>>) => {
+      setPendingChanges(changes);
+    }
+  };
 };

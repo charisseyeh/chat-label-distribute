@@ -10,6 +10,7 @@ interface AIComparisonSidebarProps {
     title: string;
     data: any;
     hasResponses: boolean;
+    messageCount: number; // Add this required property
   }>;
   selectedConversationIds: string[];
   onConversationToggle: (conversationId: string) => void;

@@ -123,220 +123,226 @@ const getDefaultQuestions = (): SurveyQuestion[] => [
 
 export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
   persist(
-    (set, get) => ({
-      // Initial state
-      templates: [],
-      currentTemplate: null,
-      loading: false,
-      error: null,
+    (set, get) => {
+      return {
+        // Initial state
+        templates: [],
+        currentTemplate: null,
+        loading: false,
+        error: null,
 
-      // State management
-      setLoading: (loading) => set({ loading }),
-      setError: (error) => set({ error }),
-      clearError: () => set({ error: null }),
+        // State management
+        setLoading: (loading) => set({ loading }),
+        setError: (error) => set({ error }),
+        clearError: () => set({ error: null }),
 
-      // Template management
-      createTemplate: (name) => {
-        const { templates } = get();
-        const newTemplate: SurveyTemplate = {
-          id: `template_${Date.now()}`,
-          name,
-          questions: getDefaultQuestions(),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
+        // Template management
+        createTemplate: (name) => {
+          const { templates } = get();
+          
+          const newTemplate: SurveyTemplate = {
+            id: `template_${Date.now()}`,
+            name,
+            questions: getDefaultQuestions(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+          
+          set({ 
+            templates: [...templates, newTemplate],
+            currentTemplate: newTemplate
+          });
+          
+          return newTemplate;
+        },
+
+        updateTemplate: (id, updates) => {
+          const { templates } = get();
+          
+          const updated = templates.map(t => 
+            t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t
+          );
+          
+          set({ templates: updated });
+          
+          // Update current template if it's the one being updated
+          const { currentTemplate } = get();
+          if (currentTemplate?.id === id) {
+            const newCurrentTemplate = updated.find(t => t.id === id) || null;
+            set({ currentTemplate: newCurrentTemplate });
+          }
+        },
+
+        deleteTemplate: (id) => {
+          const { templates, currentTemplate } = get();
+          const filtered = templates.filter(t => t.id !== id);
+          set({ templates: filtered });
+          
+          // Clear current template if it's the one being deleted
+          if (currentTemplate?.id === id) {
+            set({ currentTemplate: filtered.length > 0 ? filtered[0] : null });
+          }
+        },
+
+        setCurrentTemplate: (template) => set({ currentTemplate: template }),
         
-        set({ 
-          templates: [...templates, newTemplate],
-          currentTemplate: newTemplate
-        });
-        
-        return newTemplate;
-      },
+        setCurrentTemplateSafely: (template, onConfirm) => {
+          // This will be implemented to show confirmation dialog
+          // For now, just call the callback and set the template
+          onConfirm();
+          set({ currentTemplate: template });
+        },
 
-      updateTemplate: (id, updates) => {
-        const { templates } = get();
-        const updated = templates.map(t => 
-          t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t
-        );
-        set({ templates: updated });
-        
-        // Update current template if it's the one being updated
-        const { currentTemplate } = get();
-        if (currentTemplate?.id === id) {
-          set({ currentTemplate: updated.find(t => t.id === id) || null });
-        }
-      },
+        // Question management
+        addQuestion: (templateId, questionData) => {
+          const { templates } = get();
+          const template = templates.find(t => t.id === templateId);
+          if (!template) return;
 
-      deleteTemplate: (id) => {
-        const { templates, currentTemplate } = get();
-        const filtered = templates.filter(t => t.id !== id);
-        set({ templates: filtered });
-        
-        // Clear current template if it's the one being deleted
-        if (currentTemplate?.id === id) {
-          set({ currentTemplate: filtered.length > 0 ? filtered[0] : null });
-        }
-      },
+          const newQuestion: SurveyQuestion = {
+            ...questionData,
+            id: `question_${Date.now()}`,
+            order: template.questions.length + 1
+          };
 
-      setCurrentTemplate: (template) => set({ currentTemplate: template }),
-      
-      setCurrentTemplateSafely: (template, onConfirm) => {
-        // This will be implemented to show confirmation dialog
-        // For now, just call the callback and set the template
-        onConfirm();
-        set({ currentTemplate: template });
-      },
+          const updatedTemplate = {
+            ...template,
+            questions: [...template.questions, newQuestion],
+            updatedAt: new Date().toISOString()
+          };
 
-      // Question management
-      addQuestion: (templateId, questionData) => {
-        const { templates } = get();
-        const template = templates.find(t => t.id === templateId);
-        if (!template) return;
+          const updatedTemplates = templates.map(t => 
+            t.id === templateId ? updatedTemplate : t
+          );
 
-        const newQuestion: SurveyQuestion = {
-          ...questionData,
-          id: `question_${Date.now()}`,
-          order: template.questions.length + 1
-        };
+          set({ templates: updatedTemplates });
+          
+          // Update current template if it's the one being updated
+          const { currentTemplate } = get();
+          if (currentTemplate?.id === templateId) {
+            set({ currentTemplate: updatedTemplate });
+          }
+        },
 
-        const updatedTemplate = {
-          ...template,
-          questions: [...template.questions, newQuestion],
-          updatedAt: new Date().toISOString()
-        };
+        updateQuestion: (templateId, questionId, updates) => {
+          const { templates } = get();
+          const template = templates.find(t => t.id === templateId);
+          if (!template) return;
 
-        const updatedTemplates = templates.map(t => 
-          t.id === templateId ? updatedTemplate : t
-        );
+          const updatedQuestions = template.questions.map(q => 
+            q.id === questionId ? { ...q, ...updates } : q
+          );
 
-        set({ templates: updatedTemplates });
-        
-        // Update current template if it's the one being updated
-        const { currentTemplate } = get();
-        if (currentTemplate?.id === templateId) {
-          set({ currentTemplate: updatedTemplate });
-        }
-      },
+          const updatedTemplate = {
+            ...template,
+            questions: updatedQuestions,
+            updatedAt: new Date().toISOString()
+          };
 
-      updateQuestion: (templateId, questionId, updates) => {
-        const { templates } = get();
-        const template = templates.find(t => t.id === templateId);
-        if (!template) return;
+          const updatedTemplates = templates.map(t => 
+            t.id === templateId ? updatedTemplate : t
+          );
 
-        const updatedQuestions = template.questions.map(q => 
-          q.id === questionId ? { ...q, ...updates } : q
-        );
+          set({ templates: updatedTemplates });
+          
+          // Update current template if it's the one being updated
+          const { currentTemplate } = get();
+          if (currentTemplate?.id === templateId) {
+            set({ currentTemplate: updatedTemplate });
+          }
+        },
 
-        const updatedTemplate = {
-          ...template,
-          questions: updatedQuestions,
-          updatedAt: new Date().toISOString()
-        };
+        deleteQuestion: (templateId, questionId) => {
+          const { templates } = get();
+          const template = templates.find(t => t.id === templateId);
+          if (!template) return;
 
-        const updatedTemplates = templates.map(t => 
-          t.id === templateId ? updatedTemplate : t
-        );
+          const filteredQuestions = template.questions
+            .filter(q => q.id !== questionId)
+            .map((q, index) => ({ ...q, order: index + 1 })); // Reorder remaining questions
 
-        set({ templates: updatedTemplates });
-        
-        // Update current template if it's the one being updated
-        const { currentTemplate } = get();
-        if (currentTemplate?.id === templateId) {
-          set({ currentTemplate: updatedTemplate });
-        }
-      },
+          const updatedTemplate = {
+            ...template,
+            questions: filteredQuestions,
+            updatedAt: new Date().toISOString()
+          };
 
-      deleteQuestion: (templateId, questionId) => {
-        const { templates } = get();
-        const template = templates.find(t => t.id === templateId);
-        if (!template) return;
+          const updatedTemplates = templates.map(t => 
+            t.id === templateId ? updatedTemplate : t
+          );
 
-        const filteredQuestions = template.questions
-          .filter(q => q.id !== questionId)
-          .map((q, index) => ({ ...q, order: index + 1 })); // Reorder remaining questions
+          set({ templates: updatedTemplates });
+          
+          // Update current template if it's the one being updated
+          const { currentTemplate } = get();
+          if (currentTemplate?.id === templateId) {
+            set({ currentTemplate: updatedTemplate });
+          }
+        },
 
-        const updatedTemplate = {
-          ...template,
-          questions: filteredQuestions,
-          updatedAt: new Date().toISOString()
-        };
+        reorderQuestions: (templateId, questionIds) => {
+          const { templates } = get();
+          const template = templates.find(t => t.id === templateId);
+          if (!template) return;
 
-        const updatedTemplates = templates.map(t => 
-          t.id === templateId ? updatedTemplate : t
-        );
+          const reorderedQuestions = questionIds.map((id, index) => {
+            const question = template.questions.find(q => q.id === id);
+            return question ? { ...question, order: index + 1 } : null;
+          }).filter(Boolean) as SurveyQuestion[];
 
-        set({ templates: updatedTemplates });
-        
-        // Update current template if it's the one being updated
-        const { currentTemplate } = get();
-        if (currentTemplate?.id === templateId) {
-          set({ currentTemplate: updatedTemplate });
-        }
-      },
+          const updatedTemplate = {
+            ...template,
+            questions: reorderedQuestions,
+            updatedAt: new Date().toISOString()
+          };
 
-      reorderQuestions: (templateId, questionIds) => {
-        const { templates } = get();
-        const template = templates.find(t => t.id === templateId);
-        if (!template) return;
+          const updatedTemplates = templates.map(t => 
+            t.id === templateId ? updatedTemplate : t
+          );
 
-        const reorderedQuestions = questionIds.map((id, index) => {
-          const question = template.questions.find(q => q.id === id);
-          return question ? { ...question, order: index + 1 } : null;
-        }).filter(Boolean) as SurveyQuestion[];
+          set({ templates: updatedTemplates });
+          
+          // Update current template if it's the one being updated
+          const { currentTemplate } = get();
+          if (currentTemplate?.id === templateId) {
+            set({ currentTemplate: updatedTemplate });
+          }
+        },
 
-        const updatedTemplate = {
-          ...template,
-          questions: reorderedQuestions,
-          updatedAt: new Date().toISOString()
-        };
+        // Default template initialization
+        initializeDefaultTemplate: () => {
+          const { templates } = get();
+          if (templates.length === 0) {
+            const defaultTemplate = get().createTemplate('Default Survey Template');
+            set({ currentTemplate: defaultTemplate });
+          } else if (!get().currentTemplate) {
+            set({ currentTemplate: templates[0] });
+          }
+        },
 
-        const updatedTemplates = templates.map(t => 
-          t.id === templateId ? updatedTemplate : t
-        );
+        getDefaultQuestions: () => getDefaultQuestions(),
 
-        set({ templates: updatedTemplates });
-        
-        // Update current template if it's the one being updated
-        const { currentTemplate } = get();
-        if (currentTemplate?.id === templateId) {
-          set({ currentTemplate: updatedTemplate });
-        }
-      },
+               // Template switching safety
+         checkTemplateSwitchImpact: (newTemplate) => {
+           const currentTemplate = get().currentTemplate;
 
-      // Default template initialization
-      initializeDefaultTemplate: () => {
-        const { templates } = get();
-        if (templates.length === 0) {
-          const defaultTemplate = get().createTemplate('Default Survey Template');
-          set({ currentTemplate: defaultTemplate });
-        } else if (!get().currentTemplate) {
-          set({ currentTemplate: templates[0] });
-        }
-      },
+           if (!currentTemplate) {
+             return {
+               hasExistingResponses: false,
+               responseCount: 0,
+               willLoseData: false
+             };
+           }
 
-      getDefaultQuestions: () => getDefaultQuestions(),
-
-             // Template switching safety
-       checkTemplateSwitchImpact: (newTemplate) => {
-         const currentTemplate = get().currentTemplate;
-
-         if (!currentTemplate) {
+           // For now, return a basic check - this will be enhanced when we integrate with survey response store
            return {
              hasExistingResponses: false,
              responseCount: 0,
              willLoseData: false
            };
-         }
-
-         // For now, return a basic check - this will be enhanced when we integrate with survey response store
-         return {
-           hasExistingResponses: false,
-           responseCount: 0,
-           willLoseData: false
-         };
-       },
-    }),
+         },
+      };
+    },
     {
       name: 'survey-question-storage',
       partialize: (state) => ({ 
