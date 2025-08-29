@@ -33,7 +33,13 @@ const createWindow = () => {
 };
 
 app.whenReady().then(() => {
-  new IPCHandlers();
+  console.log('🚀 Electron app is ready, initializing IPC handlers...');
+  try {
+    const ipcHandlers = new IPCHandlers();
+    console.log('✅ IPC handlers initialized successfully');
+  } catch (error) {
+    console.error('❌ Failed to initialize IPC handlers:', error);
+  }
 });
 
 app.on('window-all-closed', () => {

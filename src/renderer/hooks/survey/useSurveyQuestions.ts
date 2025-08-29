@@ -21,11 +21,43 @@ export const useSurveyQuestions = () => {
     deleteQuestion,
     reorderQuestions,
     initializeDefaultTemplate,
-    getDefaultQuestions
+    getDefaultQuestions,
+    loadTemplates,
+    loadTemplate
   } = useSurveyQuestionStore();
 
+  // Template loading
+  const handleLoadTemplates = useCallback(async () => {
+    try {
+      setLoading(true);
+      clearError();
+      await loadTemplates();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load templates';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [loadTemplates, setLoading, setError, clearError]);
+
+  const handleLoadTemplate = useCallback(async (templateId: string) => {
+    try {
+      setLoading(true);
+      clearError();
+      const template = await loadTemplate(templateId);
+      return template;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load template';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [loadTemplate, setLoading, setError, clearError]);
+
   // Template management
-  const handleCreateTemplate = useCallback((name: string) => {
+  const handleCreateTemplate = useCallback(async (name: string) => {
     try {
       setLoading(true);
       clearError();
@@ -34,7 +66,7 @@ export const useSurveyQuestions = () => {
         throw new Error('Template name is required');
       }
       
-      const template = createTemplate(name);
+      const template = await createTemplate(name);
       return template;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create template';
@@ -45,7 +77,7 @@ export const useSurveyQuestions = () => {
     }
   }, [createTemplate, setLoading, setError, clearError]);
 
-  const handleUpdateTemplate = useCallback((id: string, updates: Partial<SurveyTemplate>) => {
+  const handleUpdateTemplate = useCallback(async (id: string, updates: Partial<SurveyTemplate>) => {
     try {
       setLoading(true);
       clearError();
@@ -58,7 +90,7 @@ export const useSurveyQuestions = () => {
         }
       }
       
-      updateTemplate(id, updates);
+      await updateTemplate(id, updates);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update template';
       setError(errorMessage);
@@ -68,7 +100,7 @@ export const useSurveyQuestions = () => {
     }
   }, [currentTemplate, updateTemplate, setLoading, setError, clearError]);
 
-  const handleDeleteTemplate = useCallback((id: string) => {
+  const handleDeleteTemplate = useCallback(async (id: string) => {
     try {
       setLoading(true);
       clearError();
@@ -77,7 +109,7 @@ export const useSurveyQuestions = () => {
         throw new Error('Cannot delete the last template');
       }
       
-      deleteTemplate(id);
+      await deleteTemplate(id);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete template';
       setError(errorMessage);
@@ -88,7 +120,7 @@ export const useSurveyQuestions = () => {
   }, [templates.length, deleteTemplate, setLoading, setError, clearError]);
 
   // Question management
-  const handleAddQuestion = useCallback((templateId: string, questionData: Omit<SurveyQuestion, 'id' | 'order'>) => {
+  const handleAddQuestion = useCallback(async (templateId: string, questionData: Omit<SurveyQuestion, 'id' | 'order'>) => {
     try {
       setLoading(true);
       clearError();
@@ -99,7 +131,7 @@ export const useSurveyQuestions = () => {
         throw new Error(`Question validation failed: ${validation.errors.join(', ')}`);
       }
       
-      addQuestion(templateId, questionData);
+      await addQuestion(templateId, questionData);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add question';
       setError(errorMessage);
@@ -109,7 +141,7 @@ export const useSurveyQuestions = () => {
     }
   }, [addQuestion, setLoading, setError, clearError]);
 
-  const handleUpdateQuestion = useCallback((templateId: string, questionId: string, updates: Partial<SurveyQuestion>) => {
+  const handleUpdateQuestion = useCallback(async (templateId: string, questionId: string, updates: Partial<SurveyQuestion>) => {
     try {
       setLoading(true);
       clearError();
@@ -127,7 +159,7 @@ export const useSurveyQuestions = () => {
         }
       }
       
-      updateQuestion(templateId, questionId, updates);
+      await updateQuestion(templateId, questionId, updates);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update question';
       setError(errorMessage);
@@ -137,7 +169,7 @@ export const useSurveyQuestions = () => {
     }
   }, [templates, updateQuestion, setLoading, setError, clearError]);
 
-  const handleDeleteQuestion = useCallback((templateId: string, questionId: string) => {
+  const handleDeleteQuestion = useCallback(async (templateId: string, questionId: string) => {
     try {
       setLoading(true);
       clearError();
@@ -147,7 +179,7 @@ export const useSurveyQuestions = () => {
         throw new Error('Cannot delete the last question');
       }
       
-      deleteQuestion(templateId, questionId);
+      await deleteQuestion(templateId, questionId);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete question';
       setError(errorMessage);
@@ -157,12 +189,12 @@ export const useSurveyQuestions = () => {
     }
   }, [templates, deleteQuestion, setLoading, setError, clearError]);
 
-  const handleReorderQuestions = useCallback((templateId: string, newOrder: string[]) => {
+  const handleReorderQuestions = useCallback(async (templateId: string, newOrder: string[]) => {
     try {
       setLoading(true);
       clearError();
       
-      reorderQuestions(templateId, newOrder);
+      await reorderQuestions(templateId, newOrder);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to reorder questions';
       setError(errorMessage);
@@ -201,9 +233,9 @@ export const useSurveyQuestions = () => {
   }, []);
 
   // Initialize default template on mount
-  const initializeTemplate = useCallback(() => {
+  const initializeTemplate = useCallback(async () => {
     if (templates.length === 0) {
-      initializeDefaultTemplate();
+      await initializeDefaultTemplate();
     }
   }, [templates.length, initializeDefaultTemplate]);
 
@@ -213,6 +245,10 @@ export const useSurveyQuestions = () => {
     currentTemplate,
     loading,
     error,
+    
+    // Template loading
+    loadTemplates: handleLoadTemplates,
+    loadTemplate: handleLoadTemplate,
     
     // Template management
     createTemplate: handleCreateTemplate,

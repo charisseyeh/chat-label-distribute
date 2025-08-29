@@ -15,6 +15,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   readSingleConversation: (filePath: string, conversationId: string) => ipcRenderer.invoke('conversations:read-single-conversation', filePath, conversationId),
   storeSelectedConversations: (selectedConversations: any[]) => ipcRenderer.invoke('conversations:store-selected', selectedConversations),
   getSelectedConversations: () => ipcRenderer.invoke('conversations:get-selected'),
+  // Survey Template operations
+  createSurveyTemplate: (template: any) => ipcRenderer.invoke('survey:create-template', template),
+  getSurveyTemplate: (templateId: string) => ipcRenderer.invoke('survey:get-template', templateId),
+  getAllSurveyTemplates: () => ipcRenderer.invoke('survey:get-all-templates'),
+  updateSurveyTemplate: (templateId: string, updates: any) => ipcRenderer.invoke('survey:update-template', templateId, updates),
+  deleteSurveyTemplate: (templateId: string) => ipcRenderer.invoke('survey:delete-template', templateId),
+  getSurveyTemplateStats: () => ipcRenderer.invoke('survey:get-template-stats'),
+  // Test handler
+  testPing: () => ipcRenderer.invoke('test:ping'),
   // OpenAI API calls
   callOpenAIAPI: (params: { apiKey: string; model: string; prompt: string }) => 
     ipcRenderer.invoke('call-openai-api', params),
@@ -34,6 +43,14 @@ declare global {
       readSingleConversation: (filePath: string, conversationId: string) => Promise<{ success: boolean; data?: any; found: boolean; error?: string }>;
       storeSelectedConversations: (selectedConversations: any[]) => Promise<{ success: boolean; data?: any; error?: string }>;
       getSelectedConversations: () => Promise<{ success: boolean; data?: any; found: boolean; lastUpdated?: string; totalSelected?: number; error?: string }>;
+      // Survey Template operations
+      createSurveyTemplate: (template: any) => Promise<{ success: boolean; data?: any; error?: string }>;
+      getSurveyTemplate: (templateId: string) => Promise<{ success: boolean; data?: any; error?: string }>;
+      getAllSurveyTemplates: () => Promise<{ success: boolean; data?: any; error?: string }>;
+      updateSurveyTemplate: (templateId: string, updates: any) => Promise<{ success: boolean; data?: any; error?: string }>;
+      deleteSurveyTemplate: (templateId: string) => Promise<{ success: boolean; data?: any; error?: string }>;
+      getSurveyTemplateStats: () => Promise<{ success: boolean; data?: any; error?: string }>;
+      testPing: () => Promise<{ success: boolean; message?: string }>;
       callOpenAIAPI: (params: { apiKey: string; model: string; prompt: string }) => Promise<{ content?: string; error?: string }>;
     };
   }

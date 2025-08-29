@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import { SurveyQuestion, SurveyTemplate } from '../types/survey';
+import { generateDefaultLabels } from '../utils/surveyUtils';
 
 interface SurveyQuestionState {
   templates: SurveyTemplate[];
@@ -16,20 +16,20 @@ interface SurveyQuestionActions {
   clearError: () => void;
   
   // Template management
-  createTemplate: (name: string) => SurveyTemplate;
-  updateTemplate: (id: string, updates: Partial<SurveyTemplate>) => void;
-  deleteTemplate: (id: string) => void;
+  createTemplate: (name: string) => Promise<SurveyTemplate>;
+  updateTemplate: (id: string, updates: Partial<SurveyTemplate>) => Promise<void>;
+  deleteTemplate: (id: string) => Promise<void>;
   setCurrentTemplate: (template: SurveyTemplate | null) => void;
   setCurrentTemplateSafely: (template: SurveyTemplate | null, onConfirm: () => void) => void;
   
   // Question management
-  addQuestion: (templateId: string, question: Omit<SurveyQuestion, 'id' | 'order'>) => void;
-  updateQuestion: (templateId: string, questionId: string, updates: Partial<SurveyQuestion>) => void;
-  deleteQuestion: (templateId: string, questionId: string) => void;
-  reorderQuestions: (templateId: string, questionIds: string[]) => void;
+  addQuestion: (templateId: string, question: Omit<SurveyQuestion, 'id' | 'order'>) => Promise<void>;
+  updateQuestion: (templateId: string, questionId: string, updates: Partial<SurveyQuestion>) => Promise<void>;
+  deleteQuestion: (templateId: string, questionId: string) => Promise<void>;
+  reorderQuestions: (templateId: string, questionIds: string[]) => Promise<void>;
   
   // Default template initialization
-  initializeDefaultTemplate: () => void;
+  initializeDefaultTemplate: () => Promise<void>;
   getDefaultQuestions: () => SurveyQuestion[];
   
   // Template switching safety
@@ -38,6 +38,10 @@ interface SurveyQuestionActions {
     responseCount: number;
     willLoseData: boolean;
   };
+
+  // Load templates from file storage
+  loadTemplates: () => Promise<void>;
+  loadTemplate: (templateId: string) => Promise<SurveyTemplate | null>;
 }
 
 type SurveyQuestionStore = SurveyQuestionState & SurveyQuestionActions;
@@ -122,23 +126,64 @@ const getDefaultQuestions = (): SurveyQuestion[] => [
 ];
 
 export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
-  persist(
-    (set, get) => {
-      return {
-        // Initial state
-        templates: [],
-        currentTemplate: null,
-        loading: false,
-        error: null,
+  (set, get) => {
+    return {
+      // Initial state
+      templates: [],
+      currentTemplate: null,
+      loading: false,
+      error: null,
 
-        // State management
-        setLoading: (loading) => set({ loading }),
-        setError: (error) => set({ error }),
-        clearError: () => set({ error: null }),
+      // State management
+      setLoading: (loading) => set({ loading }),
+      setError: (error) => set({ error }),
+      clearError: () => set({ error: null }),
 
-        // Template management
-        createTemplate: (name) => {
-          const { templates } = get();
+      // Load templates from file storage
+      loadTemplates: async () => {
+        try {
+          set({ loading: true, error: null });
+          
+          if (window.electronAPI?.getAllSurveyTemplates) {
+            const result = await window.electronAPI.getAllSurveyTemplates();
+            if (result.success) {
+              set({ templates: result.data || [] });
+            } else {
+              set({ error: result.error || 'Failed to load templates' });
+            }
+          } else {
+            // Fallback to empty array if electronAPI is not available
+            set({ templates: [] });
+          }
+        } catch (error) {
+          set({ error: error instanceof Error ? error.message : 'Failed to load templates' });
+        } finally {
+          set({ loading: false });
+        }
+      },
+
+      loadTemplate: async (templateId: string) => {
+        try {
+          if (window.electronAPI?.getSurveyTemplate) {
+            const result = await window.electronAPI.getSurveyTemplate(templateId);
+            if (result.success) {
+              return result.data;
+            } else {
+              set({ error: result.error || 'Failed to load template' });
+              return null;
+            }
+          }
+          return null;
+        } catch (error) {
+          set({ error: error instanceof Error ? error.message : 'Failed to load template' });
+          return null;
+        }
+      },
+
+      // Template management
+      createTemplate: async (name) => {
+        try {
+          set({ loading: true, error: null });
           
           const newTemplate: SurveyTemplate = {
             id: `template_${Date.now()}`,
@@ -148,17 +193,46 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
             updatedAt: new Date().toISOString()
           };
           
+          if (window.electronAPI?.createSurveyTemplate) {
+            const result = await window.electronAPI.createSurveyTemplate(newTemplate);
+            if (result.success) {
+              set({ 
+                templates: [...get().templates, newTemplate],
+                currentTemplate: newTemplate,
+                loading: false
+              });
+              return newTemplate;
+            } else {
+              throw new Error(result.error || 'Failed to create template');
+            }
+          } else {
+            // Fallback to localStorage if electronAPI is not available
+            set({ 
+              templates: [...get().templates, newTemplate],
+              currentTemplate: newTemplate,
+              loading: false
+            });
+            return newTemplate;
+          }
+        } catch (error) {
           set({ 
-            templates: [...templates, newTemplate],
-            currentTemplate: newTemplate
+            error: error instanceof Error ? error.message : 'Failed to create template',
+            loading: false
           });
-          
-          return newTemplate;
-        },
+          throw error;
+        }
+      },
 
-        updateTemplate: (id, updates) => {
-          const { templates } = get();
+      updateTemplate: async (id, updates) => {
+        try {
+          if (window.electronAPI?.updateSurveyTemplate) {
+            const result = await window.electronAPI.updateSurveyTemplate(id, updates);
+            if (!result.success) {
+              throw new Error(result.error || 'Failed to update template');
+            }
+          }
           
+          const { templates } = get();
           const updated = templates.map(t => 
             t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t
           );
@@ -171,9 +245,21 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
             const newCurrentTemplate = updated.find(t => t.id === id) || null;
             set({ currentTemplate: newCurrentTemplate });
           }
-        },
+        } catch (error) {
+          set({ error: error instanceof Error ? error.message : 'Failed to update template' });
+          throw error;
+        }
+      },
 
-        deleteTemplate: (id) => {
+      deleteTemplate: async (id) => {
+        try {
+          if (window.electronAPI?.deleteSurveyTemplate) {
+            const result = await window.electronAPI.deleteSurveyTemplate(id);
+            if (!result.success) {
+              throw new Error(result.error || 'Failed to delete template');
+            }
+          }
+          
           const { templates, currentTemplate } = get();
           const filtered = templates.filter(t => t.id !== id);
           set({ templates: filtered });
@@ -182,19 +268,24 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
           if (currentTemplate?.id === id) {
             set({ currentTemplate: filtered.length > 0 ? filtered[0] : null });
           }
-        },
+        } catch (error) {
+          set({ error: error instanceof Error ? error.message : 'Failed to delete template' });
+          throw error;
+        }
+      },
 
-        setCurrentTemplate: (template) => set({ currentTemplate: template }),
-        
-        setCurrentTemplateSafely: (template, onConfirm) => {
-          // This will be implemented to show confirmation dialog
-          // For now, just call the callback and set the template
-          onConfirm();
-          set({ currentTemplate: template });
-        },
+      setCurrentTemplate: (template) => set({ currentTemplate: template }),
+      
+      setCurrentTemplateSafely: (template, onConfirm) => {
+        // This will be implemented to show confirmation dialog
+        // For now, just call the callback and set the template
+        onConfirm();
+        set({ currentTemplate: template });
+      },
 
-        // Question management
-        addQuestion: (templateId, questionData) => {
+      // Question management
+      addQuestion: async (templateId, questionData) => {
+        try {
           const { templates } = get();
           const template = templates.find(t => t.id === templateId);
           if (!template) return;
@@ -211,6 +302,10 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
             updatedAt: new Date().toISOString()
           };
 
+          // Update in file storage first
+          await get().updateTemplate(templateId, { questions: updatedTemplate.questions });
+          
+          // Then update local state
           const updatedTemplates = templates.map(t => 
             t.id === templateId ? updatedTemplate : t
           );
@@ -222,9 +317,14 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
           if (currentTemplate?.id === templateId) {
             set({ currentTemplate: updatedTemplate });
           }
-        },
+        } catch (error) {
+          set({ error: error instanceof Error ? error.message : 'Failed to add question' });
+          throw error;
+        }
+      },
 
-        updateQuestion: (templateId, questionId, updates) => {
+      updateQuestion: async (templateId, questionId, updates) => {
+        try {
           const { templates } = get();
           const template = templates.find(t => t.id === templateId);
           if (!template) return;
@@ -239,6 +339,10 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
             updatedAt: new Date().toISOString()
           };
 
+          // Update in file storage first
+          await get().updateTemplate(templateId, { questions: updatedQuestions });
+          
+          // Then update local state
           const updatedTemplates = templates.map(t => 
             t.id === templateId ? updatedTemplate : t
           );
@@ -250,9 +354,14 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
           if (currentTemplate?.id === templateId) {
             set({ currentTemplate: updatedTemplate });
           }
-        },
+        } catch (error) {
+          set({ error: error instanceof Error ? error.message : 'Failed to update question' });
+          throw error;
+        }
+      },
 
-        deleteQuestion: (templateId, questionId) => {
+      deleteQuestion: async (templateId, questionId) => {
+        try {
           const { templates } = get();
           const template = templates.find(t => t.id === templateId);
           if (!template) return;
@@ -267,6 +376,10 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
             updatedAt: new Date().toISOString()
           };
 
+          // Update in file storage first
+          await get().updateTemplate(templateId, { questions: filteredQuestions });
+          
+          // Then update local state
           const updatedTemplates = templates.map(t => 
             t.id === templateId ? updatedTemplate : t
           );
@@ -278,9 +391,14 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
           if (currentTemplate?.id === templateId) {
             set({ currentTemplate: updatedTemplate });
           }
-        },
+        } catch (error) {
+          set({ error: error instanceof Error ? error.message : 'Failed to delete question' });
+          throw error;
+        }
+      },
 
-        reorderQuestions: (templateId, questionIds) => {
+      reorderQuestions: async (templateId, questionIds) => {
+        try {
           const { templates } = get();
           const template = templates.find(t => t.id === templateId);
           if (!template) return;
@@ -296,6 +414,10 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
             updatedAt: new Date().toISOString()
           };
 
+          // Update in file storage first
+          await get().updateTemplate(templateId, { questions: reorderedQuestions });
+          
+          // Then update local state
           const updatedTemplates = templates.map(t => 
             t.id === templateId ? updatedTemplate : t
           );
@@ -307,48 +429,50 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
           if (currentTemplate?.id === templateId) {
             set({ currentTemplate: updatedTemplate });
           }
-        },
+        } catch (error) {
+          set({ error: error instanceof Error ? error.message : 'Failed to reorder questions' });
+          throw error;
+        }
+      },
 
-        // Default template initialization
-        initializeDefaultTemplate: () => {
+      // Default template initialization
+      initializeDefaultTemplate: async () => {
+        try {
+          await get().loadTemplates();
           const { templates } = get();
+          
           if (templates.length === 0) {
-            const defaultTemplate = get().createTemplate('Default Survey Template');
+            const defaultTemplate = await get().createTemplate('Default Survey Template');
             set({ currentTemplate: defaultTemplate });
           } else if (!get().currentTemplate) {
             set({ currentTemplate: templates[0] });
           }
-        },
+        } catch (error) {
+          set({ error: error instanceof Error ? error.message : 'Failed to initialize default template' });
+        }
+      },
 
-        getDefaultQuestions: () => getDefaultQuestions(),
+      getDefaultQuestions: () => getDefaultQuestions(),
 
-               // Template switching safety
-         checkTemplateSwitchImpact: (newTemplate) => {
-           const currentTemplate = get().currentTemplate;
+      // Template switching safety
+      checkTemplateSwitchImpact: (newTemplate) => {
+        const currentTemplate = get().currentTemplate;
 
-           if (!currentTemplate) {
-             return {
-               hasExistingResponses: false,
-               responseCount: 0,
-               willLoseData: false
-             };
-           }
+        if (!currentTemplate) {
+          return {
+            hasExistingResponses: false,
+            responseCount: 0,
+            willLoseData: false
+          };
+        }
 
-           // For now, return a basic check - this will be enhanced when we integrate with survey response store
-           return {
-             hasExistingResponses: false,
-             responseCount: 0,
-             willLoseData: false
-           };
-         },
-      };
-    },
-    {
-      name: 'survey-question-storage',
-      partialize: (state) => ({ 
-        templates: state.templates,
-        currentTemplate: state.currentTemplate
-      }),
-    }
-  )
+        // For now, return a basic check - this will be enhanced when we integrate with survey response store
+        return {
+          hasExistingResponses: false,
+          responseCount: 0,
+          willLoseData: false
+        };
+      },
+    };
+  }
 );

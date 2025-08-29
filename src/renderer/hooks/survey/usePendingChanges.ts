@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { usePageActionsStore } from '../../stores/pageActionsStore';
 import { SurveyTemplate, SurveyQuestion } from '../../types/survey';
 
 export const usePendingChanges = (
   currentTemplate: SurveyTemplate | null,
-  updateQuestion: (templateId: string, questionId: string, questionData: Partial<SurveyQuestion>) => void
+  updateQuestion: (templateId: string, questionId: string, questionData: Partial<SurveyQuestion>) => Promise<void>
 ) => {
   const [pendingChanges, setPendingChanges] = useState<Map<string, Partial<SurveyQuestion>>>(new Map());
   const { setSaveHandler, clearSaveHandler, setPendingChangesCount } = usePageActionsStore();
@@ -15,31 +15,38 @@ export const usePendingChanges = (
     pendingChangesRef.current = pendingChanges;
   }, [pendingChanges]);
 
-  // Set up save handler for the footer
+  // Memoize the save handler to prevent recreation
+  const saveAllChanges = useCallback(async () => {
+    if (!currentTemplate || pendingChangesRef.current.size === 0) return;
+
+    try {
+      console.log('💾 Saving all pending changes...');
+      // Since updateQuestion is now async, we need to await all updates
+      const updatePromises = Array.from(pendingChangesRef.current.entries()).map(([questionId, questionData]) => 
+        updateQuestion(currentTemplate.id, questionId, questionData)
+      );
+      
+      await Promise.all(updatePromises);
+      
+      setPendingChanges(new Map());
+      console.log('✅ All changes saved successfully');
+    } catch (error) {
+      console.error('❌ Failed to save changes:', error);
+      throw error;
+    }
+  }, [currentTemplate?.id, updateQuestion]);
+
+  // Set up save handler for the footer - only when template changes
   useEffect(() => {
-    const saveAllChanges = async () => {
-      if (!currentTemplate || pendingChangesRef.current.size === 0) return;
-
-      try {
-        // Since updateQuestion is not async, we can call them all synchronously
-        Array.from(pendingChangesRef.current.entries()).forEach(([questionId, questionData]) => {
-          updateQuestion(currentTemplate.id, questionId, questionData);
-        });
-        
-        setPendingChanges(new Map());
-      } catch (error) {
-        console.error('❌ Failed to save changes:', error);
-        throw error;
-      }
-    };
-
+    console.log('🔄 Setting up save handler for template:', currentTemplate?.id);
     setSaveHandler(saveAllChanges);
 
     return () => {
+      console.log('🧹 Cleaning up save handler for template:', currentTemplate?.id);
       clearSaveHandler();
       setPendingChangesCount(0);
     };
-  }, [currentTemplate, updateQuestion, setSaveHandler, clearSaveHandler, setPendingChangesCount]);
+  }, [currentTemplate?.id, saveAllChanges, setSaveHandler, clearSaveHandler, setPendingChangesCount]);
 
   // Sync pending changes count with the store
   useEffect(() => {

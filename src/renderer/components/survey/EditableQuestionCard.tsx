@@ -30,29 +30,43 @@ const EditableQuestionCard: React.FC<EditableQuestionCardProps> = ({
 
   // Sync local formData with question prop changes (especially when scale changes)
   useEffect(() => {
-    // Only sync if the scale or labels have actually changed
+    // Always sync when scale changes to ensure consistency
     if (formData.scale !== question.scale || 
         JSON.stringify(formData.labels) !== JSON.stringify(question.labels) ||
         formData.text !== question.text) {
       
+      // Generate new labels if scale changed
+      let newLabels = { ...question.labels };
+      if (formData.scale !== question.scale) {
+        newLabels = generateDefaultLabels(question.scale);
+      }
+      
       setFormData({
         text: question.text,
         scale: question.scale,
-        labels: { ...question.labels }
+        labels: newLabels
       });
     }
-  }, [question.scale, question.labels, question.text]); // Remove formData from dependencies to prevent loops
+  }, [question.scale, question.labels, question.text]); // Remove formData.scale to prevent infinite loops
 
-  const handleScaleChange = (newScale: number) => {
-    const labels = generateDefaultLabels(newScale);
-    const newFormData = {
-      ...formData,
-      scale: newScale,
-      labels
-    };
-    setFormData(newFormData);
-    onTrackChanges(newFormData);
-  };
+  // Handle global scale changes separately
+  useEffect(() => {
+    // Only update if the display scale is different from the current form data scale
+    // and if the question scale has actually changed
+    if (displayScale !== question.scale) {
+      console.log(`🔄 Scale change detected: question scale ${question.scale} -> display scale ${displayScale}`);
+      // Generate new labels for the new scale
+      const newLabels = generateDefaultLabels(displayScale);
+      setFormData(prev => ({
+        ...prev,
+        scale: displayScale,
+        labels: newLabels
+      }));
+      console.log(`✅ Updated form data with new scale ${displayScale} and labels:`, newLabels);
+    }
+  }, [displayScale, question.scale]); // Only depend on displayScale and question.scale, not formData.scale
+
+
 
   const handleInputChange = (field: string, value: any) => {
     const newFormData = { ...formData, [field]: value };
