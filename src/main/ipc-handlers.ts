@@ -11,23 +11,19 @@ export class IPCHandlers {
   private surveyHandlers: SurveyHandlers;
 
   constructor() {
-    console.log('🚀 Initializing IPCHandlers...');
+    console.log('🔧 IPCHandlers: Initializing...');
     this.conversationManager = new ConversationManager();
-    console.log('✅ ConversationManager initialized');
     this.surveyManager = new SurveyManager();
-    console.log('✅ SurveyManager initialized');
+    console.log('📊 IPCHandlers: Creating SurveyHandlers...');
     this.surveyHandlers = new SurveyHandlers(this.surveyManager);
-    console.log('✅ SurveyHandlers initialized');
+    console.log('✅ IPCHandlers: SurveyHandlers created successfully');
     this.setupConversationHandlers();
-    console.log('✅ Conversation handlers setup complete');
     
     // Add a simple test handler to verify IPC is working
     ipcMain.handle('test:ping', () => {
-      console.log('🏓 Test ping received');
       return { success: true, message: 'pong' };
     });
-    
-    console.log('🎯 All IPC handlers initialized successfully');
+    console.log('✅ IPCHandlers: All handlers initialized');
   }
 
   private setupConversationHandlers() {
@@ -265,7 +261,7 @@ export class IPCHandlers {
       try {
         // Type checking for apiKey
         if (!apiKey || typeof apiKey !== 'string') {
-          console.error('❌ Invalid API key type:', typeof apiKey, 'Value:', apiKey);
+          console.error('Invalid API key type:', typeof apiKey, 'Value:', apiKey);
           return { error: 'Invalid API key format. Please check your OpenAI API key.' };
         }
         
@@ -301,16 +297,16 @@ export class IPCHandlers {
           throw new Error('No valid response from OpenAI API');
         }
       } catch (error) {
-        console.error('❌ Main process: OpenAI API error:', error);
+        console.error('Main process: OpenAI API error:', error);
         
         if (axios.isAxiosError(error)) {
           if (error.response?.status === 401) {
-            console.error('🔑 401 Unauthorized - API key issue');
+            console.error('401 Unauthorized - API key issue');
             if (apiKey && typeof apiKey === 'string') {
-              console.error('🔑 Sent API key length:', apiKey.length);
-              console.error('🔑 Sent API key start:', apiKey.substring(0, 20));
+              console.error('Sent API key length:', apiKey.length);
+              console.error('Sent API key start:', apiKey.substring(0, 20));
             } else {
-              console.error('🔑 API key is invalid:', typeof apiKey, apiKey);
+              console.error('API key is invalid:', typeof apiKey, apiKey);
             }
             return { error: 'Invalid API key. Please check your OpenAI API key.' };
           } else if (error.response?.status === 429) {

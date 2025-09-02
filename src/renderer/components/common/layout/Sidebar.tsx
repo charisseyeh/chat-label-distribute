@@ -12,9 +12,9 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar }) => {
-  const { currentPage, setCurrentPage, selectedConversations, removeSelectedConversation, currentConversationId, currentTemplateId } = useNavigationStore();
+  const { currentPage, setCurrentPage, selectedConversations, removeSelectedConversation, currentConversationId, currentTemplateId, setCurrentTemplateId } = useNavigationStore();
   const { selectedConversationIds, removeSelectedConversation: removeFromStore, saveSelectedConversationsToStorage } = useConversationStore();
-  const { templates } = useSurveyQuestions();
+  const { templates, deleteTemplate } = useSurveyQuestions();
   const navigate = useNavigate();
 
   const getPageTitle = useCallback((page: string) => {
@@ -111,6 +111,36 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
       console.error('❌ handleRemoveConversation: Failed to remove conversation:', error);
     }
   }, [selectedConversations, currentPage, removeSelectedConversation, removeFromStore, saveSelectedConversationsToStorage, navigate]);
+
+  const handleDeleteTemplate = useCallback(async (templateId: string) => {
+    try {
+      // Get template title for confirmation
+      const template = templates.find(t => t.id === templateId);
+      const title = template?.name || 'this template';
+      
+      // Ask for confirmation
+      if (!window.confirm(`Are you sure you want to delete "${title}"? This action cannot be undone.`)) {
+        return;
+      }
+      
+      // Check if user is currently viewing this template
+      const currentPath = window.location.pathname;
+      if (currentPath === `/survey-template/${templateId}`) {
+        // Redirect to survey templates page if viewing the deleted template
+        navigate('/survey-templates');
+      }
+      
+      // Delete the template
+      await deleteTemplate(templateId);
+      
+      // Clear current template ID if we deleted the active template
+      if (currentTemplateId === templateId) {
+        setCurrentTemplateId(null);
+      }
+    } catch (error) {
+      console.error('❌ handleDeleteTemplate: Failed to delete template:', error);
+    }
+  }, [templates, currentTemplateId, setCurrentTemplateId, deleteTemplate, navigate]);
 
   // Helper function to determine if a navigation item should be active
   const isNavigationItemActive = useCallback((itemId: string) => {
@@ -269,6 +299,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
                         label={subItem.label}
                         isActive={currentTemplateId === subItem.id}
                         onClick={subItem.onClick}
+                        onRemove={() => handleDeleteTemplate(subItem.id)}
                       />
                     ))}
                     

@@ -79,19 +79,29 @@ export const useSurveyQuestions = () => {
 
   const handleUpdateTemplate = useCallback(async (id: string, updates: Partial<SurveyTemplate>) => {
     try {
+      console.log('🔄 useSurveyQuestions: handleUpdateTemplate called', { id, updates });
       setLoading(true);
       clearError();
       
       // Validate template before updating
       if (updates.questions) {
-        const validation = QuestionService.validateTemplate({ ...currentTemplate, ...updates } as SurveyTemplate);
+        console.log('🔍 Validating template with questions...');
+        const templateToValidate = { ...currentTemplate, ...updates } as SurveyTemplate;
+        console.log('📋 Template to validate:', templateToValidate);
+        const validation = QuestionService.validateTemplate(templateToValidate);
+        console.log('✅ Validation result:', validation);
+        
         if (!validation.isValid) {
+          console.error('❌ Template validation failed:', validation.errors);
           throw new Error(`Template validation failed: ${validation.errors.join(', ')}`);
         }
       }
       
+      console.log('📡 Calling store updateTemplate...');
       await updateTemplate(id, updates);
+      console.log('✅ Store updateTemplate completed');
     } catch (err) {
+      console.error('❌ useSurveyQuestions: handleUpdateTemplate failed:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to update template';
       setError(errorMessage);
       throw err;

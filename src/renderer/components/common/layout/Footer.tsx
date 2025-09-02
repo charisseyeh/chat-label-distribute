@@ -11,7 +11,7 @@ interface FooterProps {
 const Footer: React.FC<FooterProps> = React.memo(({ className = '' }) => {
   const { selectedConversationIds, selectedConversations, currentSourceFile, filteredConversations } = useConversationStore();
   const { currentPage, setSelectedConversations, setCurrentPage } = useNavigationStore();
-  const { saveHandler, pendingChangesCount } = usePageActionsStore();
+  const { saveHandler, pendingChangesCount, showSaveFeedback, setShowSaveFeedback } = usePageActionsStore();
   const navigate = useNavigate();
 
   // Memoize expensive calculations
@@ -48,11 +48,16 @@ const Footer: React.FC<FooterProps> = React.memo(({ className = '' }) => {
     if (saveHandler) {
       try {
         await saveHandler();
+        // Show feedback for 2 seconds
+        setShowSaveFeedback(true);
+        setTimeout(() => {
+          setShowSaveFeedback(false);
+        }, 2000);
       } catch (error) {
         console.error('❌ Save failed:', error);
       }
     }
-  }, [saveHandler]);
+  }, [saveHandler, setShowSaveFeedback]);
 
   // Only show footer when there are selected conversations and we're on the select-conversations page
   if (currentPage === 'select-conversations') {
@@ -103,7 +108,7 @@ const Footer: React.FC<FooterProps> = React.memo(({ className = '' }) => {
             disabled={pendingChangesCount === 0}
             className="btn-primary btn-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Save Changes
+            {showSaveFeedback ? 'Changes saved!' : 'Save Changes'}
           </button>
         </div>
       </footer>

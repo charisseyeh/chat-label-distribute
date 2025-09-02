@@ -225,11 +225,18 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
 
       updateTemplate: async (id, updates) => {
         try {
+          console.log('🔄 SurveyQuestionStore: updateTemplate called', { id, updates });
+          
           if (window.electronAPI?.updateSurveyTemplate) {
+            console.log('📡 Calling electronAPI.updateSurveyTemplate...');
             const result = await window.electronAPI.updateSurveyTemplate(id, updates);
+            console.log('📡 electronAPI.updateSurveyTemplate result:', result);
+            
             if (!result.success) {
               throw new Error(result.error || 'Failed to update template');
             }
+          } else {
+            console.warn('⚠️ window.electronAPI.updateSurveyTemplate not available');
           }
           
           const { templates } = get();
@@ -245,7 +252,10 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
             const newCurrentTemplate = updated.find(t => t.id === id) || null;
             set({ currentTemplate: newCurrentTemplate });
           }
+          
+          console.log('✅ SurveyQuestionStore: updateTemplate completed successfully');
         } catch (error) {
+          console.error('❌ SurveyQuestionStore: updateTemplate failed:', error);
           set({ error: error instanceof Error ? error.message : 'Failed to update template' });
           throw error;
         }

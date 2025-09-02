@@ -17,8 +17,6 @@ const SurveyTemplatesPage: React.FC = () => {
   } = useSurveyQuestions();
 
   const { currentTemplateId, setCurrentTemplateId } = useNavigationStore();
-  const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
-  const [newTemplateName, setNewTemplateName] = useState('');
   const navigate = useNavigate();
 
   // Initialize default template on mount
@@ -31,12 +29,8 @@ const SurveyTemplatesPage: React.FC = () => {
 
   // Handle template creation
   const handleCreateTemplate = async () => {
-    if (!newTemplateName.trim()) return;
-    
     try {
-      const newTemplate = await createTemplate(newTemplateName.trim());
-      setNewTemplateName('');
-      setIsCreatingTemplate(false);
+      const newTemplate = await createTemplate('Untitled Template');
       // Set as current template and navigate to it
       setCurrentTemplateId(newTemplate.id);
       navigate(`/survey-template/${newTemplate.id}`);
@@ -119,46 +113,15 @@ const SurveyTemplatesPage: React.FC = () => {
       )}
 
 
-      {/* Create Template Form */}
-      {isCreatingTemplate && (
-        <div className="mb-8 p-6 bg-muted border border-border rounded-lg">
-                      <h3 className="text-lg font-semibold text-foreground mb-4">Create New Template</h3>
-          <div className="flex items-center space-x-4">
-            <input
-              type="text"
-              value={newTemplateName}
-              onChange={(e) => setNewTemplateName(e.target.value)}
-              placeholder="Enter template name..."
-              className="flex-1 px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
-              autoFocus
-            />
-            <button
-              onClick={handleCreateTemplate}
-              disabled={!newTemplateName.trim()}
-              className="px-6 py-2 bg-success text-white rounded-lg hover:bg-success/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Create Template
-            </button>
-            <button
-              onClick={() => {
-                setIsCreatingTemplate(false);
-                setNewTemplateName('');
-              }}
-              className="px-6 py-2 bg-secondary-600 text-white rounded-lg hover:bg-secondary-700 transition-colors"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
+
 
       {/* Templates List using Design System */}
-      {templates.length === 0 && !isCreatingTemplate ? (
+      {templates.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground mb-4">No survey templates found.</p>
           <button
-            onClick={() => setIsCreatingTemplate(true)}
-                          className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            onClick={handleCreateTemplate}
+            className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
           >
             Create Your First Template
           </button>
@@ -180,10 +143,7 @@ const SurveyTemplatesPage: React.FC = () => {
             className="border-t border-primary/20 bg-primary-100 hover:bg-primary-200 transition-colors"
           >
             <button
-              onClick={() => {
-                setIsCreatingTemplate(true);
-                setNewTemplateName('');
-              }}
+              onClick={handleCreateTemplate}
               className="w-full text-left text-primary-800 hover:text-primary-900 py-3 px-4 transition-colors"
             >
               + Create new template
