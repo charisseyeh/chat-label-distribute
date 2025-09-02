@@ -1,4 +1,6 @@
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export interface MessageProps {
   id: string;
@@ -18,7 +20,7 @@ const Message: React.FC<MessageProps> = ({
   content,
   timestamp,
   className = '',
-  variant = 'bubble',
+  variant = 'minimal',
   showRole = false,
   showTimestamp = false,
   messageIndex,
@@ -50,28 +52,64 @@ const Message: React.FC<MessageProps> = ({
   };
 
   const formatMessageContent = (content: string) => {
-    // Simple formatting - can be enhanced with markdown support
-    return content.split('\n').map((line, index) => (
-      <React.Fragment key={index}>
-        {line}
-        {index < content.split('\n').length - 1 && <br />}
-      </React.Fragment>
-    ));
+    // Use ReactMarkdown for rich markdown rendering
+    return (
+      <div className="markdown-content prose prose-sm max-w-none">
+        <ReactMarkdown 
+          remarkPlugins={[remarkGfm]}
+          components={{
+            // Customize code block styling
+          code: ({ inline, className, children, ...props }: any) => {
+            if (inline) {
+              return (
+                <code className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono" {...props}>
+                  {children}
+                </code>
+              );
+            }
+            return (
+              <code className="block bg-gray-100 p-3 rounded-lg text-sm font-mono overflow-x-auto" {...props}>
+                {children}
+              </code>
+            );
+          },
+          // Customize link styling
+          a: ({ children, href, ...props }: any) => (
+            <a 
+              href={href} 
+              className="text-blue-600 hover:text-blue-800 underline" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              {...props}
+            >
+              {children}
+            </a>
+          ),
+          // Customize blockquote styling
+          blockquote: ({ children, ...props }: any) => (
+            <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-700" {...props}>
+              {children}
+            </blockquote>
+          ),
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+      </div>
+    );
   };
 
   // Add data-message-index attribute for intersection observer tracking
-  const messageAttributes: React.HTMLAttributes<HTMLDivElement> = {};
+  const messageAttributes: React.HTMLAttributes<HTMLDivElement> & { 'data-message-index'?: number } = {};
   if (messageIndex !== undefined) {
     messageAttributes['data-message-index'] = messageIndex;
   }
 
   if (variant === 'minimal') {
     return (
-      <div className={`flex space-x-3 ${className}`} {...messageAttributes}>
-        <div className="flex-1">
-          <div className="prose prose-sm max-w-none">
-            {formatMessageContent(content)}
-          </div>
+      <div className={`message-container ${className}`} {...messageAttributes}>
+        <div className="message-content">
+          {formatMessageContent(content)}
         </div>
       </div>
     );
@@ -81,8 +119,8 @@ const Message: React.FC<MessageProps> = ({
     const isUser = role === 'user';
     
     return (
-      <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} ${className}`} {...messageAttributes}>
-        <div className={`max-w-[70%] ${isUser ? 'order-2' : 'order-1'}`}>
+      <div className={`message-container ${role} ${className}`} {...messageAttributes}>
+        <div className={`message-content ${role}`}>
           {/* Role and Timestamp Header */}
           {(showRole || showTimestamp) && (
             <div className={`flex items-center space-x-2 mb-2 ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -100,10 +138,8 @@ const Message: React.FC<MessageProps> = ({
           )}
           
           {/* Message Bubble */}
-          <div className={`message-bubble ${role} ${isUser ? 'ml-auto' : 'mr-auto'}`}>
-            <div className="prose prose-sm max-w-none">
-              {formatMessageContent(content)}
-            </div>
+          <div className={`message-bubble ${role}`}>
+            {formatMessageContent(content)}
           </div>
         </div>
       </div>
@@ -112,11 +148,9 @@ const Message: React.FC<MessageProps> = ({
 
   // Default variant
   return (
-    <div className={`flex space-x-3 ${className}`} {...messageAttributes}>
-      <div className="flex-1">
-        <div className="prose prose-sm max-w-none">
-          {formatMessageContent(content)}
-        </div>
+    <div className={`message-container ${className}`} {...messageAttributes}>
+      <div className="message-content">
+        {formatMessageContent(content)}
       </div>
     </div>
   );

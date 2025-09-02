@@ -67,7 +67,7 @@ const NavigationSync: React.FC = React.memo(() => {
 NavigationSync.displayName = 'NavigationSync';
 
 function App() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const { loadSelectedConversationsFromStorage, selectedConversations } = useConversationStore();
   const { setSelectedConversations } = useNavigationStore();
 

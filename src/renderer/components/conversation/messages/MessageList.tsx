@@ -35,7 +35,7 @@ const MessageList: React.FC<MessageListProps> = ({
   const displayMessages = maxMessages ? messages.slice(0, maxMessages) : messages;
 
   const renderSingleColumn = () => (
-    <div className="space-y-4">
+    <div className="message-column">
       {displayMessages.map((message) => (
         <Message
           key={message.id}
@@ -51,7 +51,7 @@ const MessageList: React.FC<MessageListProps> = ({
 
   const renderTwoColumn = () => {
     return (
-      <div className="space-y-4">
+      <div className="message-column">
         {displayMessages.map((message) => (
           <Message
             key={message.id}
@@ -67,7 +67,7 @@ const MessageList: React.FC<MessageListProps> = ({
   };
 
   const renderGrid = () => (
-    <div className={`grid grid-cols-1 md:grid-cols-${columns} gap-4`}>
+    <div className="message-grid">
       {displayMessages.map((message) => (
         <Message
           key={message.id}
