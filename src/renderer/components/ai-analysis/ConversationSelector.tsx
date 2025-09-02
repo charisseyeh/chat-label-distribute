@@ -7,14 +7,18 @@ interface ConversationSelectorProps {
   conversations: ConversationData[];
   selectedConversations: string[];
   onConversationToggle: (conversationId: string) => void;
+  showRelevancyChips?: boolean; // Optional prop to control relevancy chip display
+  allowToggle?: boolean; // Optional prop to control whether conversations can be toggled
 }
 
 const ConversationSelector: React.FC<ConversationSelectorProps> = ({
   conversations,
   selectedConversations,
-  onConversationToggle
+  onConversationToggle,
+  showRelevancyChips = true, // Default to true to maintain existing behavior
+  allowToggle = false // Default to false to maintain existing behavior
 }) => {
-  const { selectedConversationIds } = useConversationStore();
+  const { selectedConversationIds: storeSelectedConversationIds } = useConversationStore();
 
   const formatDate = useCallback((timestamp: number | string | undefined) => {
     if (!timestamp) return 'No date';
@@ -54,9 +58,14 @@ const ConversationSelector: React.FC<ConversationSelectorProps> = ({
   }, [onConversationToggle]);
 
   const conversationItems = useMemo(() => {
+    // Use the appropriate selectedConversationIds based on context
+    const currentSelectedIds = allowToggle ? selectedConversations : storeSelectedConversationIds;
+    
     return conversations.map(conversation => {
-      const isPermanentlyStored = selectedConversations.includes(conversation.id);
-      const isCurrentlySelected = selectedConversationIds.includes(conversation.id);
+      // In AIComparisonSidebar context, selectedConversations is the same as selectedConversationIds
+      // So we need to check if this is truly a permanently stored conversation
+      const isPermanentlyStored = !allowToggle && selectedConversations.includes(conversation.id);
+      const isCurrentlySelected = currentSelectedIds.includes(conversation.id);
       
       // Format the date properly
       const formattedDate = formatDate(conversation.createTime || conversation.createdAt);
@@ -71,19 +80,19 @@ const ConversationSelector: React.FC<ConversationSelectorProps> = ({
             : formattedDate}
           chip={isPermanentlyStored 
             ? undefined
-            : conversation.aiRelevancy ? {
+            : showRelevancyChips && conversation.aiRelevancy ? {
                 variant: conversation.aiRelevancy.category === 'relevant' ? 'relevant' : 'not-relevant',
                 text: conversation.aiRelevancy.category === 'relevant' ? '✓ Relevant' : '✗ Not Relevant'
               } : undefined}
-          checked={isPermanentlyStored || isCurrentlySelected}
-          onCheckChange={isPermanentlyStored ? undefined : () => handleConversationToggle(conversation.id)}
-          selected={isPermanentlyStored || isCurrentlySelected}
-          onClick={isPermanentlyStored ? undefined : () => handleConversationToggle(conversation.id)}
+          checked={allowToggle ? isCurrentlySelected : (isPermanentlyStored || isCurrentlySelected)}
+          onCheckChange={allowToggle ? () => handleConversationToggle(conversation.id) : (isPermanentlyStored ? undefined : () => handleConversationToggle(conversation.id))}
+          selected={allowToggle ? isCurrentlySelected : (isPermanentlyStored || isCurrentlySelected)}
+          onClick={allowToggle ? () => handleConversationToggle(conversation.id) : (isPermanentlyStored ? undefined : () => handleConversationToggle(conversation.id))}
           className="hover:border-gray-300 transition-colors"
         />
       );
     });
-  }, [conversations, selectedConversations, selectedConversationIds, formatDate, handleConversationToggle]);
+  }, [conversations, selectedConversations, storeSelectedConversationIds, formatDate, handleConversationToggle, allowToggle, showRelevancyChips]);
 
   return (
     <div>

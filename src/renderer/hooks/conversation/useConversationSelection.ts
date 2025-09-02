@@ -6,21 +6,33 @@ export const useConversationSelection = () => {
   const [selectedConversationIds, setSelectedConversationIds] = useState<string[]>([]);
   
   const { conversationData } = useSurveyResponseStore();
-  const { selectedConversations: storeConversations } = useConversationStore();
+  const { selectedConversations: storeConversations, getFullConversationData } = useConversationStore();
 
-  // Get conversations with survey data
+  // Get conversations with survey data - include all selected conversations, not just those with responses
   const conversationsWithData = useMemo(() => {
-    return Object.keys(conversationData).map(conversationId => {
-      const data = conversationData[conversationId];
-      const conversation = storeConversations.find(c => c.id === conversationId);
-      return {
-        id: conversationId,
-        title: conversation?.title || 'Unknown Conversation',
-        data,
-        hasResponses: data.responses.length > 0
+    return storeConversations.map(conversation => {
+      const data = conversationData[conversation.id] || {
+        conversationId: conversation.id,
+        responses: [],
+        completedSections: [],
+        lastUpdated: new Date().toISOString()
       };
-    }).filter(conv => conv.hasResponses);
-  }, [conversationData, storeConversations]);
+      
+      // Get full conversation data to include createTime, aiRelevancy, etc.
+      const fullConversationData = getFullConversationData(conversation.id);
+      
+      return {
+        id: conversation.id,
+        title: conversation.title || 'Unknown Conversation',
+        data,
+        hasResponses: data.responses.length > 0,
+        messageCount: fullConversationData?.messageCount || 0,
+        createTime: fullConversationData?.createTime,
+        createdAt: fullConversationData?.createdAt,
+        aiRelevancy: fullConversationData?.aiRelevancy
+      };
+    });
+  }, [conversationData, storeConversations, getFullConversationData]);
 
   const toggleConversationSelection = (conversationId: string) => {
     setSelectedConversationIds(prev => 

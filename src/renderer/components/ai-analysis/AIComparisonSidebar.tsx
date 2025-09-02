@@ -49,6 +49,8 @@ export const AIComparisonSidebar: React.FC<AIComparisonSidebarProps> = ({
           conversations={conversationsWithData}
           selectedConversations={selectedConversationIds}
           onConversationToggle={onConversationToggle}
+          showRelevancyChips={false}
+          allowToggle={true}
         />
       </section>
 
