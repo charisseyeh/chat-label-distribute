@@ -267,25 +267,9 @@ const SurveyQuestionsPage: React.FC = () => {
     
     console.log('✅ Scale changes marked as pending');
     
-    // Update local template state for immediate UI feedback
-    if (currentTemplate) {
-      const defaultLabels = generateDefaultLabels(newScale);
-      console.log('📝 Generated labels for scale', newScale, ':', defaultLabels);
-      
-      const updatedQuestions = currentTemplate.questions.map(question => ({
-        ...question,
-        scale: newScale,
-        labels: defaultLabels
-      }));
-      
-      const updatedTemplate = {
-        ...currentTemplate,
-        questions: updatedQuestions
-      };
-      setCurrentTemplate(updatedTemplate);
-      console.log('🔄 Local template updated with new scale');
-    }
-  }, [uiState.globalScale, updateUiState, currentTemplate, generateDefaultLabels, setCurrentTemplate]);
+    // Don't update currentTemplate immediately - let the save function handle it
+    // This prevents the useEffect from resetting hasScaleChanges
+  }, [uiState.globalScale, updateUiState]);
 
   // Handle question creation
   const handleAddQuestion = useCallback(async () => {
@@ -406,17 +390,26 @@ const SurveyQuestionsPage: React.FC = () => {
           <div className="space-y-4">
             {currentTemplate.questions
               .filter(question => !uiState.deletedQuestions.has(question.id))
-              .map((question, index) => (
-                <EditableQuestionCard
-                  key={`${question.id}-${uiState.globalScale}`}
-                  question={question}
-                  index={index}
-                  globalScale={uiState.globalScale}
-                  onSave={(questionData) => handleUpdateQuestion(question.id, questionData)}
-                  onDelete={() => handleDeleteQuestion(question.id)}
-                  onTrackChanges={(questionData) => updatePendingChanges(question.id, questionData)}
-                />
-              ))}
+              .map((question, index) => {
+                // Use the new scale from uiState if there are scale changes, otherwise use the question's scale
+                const questionWithUpdatedScale = uiState.hasScaleChanges ? {
+                  ...question,
+                  scale: uiState.globalScale,
+                  labels: generateDefaultLabels(uiState.globalScale)
+                } : question;
+                
+                return (
+                  <EditableQuestionCard
+                    key={`${question.id}-${uiState.globalScale}`}
+                    question={questionWithUpdatedScale}
+                    index={index}
+                    globalScale={uiState.globalScale}
+                    onSave={(questionData) => handleUpdateQuestion(question.id, questionData)}
+                    onDelete={() => handleDeleteQuestion(question.id)}
+                    onTrackChanges={(questionData) => updatePendingChanges(question.id, questionData)}
+                  />
+                );
+              })}
           </div>
         </>
       )}
