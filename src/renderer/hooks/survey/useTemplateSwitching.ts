@@ -1,11 +1,13 @@
 import { useCallback } from 'react';
 import { useSurveyQuestionStore } from '../../stores/surveyQuestionStore';
 import { useSurveyResponseStore } from '../../stores/surveyResponseStore';
+import { useNavigationStore } from '../../stores/navigationStore';
 import { SurveyTemplate } from '../../types/survey';
 
 export const useTemplateSwitching = () => {
   const { currentTemplate, setCurrentTemplate } = useSurveyQuestionStore();
   const { conversationData, clearAllResponsesForTemplate } = useSurveyResponseStore();
+  const { currentTemplateId, setCurrentTemplateId } = useNavigationStore();
 
   /**
    * Check if switching to a new template will affect existing responses
@@ -76,17 +78,31 @@ export const useTemplateSwitching = () => {
            clearAllResponsesForTemplate(currentTemplate.id);
          }
          
-         onConfirm();
+         // Update both stores in the correct order
          setCurrentTemplate(newTemplate);
+         if (newTemplate && newTemplate.id !== currentTemplateId) {
+           setCurrentTemplateId(newTemplate.id);
+         } else if (!newTemplate && currentTemplateId !== null) {
+           setCurrentTemplateId(null);
+         }
+         
+         onConfirm();
        } else {
         onCancel?.();
       }
     } else {
       // No data loss, safe to switch
-      onConfirm();
+      // Update both stores in the correct order
       setCurrentTemplate(newTemplate);
+      if (newTemplate && newTemplate.id !== currentTemplateId) {
+        setCurrentTemplateId(newTemplate.id);
+      } else if (!newTemplate && currentTemplateId !== null) {
+        setCurrentTemplateId(null);
+      }
+      
+      onConfirm();
     }
-  }, [currentTemplate, conversationData, checkTemplateSwitchImpact, setCurrentTemplate]);
+  }, [currentTemplate, conversationData, checkTemplateSwitchImpact, setCurrentTemplate, setCurrentTemplateId, currentTemplateId]);
 
   return {
     checkTemplateSwitchImpact,

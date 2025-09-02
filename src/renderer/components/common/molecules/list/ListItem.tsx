@@ -15,6 +15,7 @@ export interface ListItemProps {
   onDelete?: () => void;
   className?: string;
   onClick?: () => void;
+  onDoubleClick?: () => void;
   selected?: boolean;
 }
 
@@ -28,6 +29,7 @@ export const ListItem: React.FC<ListItemProps> = ({
   onDelete,
   className = '',
   onClick,
+  onDoubleClick,
   selected = false
 }) => {
   const baseClasses = 'list-item';
@@ -44,6 +46,7 @@ export const ListItem: React.FC<ListItemProps> = ({
     <div 
       className={`${baseClasses} ${variantClasses} ${selectedClasses} ${className}`}
       onClick={onClick}
+      onDoubleClick={onDoubleClick}
     >
       {/* Check Toggle */}
       {hasCheckToggle && (

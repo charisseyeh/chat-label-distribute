@@ -49,7 +49,7 @@ type SurveyQuestionStore = SurveyQuestionState & SurveyQuestionActions;
 // Default survey questions based on the existing implementation
 const getDefaultQuestions = (): SurveyQuestion[] => [
   {
-    id: 'mood',
+    id: '1',
     text: 'How would you rate the overall mood or emotional tone?',
     scale: 7,
     labels: {
@@ -64,7 +64,7 @@ const getDefaultQuestions = (): SurveyQuestion[] => [
     order: 1
   },
   {
-    id: 'emotional_regulation',
+    id: '2',
     text: 'How well is the person managing and controlling their emotions?',
     scale: 7,
     labels: {
@@ -79,7 +79,7 @@ const getDefaultQuestions = (): SurveyQuestion[] => [
     order: 2
   },
   {
-    id: 'stress',
+    id: '3',
     text: 'How stressed or overwhelmed does the person appear to be?',
     scale: 7,
     labels: {
@@ -94,7 +94,7 @@ const getDefaultQuestions = (): SurveyQuestion[] => [
     order: 3
   },
   {
-    id: 'energy',
+    id: '4',
     text: 'How energetic and engaged does the person seem?',
     scale: 7,
     labels: {
@@ -109,7 +109,7 @@ const getDefaultQuestions = (): SurveyQuestion[] => [
     order: 4
   },
   {
-    id: 'wellbeing',
+    id: '5',
     text: 'How would you rate the person\'s overall psychological wellbeing?',
     scale: 7,
     labels: {

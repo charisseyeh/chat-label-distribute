@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSurveyQuestions } from '../hooks/survey/useSurveyQuestions';
+import { useTemplateSwitching } from '../hooks/survey/useTemplateSwitching';
 import { SurveyTemplate } from '../types/survey';
 import { List, ListItem } from '../components/common';
 import { useNavigationStore } from '../stores/navigationStore';
@@ -17,6 +18,7 @@ const SurveyTemplatesPage: React.FC = () => {
   } = useSurveyQuestions();
 
   const { currentTemplateId, setCurrentTemplateId } = useNavigationStore();
+  const { switchTemplateSafely } = useTemplateSwitching();
   const navigate = useNavigate();
 
   // Initialize default template on mount
@@ -54,9 +56,23 @@ const SurveyTemplatesPage: React.FC = () => {
     }
   };
 
-  // Navigate to template
+  // Switch template without navigation
   const handleTemplateClick = (template: SurveyTemplate) => {
-    setCurrentTemplateId(template.id);
+    switchTemplateSafely(
+      template,
+      () => {
+        // Success callback - template switched successfully
+        // Template switch completed silently
+      },
+      () => {
+        // Cancel callback - user cancelled the switch
+        console.log('Template switch cancelled by user');
+      }
+    );
+  };
+
+  // Navigate to template editing page on double-click
+  const handleTemplateDoubleClick = (template: SurveyTemplate) => {
     navigate(`/survey-template/${template.id}`);
   };
 
@@ -81,6 +97,7 @@ const SurveyTemplatesPage: React.FC = () => {
         text: 'currently using'
       } : undefined,
       onClick: () => handleTemplateClick(template),
+      onDoubleClick: () => handleTemplateDoubleClick(template),
       onDelete: () => handleDeleteTemplate(template.id),
       selected: false // Don't highlight the currently using template with background color
     };

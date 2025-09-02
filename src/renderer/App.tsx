@@ -23,22 +23,22 @@ const NavigationSync: React.FC = React.memo(() => {
     const path = location.pathname;
     
     if (path === '/' || path === '/select-conversations') {
-      return { page: 'select-conversations' as const, conversationId: null, templateId: null };
+      return { page: 'select-conversations' as const, conversationId: null, templateId: undefined };
     } else if (path === '/label-conversations') {
-      return { page: 'label-conversations' as const, conversationId: null, templateId: null };
+      return { page: 'label-conversations' as const, conversationId: null, templateId: undefined };
     } else if (path === '/ai-comparisons') {
-      return { page: 'ai-comparisons' as const, conversationId: null, templateId: null };
+      return { page: 'ai-comparisons' as const, conversationId: null, templateId: undefined };
     } else if (path === '/survey-templates') {
-      return { page: 'survey-templates' as const, conversationId: null, templateId: null };
+      return { page: 'survey-templates' as const, conversationId: null, templateId: undefined };
     } else if (path.startsWith('/conversation/')) {
       const conversationId = path.split('/conversation/')[1];
-      return { page: 'label-conversations' as const, conversationId, templateId: null };
+      return { page: 'label-conversations' as const, conversationId, templateId: undefined };
     } else if (path.startsWith('/survey-template/')) {
       const templateId = path.split('/survey-template/')[1];
       return { page: 'survey-questions' as const, conversationId: null, templateId };
     }
     
-    return { page: 'select-conversations' as const, conversationId: null, templateId: null };
+    return { page: 'select-conversations' as const, conversationId: null, templateId: undefined };
   }, [location.pathname]);
 
   useEffect(() => {
@@ -49,11 +49,17 @@ const NavigationSync: React.FC = React.memo(() => {
     performanceMonitor.startNavigation(route);
     
     // Use batch update for better performance - single state update instead of three
-    batchUpdate({
+    // Only update templateId if it's explicitly provided (not undefined)
+    const updates: any = {
       currentPage: page,
-      currentConversationId: conversationId,
-      currentTemplateId: templateId
-    });
+      currentConversationId: conversationId
+    };
+    
+    if (templateId !== undefined) {
+      updates.currentTemplateId = templateId;
+    }
+    
+    batchUpdate(updates);
     
     // Mark navigation as complete after state update
     requestAnimationFrame(() => {

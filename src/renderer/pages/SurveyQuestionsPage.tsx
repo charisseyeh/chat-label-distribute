@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSurveyQuestions } from '../hooks/survey/useSurveyQuestions';
 import { usePageActionsStore } from '../stores/pageActionsStore';
+import { useNavigationStore } from '../stores/navigationStore';
 import { generateDefaultLabels } from '../utils/surveyUtils';
 import { SurveyTemplate, SurveyQuestion } from '../types/survey';
 import { TemplateCreationForm, SurveyHeader, EditableQuestionCard } from '../components/survey';
@@ -16,17 +17,11 @@ const SurveyQuestionsPage: React.FC = () => {
     error,
     createTemplate,
     updateTemplate,
-    deleteTemplate,
     setCurrentTemplate,
     addQuestion,
-    updateQuestion,
-    deleteQuestion,
-    reorderQuestions,
     initializeTemplate,
     clearError,
-    loadTemplates,
-    loadTemplate,
-    generateDefaultLabels
+    loadTemplates
   } = useSurveyQuestions();
 
   // Consolidated state management
@@ -78,22 +73,13 @@ const SurveyQuestionsPage: React.FC = () => {
   // Simplified and efficient save function
   const saveAllChanges = useCallback(async () => {
     if (!currentTemplate) {
-      console.log('💾 No template to save');
       return;
     }
 
     const { pendingChanges, hasTitleChanges, hasScaleChanges, deletedQuestions, localTitle, globalScale } = uiStateRef.current;
     
-    console.log('💾 Save function called with state:', {
-      pendingChanges: pendingChanges.size,
-      hasTitleChanges,
-      hasScaleChanges,
-      deletedQuestions: deletedQuestions.size
-    });
-    
     // Check if there are any changes to save
     if (pendingChanges.size === 0 && !hasTitleChanges && !hasScaleChanges && deletedQuestions.size === 0) {
-      console.log('💾 No changes to save, returning early');
       return;
     }
     
@@ -104,7 +90,6 @@ const SurveyQuestionsPage: React.FC = () => {
       // 1. Handle title changes
       if (hasTitleChanges && localTitle !== currentTemplate.name) {
         templateUpdates.name = localTitle;
-        console.log('📝 Title update:', { from: currentTemplate.name, to: localTitle });
       }
       
       // 2. Handle question changes (scale, individual changes, deletions)
@@ -147,7 +132,6 @@ const SurveyQuestionsPage: React.FC = () => {
       
       // 3. Save the template
       if (Object.keys(templateUpdates).length > 0) {
-        console.log('💾 Updating template with:', templateUpdates);
         await updateTemplate(currentTemplate.id, templateUpdates);
         
         // Update local state to reflect saved changes
@@ -164,8 +148,6 @@ const SurveyQuestionsPage: React.FC = () => {
       // 4. Clear all pending changes
       clearAllChanges();
       setPendingChangesCount(0);
-      
-      console.log('✅ Save operation completed successfully');
     } catch (error) {
       console.error('❌ Failed to save changes:', error);
       throw error;
@@ -234,6 +216,16 @@ const SurveyQuestionsPage: React.FC = () => {
     }
   }, [templateId, templates, setCurrentTemplate]);
 
+  // Sync with navigation store - only update navigation store when currentTemplate changes
+  const { currentTemplateId, setCurrentTemplateId } = useNavigationStore();
+  
+  // When currentTemplate changes, update navigation store (only if different)
+  useEffect(() => {
+    if (currentTemplate && currentTemplate.id !== currentTemplateId) {
+      setCurrentTemplateId(currentTemplate.id);
+    }
+  }, [currentTemplate, currentTemplateId, setCurrentTemplateId]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -258,14 +250,10 @@ const SurveyQuestionsPage: React.FC = () => {
 
   // Handle global scale change
   const handleGlobalScaleChange = useCallback((newScale: number) => {
-    console.log('🔄 Scale change requested:', { from: uiState.globalScale, to: newScale });
-    
     updateUiState({
       globalScale: newScale,
       hasScaleChanges: true
     });
-    
-    console.log('✅ Scale changes marked as pending');
     
     // Don't update currentTemplate immediately - let the save function handle it
     // This prevents the useEffect from resetting hasScaleChanges
@@ -307,30 +295,24 @@ const SurveyQuestionsPage: React.FC = () => {
       return;
     }
 
-    if (window.confirm('Are you sure you want to delete this question?')) {
-      // Add to deleted questions set and remove from pending changes
-      const newDeletedQuestions = new Set([...uiState.deletedQuestions, questionId]);
-      const newPendingChanges = new Map(uiState.pendingChanges);
-      newPendingChanges.delete(questionId);
-      
-      updateUiState({
-        deletedQuestions: newDeletedQuestions,
-        pendingChanges: newPendingChanges
-      });
-    }
+    // Add to deleted questions set and remove from pending changes
+    const newDeletedQuestions = new Set([...uiState.deletedQuestions, questionId]);
+    const newPendingChanges = new Map(uiState.pendingChanges);
+    newPendingChanges.delete(questionId);
+    
+    updateUiState({
+      deletedQuestions: newDeletedQuestions,
+      pendingChanges: newPendingChanges
+    });
   }, [currentTemplate, uiState.deletedQuestions, uiState.pendingChanges, updateUiState]);
 
   // Handle immediate title change for local state
   const handleTitleChange = useCallback((newTitle: string) => {
-    console.log('📝 handleTitleChange called:', { newTitle, currentTitle: currentTemplate?.name });
-    
     const hasChanges = newTitle !== currentTemplate?.name;
     updateUiState({
       localTitle: newTitle,
       hasTitleChanges: hasChanges
     });
-    
-    console.log('📝 Title change tracked:', { hasChanges, newTitle, currentTitle: currentTemplate?.name });
   }, [currentTemplate?.name, updateUiState]);
 
 
