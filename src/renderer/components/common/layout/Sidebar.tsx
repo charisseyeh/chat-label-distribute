@@ -1,6 +1,6 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sidebar as SidebarIcon, X, ClipboardText, Tag, FileText, Robot, SidebarSimpleIcon } from '@phosphor-icons/react';
+import { Sidebar as SidebarIcon, X, ClipboardText, Tag, FileText, Robot, SidebarSimpleIcon, CaretDown, CaretRight } from '@phosphor-icons/react';
 import { useNavigationStore } from '../../../stores/navigationStore';
 import { useConversationStore } from '../../../stores/conversationStore';
 import { useSurveyQuestions } from '../../../hooks/survey/useSurveyQuestions';
@@ -16,6 +16,9 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
   const { selectedConversationIds, removeSelectedConversation: removeFromStore, saveSelectedConversationsToStorage } = useConversationStore();
   const { templates, deleteTemplate } = useSurveyQuestions();
   const navigate = useNavigate();
+  
+  // State for expanded navigation items
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
   const getPageTitle = useCallback((page: string) => {
     switch (page) {
@@ -42,7 +45,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
   const getSelectedConversationTitles = useMemo(() => {
     if (selectedConversations.length === 0) return [];
     
-    return selectedConversations.slice(0, 3).map(conv => ({
+    return selectedConversations.map(conv => ({
       id: conv.id,
       title: conv.title
     }));
@@ -51,7 +54,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
   const getSelectedTemplateTitles = useMemo(() => {
     if (templates.length === 0) return [];
     
-    return templates.slice(0, 3).map(template => ({
+    return templates.map(template => ({
       id: template.id,
       title: template.name || 'Untitled Template'
     }));
@@ -142,6 +145,19 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
     }
   }, [templates, currentTemplateId, setCurrentTemplateId, deleteTemplate, navigate]);
 
+  // Toggle expanded state for navigation items
+  const toggleExpanded = useCallback((itemId: string) => {
+    setExpandedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
+  }, []);
+
   // Helper function to determine if a navigation item should be active
   const isNavigationItemActive = useCallback((itemId: string) => {
     // If we're viewing a specific conversation, only that should be active
@@ -170,7 +186,8 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
       label: 'Label Conversations',
       icon: <Tag size={20} weight="bold" />,
       onClick: () => handlePageNavigation('label-conversations'),
-      subItems: getSelectedConversationTitles.slice(0, 3).map(conv => ({
+      hasSubItems: getSelectedConversationTitles.length > 0,
+      subItems: getSelectedConversationTitles.map(conv => ({
         id: conv.id,
         label: truncateTitle(conv.title),
         onClick: () => handleConversationClick(conv.id)
@@ -181,7 +198,8 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
       label: 'Survey Templates',
       icon: <FileText size={20} weight="bold" />,
       onClick: () => handlePageNavigation('survey-templates'),
-      subItems: getSelectedTemplateTitles.slice(0, 3).map(template => ({
+      hasSubItems: getSelectedTemplateTitles.length > 0,
+      subItems: getSelectedTemplateTitles.map(template => ({
         id: template.id,
         label: truncateTitle(template.title),
         onClick: () => handleTemplateClick(template.id)
@@ -256,17 +274,42 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
               weight: isNavigationItemActive(item.id) ? "fill" : "bold"
             });
 
+            const isExpanded = expandedItems.has(item.id);
+            const hasSubItems = item.hasSubItems && item.subItems && item.subItems.length > 0;
+
             return (
               <div key={item.id}>
-                <NavigationItem
-                  icon={iconElement}
-                  label={item.label}
-                  isActive={isNavigationItemActive(item.id)}
-                  onClick={item.onClick}
-                />
+                {hasSubItems ? (
+                  <div 
+                    className={`nav-item nav-item-with-icon ${isNavigationItemActive(item.id) ? 'active' : ''}`}
+                    onClick={() => {
+                      item.onClick();
+                      toggleExpanded(item.id);
+                    }}
+                  >
+                    <span className="nav-item-icon">
+                      {iconElement}
+                    </span>
+                    <span className="font-medium flex-1">{item.label}</span>
+                    <span className="nav-item-icon">
+                      {isExpanded ? (
+                        <CaretDown size={16} weight="bold" />
+                      ) : (
+                        <CaretRight size={16} weight="bold" />
+                      )}
+                    </span>
+                  </div>
+                ) : (
+                  <NavigationItem
+                    icon={iconElement}
+                    label={item.label}
+                    isActive={isNavigationItemActive(item.id)}
+                    onClick={item.onClick}
+                  />
+                )}
                 
                 {/* Sub-items for label conversations */}
-                {item.id === 'label-conversations' && item.subItems && item.subItems.length > 0 && (
+                {item.id === 'label-conversations' && hasSubItems && isExpanded && (
                   <div>
                     {item.subItems.map((subItem) => (
                       <NavigationItemNested
@@ -277,21 +320,11 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
                         onRemove={() => handleRemoveConversation(subItem.id)}
                       />
                     ))}
-                    
-                    {getSelectedConversationTitles.length > 3 && (
-                      <button
-                        onClick={() => handlePageNavigation('label-conversations')}
-                        className="nav-item text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 text-left"
-                      >
-                        <span className="text-xs">→</span>
-                        <span>See all ({getSelectedConversationTitles.length})</span>
-                      </button>
-                    )}
                   </div>
                 )}
 
                 {/* Sub-items for survey templates */}
-                {item.id === 'survey-templates' && item.subItems && item.subItems.length > 0 && (
+                {item.id === 'survey-templates' && hasSubItems && isExpanded && (
                   <div>
                     {item.subItems.map((subItem) => (
                       <NavigationItemNested
@@ -302,16 +335,6 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
                         onRemove={() => handleDeleteTemplate(subItem.id)}
                       />
                     ))}
-                    
-                    {getSelectedTemplateTitles.length > 3 && (
-                      <button
-                        onClick={() => handlePageNavigation('survey-templates')}
-                        className="nav-item text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 text-left"
-                      >
-                        <span className="text-xs">→</span>
-                        <span>See all ({getSelectedTemplateTitles.length})</span>
-                      </button>
-                    )}
                   </div>
                 )}
               </div>
