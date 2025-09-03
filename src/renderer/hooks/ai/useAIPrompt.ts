@@ -50,6 +50,45 @@ export const useAIPrompt = () => {
     }
   }, [currentTemplate]);
 
+  // Generate system prompt only (for editing)
+  const generateSystemPromptOnly = useCallback((): string | null => {
+    if (!currentTemplate) {
+      console.warn('No survey template available for system prompt generation');
+      return null;
+    }
+
+    try {
+      return AIPromptService.generateSystemPromptOnly(currentTemplate);
+    } catch (error) {
+      console.error('Failed to generate system prompt:', error);
+      return null;
+    }
+  }, [currentTemplate]);
+
+  // Generate OpenAI API prompt with custom system prompt
+  const generateOpenAIPromptWithCustomSystem = useCallback((
+    customSystemPrompt: string,
+    conversationContext: string,
+    position: 'beginning' | 'turn6' | 'end'
+  ): string | null => {
+    if (!currentTemplate) {
+      console.warn('No survey template available for AI prompt generation');
+      return null;
+    }
+
+    try {
+      return AIPromptService.generateOpenAIPromptWithCustomSystem(
+        customSystemPrompt,
+        currentTemplate,
+        conversationContext,
+        position
+      );
+    } catch (error) {
+      console.error('Failed to generate OpenAI prompt with custom system:', error);
+      return null;
+    }
+  }, [currentTemplate]);
+
   // Generate conversation context for AI
   const generateConversationContext = useCallback((
     messages: any[],
@@ -204,6 +243,8 @@ export const useAIPrompt = () => {
     // Core functionality
     generatePromptConfig,
     generateOpenAIPrompt,
+    generateSystemPromptOnly,
+    generateOpenAIPromptWithCustomSystem,
     generateConversationContext,
     parseAIResponse,
     validateAIRatings,

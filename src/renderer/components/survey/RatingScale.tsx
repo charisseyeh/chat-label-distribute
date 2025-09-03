@@ -44,15 +44,7 @@ const RatingScale: React.FC<RatingScaleProps> = ({
                 onKeyPress={(e) => handleKeyPress(e, rating)}
                 onMouseEnter={() => setHoveredRating(rating)}
                 onMouseLeave={() => setHoveredRating(null)}
-                className={`
-                  w-7 h-7 rounded-full border-2 transition-all duration-200 ease-in-out
-                  flex items-center justify-center text-xs font-medium
-                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-                  ${isSelected
-                    ? 'bg-blue-600 border-blue-600 text-white shadow-lg'
-                    : 'bg-white border-gray-300 text-muted-foreground hover:border-blue-400'
-                  }
-                `}
+                className={`rating-button ${isSelected ? 'rating-button--selected' : ''}`}
                 aria-label={`Rate ${rating}: ${label}`}
                 aria-pressed={isSelected}
                 tabIndex={0}
@@ -69,7 +61,7 @@ const RatingScale: React.FC<RatingScaleProps> = ({
         <div className="text-left">
           <div className={`
             text-small italic transition-all duration-200
-            ${currentRating ? 'text-blue-600' : 'text-muted-foreground'}
+            ${currentRating ? 'text-primary-600' : 'text-muted-foreground'}
           `}>
             {hoveredRating ? labels[hoveredRating] : labels[currentRating]}
           </div>

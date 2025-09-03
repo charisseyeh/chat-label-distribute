@@ -7,7 +7,7 @@ import ConversationSelectorPage from './pages/ConversationSelectorPage';
 import LabelConversations from './components/conversation/management/LabelConversations';
 import ConversationPage from './pages/ConversationPage';
 import AIComparisonsPage from './pages/AIComparisonsPage';
-import AISimulationPage from './pages/AISimulationPage';
+
 import SurveyQuestionsPage from './pages/SurveyQuestionsPage';
 import SurveyTemplatesPage from './pages/SurveyTemplatesPage';
 import { useConversationStore } from './stores/conversationStore';
@@ -29,8 +29,7 @@ const NavigationSync: React.FC = React.memo(() => {
       return { page: 'label-conversations' as const, conversationId: null, templateId: undefined };
     } else if (path === '/ai-comparisons') {
       return { page: 'ai-comparisons' as const, conversationId: null, templateId: undefined };
-    } else if (path === '/ai-simulation') {
-      return { page: 'ai-simulation' as const, conversationId: null, templateId: undefined };
+
     } else if (path === '/survey-templates') {
       return { page: 'survey-templates' as const, conversationId: null, templateId: undefined };
     } else if (path.startsWith('/conversation/')) {
@@ -75,7 +74,7 @@ NavigationSync.displayName = 'NavigationSync';
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const { loadSelectedConversationsFromStorage, selectedConversations } = useConversationStore();
-  const { setSelectedConversations } = useNavigationStore();
+  const { setSelectedConversations, currentPage } = useNavigationStore();
 
   // Load selected conversations from permanent storage on app startup
   useEffect(() => {
@@ -121,13 +120,13 @@ function App() {
               <Route path="/label-conversations" element={<LabelConversations />} />
               <Route path="/conversation/:id" element={<ConversationPage />} />
               <Route path="/ai-comparisons" element={<AIComparisonsPage />} />
-              <Route path="/ai-simulation" element={<AISimulationPage />} />
+
               <Route path="/survey-templates" element={<SurveyTemplatesPage />} />
               <Route path="/survey-template/:id" element={<SurveyQuestionsPage />} />
               <Route path="*" element={<ConversationSelectorPage />} />
             </Routes>
           </main>
-          <Footer />
+          {currentPage !== 'ai-comparisons' && <Footer />}
         </div>
       </div>
     </Router>

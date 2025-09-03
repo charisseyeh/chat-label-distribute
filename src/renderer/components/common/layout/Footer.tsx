@@ -6,9 +6,11 @@ import { useNavigate } from 'react-router-dom';
 
 interface FooterProps {
   className?: string;
+  onExportComparison?: () => void;
+  hasComparisonData?: boolean;
 }
 
-const Footer: React.FC<FooterProps> = React.memo(({ className = '' }) => {
+const Footer: React.FC<FooterProps> = React.memo(({ className = '', onExportComparison, hasComparisonData }) => {
   const { selectedConversationIds, selectedConversations, currentSourceFile, filteredConversations } = useConversationStore();
   const { currentPage, setSelectedConversations, setCurrentPage } = useNavigationStore();
   const { saveHandler, pendingChangesCount, showSaveFeedback, setShowSaveFeedback } = usePageActionsStore();
@@ -109,6 +111,26 @@ const Footer: React.FC<FooterProps> = React.memo(({ className = '' }) => {
             className="btn-primary btn-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {showSaveFeedback ? 'Changes saved!' : 'Save Changes'}
+          </button>
+        </div>
+      </footer>
+    );
+  }
+
+  // For AI comparisons page, show export button
+  if (currentPage === 'ai-comparisons') {
+    if (!hasComparisonData || !onExportComparison) {
+      return null; // Don't show footer if no comparison data or export handler
+    }
+
+    return (
+      <footer className={`bg-background border-t border-border px-6 py-4 ${className}`}>
+        <div className="flex items-center justify-end space-x-2">
+          <button
+            onClick={onExportComparison}
+            className="btn-primary btn-md"
+          >
+            Export comparison results
           </button>
         </div>
       </footer>

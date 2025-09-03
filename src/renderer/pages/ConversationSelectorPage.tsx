@@ -156,9 +156,9 @@ const ConversationSelectorPage: React.FC = () => {
     >
       {/* Show message when no file is selected OR no files are stored */}
       {(!currentSourceFile || storedFiles.length === 0) && (
-        <div className="p-4 bg-primary-50 border border-primary-200 rounded-lg">
+        <div className="p-6">
           <div className="text-center">
-            <h3 className="text-h3 text-primary-800 mb-2">
+            <h3 className="text-h3 mb-2">
               {storedFiles.length === 0 ? 'No Files Available' : 'No File Selected'}
             </h3>
             <p className="text-body-secondary mb-4">
@@ -169,7 +169,7 @@ const ConversationSelectorPage: React.FC = () => {
             </p>
             <button
               onClick={handleFileSelect}
-              className="bg-primary-600 hover:text-primary-700 text-white text-body py-2 px-4 rounded-lg transition-colors"
+              className="btn-primary btn-md"
             >
               {storedFiles.length === 0 ? 'Upload Conversations File' : 'Select Conversations File'}
             </button>

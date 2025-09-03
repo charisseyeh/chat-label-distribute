@@ -74,3 +74,42 @@
   height: 0;
   width: 0;
 }
+
+/* ===== RATING BUTTONS ===== */
+.rating-button {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background-color: var(--background);
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  outline: none;
+}
+
+.rating-button:hover {
+  border-color: var(--primary-400);
+  color: var(--foreground);
+}
+
+.rating-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
+}
+
+.rating-button--selected {
+  background-color: var(--primary-600);
+  border-color: var(--primary-600);
+  color: var(--primary-foreground);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.rating-button--selected:hover {
+  color: var(--primary-foreground);
+}

@@ -5,11 +5,13 @@ import { useSurveyQuestionStore } from '../stores/surveyQuestionStore';
 import { useConversationStore } from '../stores/conversationStore';
 import { useAIPrompt } from '../hooks/ai/useAIPrompt';
 import { TwoPanelLayout } from '../components/common';
+import Footer from '../components/common/layout/Footer';
 import { 
   ProgressTracker, 
   AIComparisonSidebar, 
   ComparisonResultsDisplay,
-  PromptReviewModal
+  PromptReviewModal,
+  ExportComparisonModal
 } from '../components/ai-analysis';
 import { useAIGeneration } from '../hooks/ai/useAIGeneration';
 import { useConversationSelection } from '../hooks/conversation/useConversationSelection';
@@ -19,11 +21,15 @@ const AIComparisonsPage: React.FC = () => {
   const { getConversationData } = useSurveyResponseStore();
   const { currentTemplate } = useSurveyQuestionStore();
   const { selectedConversations: storeConversations } = useConversationStore();
-  const { generateOpenAIPrompt } = useAIPrompt();
+  const { generateOpenAIPrompt, generateSystemPromptOnly, generateOpenAIPromptWithCustomSystem } = useAIPrompt();
 
   // Prompt review modal state
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
   const [currentPrompt, setCurrentPrompt] = useState<string>('');
+  const [customSystemPrompt, setCustomSystemPrompt] = useState<string>('');
+
+  // Export modal state
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   // Custom hooks for different concerns
   const {
@@ -44,7 +50,8 @@ const AIComparisonsPage: React.FC = () => {
     trialComparisons,
     isGenerating,
     generationProgress,
-    generateAIResponses
+    generateAIResponses,
+    accuracy
   } = useAIGeneration();
 
   // Handle prompt review modal
@@ -54,20 +61,17 @@ const AIComparisonsPage: React.FC = () => {
       return;
     }
 
-    const firstConversation = storeConversations.find(c => c.id === selectedConversationIds[0]);
-    if (!firstConversation) {
-      alert('Selected conversation not found.');
-      return;
-    }
-
-    const conversationContext = `Conversation: ${firstConversation.title}`;
-    const prompt = generateOpenAIPrompt(conversationContext, 'beginning'); // Always use 'beginning' position
+    const systemPrompt = generateSystemPromptOnly();
     
-    if (prompt) {
-      setCurrentPrompt(prompt);
+    if (systemPrompt) {
+      setCurrentPrompt(systemPrompt);
+      // Initialize custom system prompt if not already set
+      if (!customSystemPrompt) {
+        setCustomSystemPrompt(systemPrompt);
+      }
       setIsPromptModalOpen(true);
     } else {
-      alert('Failed to generate prompt. Please check your survey template.');
+      alert('Failed to generate system prompt. Please check your survey template.');
     }
   };
 
@@ -76,8 +80,13 @@ const AIComparisonsPage: React.FC = () => {
   // Handle saving edited prompt
   const handleSavePrompt = (editedPrompt: string) => {
     setCurrentPrompt(editedPrompt);
-    // Here you could also save the edited prompt to a store or pass it to the AI generation
-    console.log('Saved edited prompt:', editedPrompt);
+    setCustomSystemPrompt(editedPrompt);
+    console.log('Saved edited system prompt:', editedPrompt);
+  };
+
+  // Handle export modal
+  const handleExportComparison = () => {
+    setIsExportModalOpen(true);
   };
 
   // Handle AI generation with error handling
@@ -87,7 +96,8 @@ const AIComparisonsPage: React.FC = () => {
         selectedConversationIds,
         apiKey,
         model,
-        getConversationData
+        getConversationData,
+        customSystemPrompt || undefined
       );
     } catch (error) {
       if (error instanceof Error) {
@@ -99,45 +109,55 @@ const AIComparisonsPage: React.FC = () => {
   };
 
   return (
-    <TwoPanelLayout
-      sidebarContent={
-        <AIComparisonSidebar
-          conversationsWithData={conversationsWithData}
-          selectedConversationIds={selectedConversationIds}
-          onConversationToggle={toggleConversationSelection}
-          apiKey={apiKey}
-          model={model}
-          onApiKeyChange={setApiKey}
-          onModelChange={setModel}
-          onGenerate={handleGenerateAI}
-          isGenerating={isGenerating}
-          hasSelectedConversations={selectedConversationIds.length > 0}
-          currentTemplate={currentTemplate}
-          storeConversations={storeConversations}
-          generateOpenAIPrompt={generateOpenAIPrompt}
-          onReviewPrompt={handleReviewPrompt}
-        />
-      }
-    >
-      {/* Main Content Area - AI Comparison Results */}
-      <div className="space-y-6">
-        {/* Progress and Status Display */}
-        {isGenerating && (
-          <ProgressTracker
-            progress={generationProgress}
-            storeConversations={storeConversations}
-            selectedConversations={selectedConversationIds}
-          />
-        )}
+    <div className="flex flex-col h-screen">
+      <div className="flex-1 overflow-hidden">
+        <TwoPanelLayout
+          sidebarContent={
+            <AIComparisonSidebar
+              conversationsWithData={conversationsWithData}
+              selectedConversationIds={selectedConversationIds}
+              onConversationToggle={toggleConversationSelection}
+              apiKey={apiKey}
+              model={model}
+              onApiKeyChange={setApiKey}
+              onModelChange={setModel}
+              onGenerate={handleGenerateAI}
+              isGenerating={isGenerating}
+              hasSelectedConversations={selectedConversationIds.length > 0}
+              currentTemplate={currentTemplate}
+              storeConversations={storeConversations}
+              generateOpenAIPrompt={generateOpenAIPrompt}
+              onReviewPrompt={handleReviewPrompt}
+            />
+          }
+        >
+          {/* Main Content Area - AI Comparison Results */}
+          <div className="space-y-6">
+            {/* Progress and Status Display */}
+            {isGenerating && (
+              <ProgressTracker
+                progress={generationProgress}
+                storeConversations={storeConversations}
+                selectedConversations={selectedConversationIds}
+              />
+            )}
 
-        {/* AI Comparison Results */}
-        <ComparisonResultsDisplay
-          comparisonData={comparisonData}
-          trialComparisons={trialComparisons}
-          currentTemplate={currentTemplate}
-          model={model}
-        />
+            {/* AI Comparison Results */}
+            <ComparisonResultsDisplay
+              comparisonData={comparisonData}
+              trialComparisons={trialComparisons}
+              currentTemplate={currentTemplate}
+              model={model}
+            />
+          </div>
+        </TwoPanelLayout>
       </div>
+
+      {/* Footer with Export Button */}
+      <Footer 
+        onExportComparison={handleExportComparison}
+        hasComparisonData={comparisonData.length > 0}
+      />
 
       {/* Prompt Review Modal */}
       <PromptReviewModal
@@ -146,7 +166,18 @@ const AIComparisonsPage: React.FC = () => {
         currentPrompt={currentPrompt}
         onSavePrompt={handleSavePrompt}
       />
-    </TwoPanelLayout>
+
+      {/* Export Modal */}
+      <ExportComparisonModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        comparisonData={comparisonData}
+        trialComparisons={trialComparisons}
+        currentTemplate={currentTemplate}
+        model={model}
+        accuracy={accuracy}
+      />
+    </div>
   );
 };
 

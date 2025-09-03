@@ -83,6 +83,26 @@ export class AIPromptService {
   }
 
   /**
+   * Generates only the system prompt (for editing purposes)
+   */
+  static generateSystemPromptOnly(template: SurveyTemplate): string {
+    return this.generateSystemPrompt(template);
+  }
+
+  /**
+   * Generates the complete AI prompt using a custom system prompt
+   */
+  static generateOpenAIPromptWithCustomSystem(
+    customSystemPrompt: string,
+    template: SurveyTemplate,
+    conversationContext: string,
+    position: 'beginning' | 'turn6' | 'end'
+  ): string {
+    const userPrompt = this.generateUserPrompt(template, conversationContext, position);
+    return `${customSystemPrompt}\n\n${userPrompt}`;
+  }
+
+  /**
    * Generates system prompt for OpenAI API
    */
   private static generateSystemPrompt(template: SurveyTemplate): string {
@@ -96,7 +116,9 @@ export class AIPromptService {
     prompt += `- Use only the provided rating scales\n`;
     prompt += `- Provide ratings that reflect the psychological assessment\n`;
     prompt += `- Be consistent and objective in your ratings\n`;
-    prompt += `- Consider the context and timing of the conversation\n\n`;
+    prompt += `- Consider the context and timing of the conversation\n`;
+    prompt += `- Respond ONLY with numeric ratings in the exact format requested\n`;
+    prompt += `- Do NOT include conversation content, explanations, or additional text\n\n`;
     
     prompt += `Rating Format:\n`;
     template.questions.forEach((question, index) => {
@@ -125,11 +147,14 @@ export class AIPromptService {
     let prompt = `Please analyze the following conversation and provide psychological ratings for the ${positionText}.\n\n`;
     prompt += `Conversation Context:\n${conversationContext}\n\n`;
     
+    prompt += `IMPORTANT: You must provide ONLY numeric ratings in the exact format below. Do not include any conversation content, explanations, or additional text.\n\n`;
     prompt += `Please provide your ratings in this exact format:\n`;
     // Dynamically generate the format based on actual template questions
     template.questions.forEach((question, index) => {
       prompt += `Question ${index + 1}: [rating]\n`;
     });
+    
+    prompt += `\nRemember: Only provide the numeric ratings above, nothing else.`;
     
     return prompt;
   }
@@ -141,8 +166,16 @@ export class AIPromptService {
     try {
       const ratings: Record<string, number> = {};
       
+      // Clean the response - remove any conversation content that might be included
+      let cleanResponse = response;
+      
+      // Remove common conversation patterns that might interfere with parsing
+      cleanResponse = cleanResponse.replace(/Conversation:[\s\S]*?(?=Question|\d+:|$)/gi, '');
+      cleanResponse = cleanResponse.replace(/Participant \d+:[\s\S]*?(?=Question|\d+:|$)/gi, '');
+      cleanResponse = cleanResponse.replace(/\[rating\]/g, '');
+      
       // Try to extract JSON first
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      const jsonMatch = cleanResponse.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         try {
           const jsonResponse = JSON.parse(jsonMatch[0]);
@@ -156,7 +189,7 @@ export class AIPromptService {
       
       // If JSON parsing failed or didn't provide enough ratings, try line parsing
       if (Object.keys(ratings).length < template.questions.length) {
-        const lines = response.split('\n').filter(line => line.trim());
+        const lines = cleanResponse.split('\n').filter(line => line.trim());
         
         for (const line of lines) {
           const questionMatch = line.match(/Question\s+(\d+)[:\s]+(\d+)/i);
@@ -181,6 +214,18 @@ export class AIPromptService {
               ratings[questionId] = rating;
             }
           }
+        }
+      }
+      
+      // If we still don't have enough ratings, try to extract any numbers from the response
+      if (Object.keys(ratings).length < template.questions.length) {
+        const numbers = cleanResponse.match(/\b[1-3]\b/g); // Look for ratings 1-3
+        if (numbers && numbers.length >= template.questions.length) {
+          template.questions.forEach((question, index) => {
+            if (numbers[index]) {
+              ratings[question.id] = parseInt(numbers[index], 10);
+            }
+          });
         }
       }
       

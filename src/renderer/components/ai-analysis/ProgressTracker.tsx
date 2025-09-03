@@ -38,7 +38,7 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({
   })();
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 p-6">
       {/* Header with animated ellipsis */}
       <h3 className="text-h3 mb-2">
         AI labeling conversations...

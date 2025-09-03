@@ -31,7 +31,7 @@ export const useAIGeneration = () => {
 
   const { currentTemplate } = useSurveyQuestionStore();
   const { selectedConversations: storeConversations } = useConversationStore();
-  const { generateOpenAIPrompt, parseAIResponse } = useAIPrompt();
+  const { generateOpenAIPrompt, generateOpenAIPromptWithCustomSystem, parseAIResponse } = useAIPrompt();
 
   const initializeAIService = useCallback((apiKey: string, model: string) => {
     if (!apiKey.trim()) {
@@ -53,7 +53,8 @@ export const useAIGeneration = () => {
     selectedConversationIds: string[],
     apiKey: string,
     model: string,
-    getConversationData: (id: string) => any
+    getConversationData: (id: string) => any,
+    customSystemPrompt?: string
   ) => {
     let service = aiService;
     
@@ -81,7 +82,7 @@ export const useAIGeneration = () => {
       currentConversation: 0,
       totalConversations: selectedConversationIds.length,
       currentPosition: 0,
-      totalPositions: 1,
+      totalPositions: 3,
       status: 'connecting',
       currentOperation: '',
       currentPrompt: ''
@@ -114,32 +115,46 @@ export const useAIGeneration = () => {
 
         const aiResponses: Record<string, number> = {};
         
-        try {
-          const conversationContext = `Conversation: ${conversation.title}`;
-          const prompt = generateOpenAIPrompt(conversationContext, 'beginning'); // Use only 'beginning' position
-          if (!prompt) continue;
-
-          setGenerationProgress((prev: GenerationProgress) => ({ 
-            ...prev, 
-            currentPosition: 1,
-            currentOperation: `Generating AI response for: ${conversation.title}`,
-            currentPrompt: prompt
-          }));
-
-          const aiResponse = await service.generateSurveyResponses(prompt);
-          console.log('🤖 AI Response received:', aiResponse);
+        // Process all three positions: beginning, turn6, end
+        const positions: Array<'beginning' | 'turn6' | 'end'> = ['beginning', 'turn6', 'end'];
+        
+        for (let posIndex = 0; posIndex < positions.length; posIndex++) {
+          const position = positions[posIndex];
           
-          const parsedRatings = await parseAIResponse(aiResponse);
-          console.log('📊 Parsed ratings:', parsedRatings);
-          
-          if (parsedRatings) {
-            Object.entries(parsedRatings).forEach(([questionId, rating]) => {
-              const positionKey = `beginning_${questionId}`;
-              aiResponses[positionKey] = rating;
-            });
+          try {
+            const conversationContext = `Conversation: ${conversation.title}`;
+            let prompt: string | null;
+            
+            if (customSystemPrompt) {
+              prompt = generateOpenAIPromptWithCustomSystem(customSystemPrompt, conversationContext, position);
+            } else {
+              prompt = generateOpenAIPrompt(conversationContext, position);
+            }
+            
+            if (!prompt) continue;
+
+            setGenerationProgress((prev: GenerationProgress) => ({ 
+              ...prev, 
+              currentPosition: posIndex + 1,
+              currentOperation: `Generating AI response for: ${conversation.title} (${position})`,
+              currentPrompt: prompt
+            }));
+
+            const aiResponse = await service.generateSurveyResponses(prompt);
+            console.log(`🤖 AI Response received for ${position}:`, aiResponse);
+            
+            const parsedRatings = await parseAIResponse(aiResponse);
+            console.log(`📊 Parsed ratings for ${position}:`, parsedRatings);
+            
+            if (parsedRatings) {
+              Object.entries(parsedRatings).forEach(([questionId, rating]) => {
+                const positionKey = `${position}_${questionId}`;
+                aiResponses[positionKey] = rating;
+              });
+            }
+          } catch (error) {
+            console.error(`Error generating AI response for: ${conversation.title} at ${position}`, error);
           }
-        } catch (error) {
-          console.error(`Error generating AI response for: ${conversation.title}`, error);
         }
 
         const agreement = calculateAgreement(humanResponses, aiResponses);
@@ -190,14 +205,14 @@ export const useAIGeneration = () => {
           currentConversation: 0,
           totalConversations: 0,
           currentPosition: 0,
-          totalPositions: 1,
+          totalPositions: 3,
           status: 'connecting',
           currentOperation: '',
           currentPrompt: ''
         });
       }, 3000);
     }
-  }, [aiService, currentTemplate, storeConversations, generateOpenAIPrompt, parseAIResponse, initializeAIService]);
+  }, [aiService, currentTemplate, storeConversations, generateOpenAIPrompt, generateOpenAIPromptWithCustomSystem, parseAIResponse, initializeAIService]);
 
   return {
     comparisonData,
