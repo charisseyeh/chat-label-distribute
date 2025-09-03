@@ -49,7 +49,7 @@ const ExportComparisonModal: React.FC<ExportComparisonModalProps> = ({
     return comparisonData.map(comparison => ({
       id: comparison.conversationId,
       title: comparison.conversationTitle,
-      accuracy: Math.round(comparison.agreement * 100)
+      accuracy: Math.round(comparison.agreement)
     }));
   }, [comparisonData]);
 

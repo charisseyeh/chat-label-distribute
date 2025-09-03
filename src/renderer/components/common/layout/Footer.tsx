@@ -2,6 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { useConversationStore } from '../../../stores/conversationStore';
 import { useNavigationStore } from '../../../stores/navigationStore';
 import { usePageActionsStore } from '../../../stores/pageActionsStore';
+import { useAIComparisonStore } from '../../../stores/aiComparisonStore';
 import { useNavigate } from 'react-router-dom';
 
 interface FooterProps {
@@ -14,6 +15,7 @@ const Footer: React.FC<FooterProps> = React.memo(({ className = '', onExportComp
   const { selectedConversationIds, selectedConversations, currentSourceFile, filteredConversations } = useConversationStore();
   const { currentPage, setSelectedConversations, setCurrentPage } = useNavigationStore();
   const { saveHandler, pendingChangesCount, showSaveFeedback, setShowSaveFeedback } = usePageActionsStore();
+  const { exportHandler, hasComparisonData: storeHasComparisonData } = useAIComparisonStore();
   const navigate = useNavigate();
 
 
@@ -121,7 +123,11 @@ const Footer: React.FC<FooterProps> = React.memo(({ className = '', onExportComp
 
   // For AI comparisons page, show export button
   if (currentPage === 'ai-comparisons') {
-    if (!hasComparisonData || !onExportComparison) {
+    // Use store data if available, otherwise fall back to props
+    const effectiveHasComparisonData = storeHasComparisonData || hasComparisonData;
+    const effectiveExportHandler = exportHandler || onExportComparison;
+    
+    if (!effectiveHasComparisonData || !effectiveExportHandler) {
       return null; // Don't show footer if no comparison data or export handler
     }
 
@@ -129,7 +135,7 @@ const Footer: React.FC<FooterProps> = React.memo(({ className = '', onExportComp
       <footer className={`bg-background border-t border-border px-6 py-4 ${className}`}>
         <div className="flex items-center justify-end space-x-2">
           <button
-            onClick={onExportComparison}
+            onClick={effectiveExportHandler}
             className="btn-primary btn-md"
           >
             Export comparison results

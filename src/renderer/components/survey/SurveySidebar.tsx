@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSurveyQuestions } from '../../hooks/survey/useSurveyQuestions';
 import { useSurveyResponses } from '../../hooks/survey/useSurveyResponses';
 import { useConversationStore } from '../../stores/conversationStore';
+import { useNavigationStore } from '../../stores/navigationStore';
 import { SurveySection as SurveySectionType } from '../../types/survey';
 import SurveySection from './SurveySection';
 
@@ -20,6 +21,7 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({
   endReached = false      // Change from callback to boolean
 }) => {
   const navigate = useNavigate();
+  const { setCurrentPage } = useNavigationStore();
   const { currentTemplate } = useSurveyQuestions();
   const { 
     responses, 
@@ -98,6 +100,14 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({
   // The callbacks will be called by the parent when scroll tracking events occur
   // We just need to make sure our local state handlers are properly set up
 
+  // Handle navigation to survey templates with proper state management
+  const handleNavigateToTemplates = useCallback(() => {
+    // Update navigation store to ensure proper page state
+    setCurrentPage('survey-templates');
+    // Navigate to survey templates page
+    navigate('/survey-templates');
+  }, [setCurrentPage, navigate]);
+
   if (!currentTemplate) {
     return (
       <div className="p-4">
@@ -105,7 +115,7 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({
           <p className="mb-2">No assessment questions available</p>
           <p className="text-sm mb-4">Please select assessments template or create a new one in assessment templates</p>
           <button
-            onClick={() => navigate('/survey-templates')}
+            onClick={handleNavigateToTemplates}
             className="btn-primary btn-md"
           >
             Select a template

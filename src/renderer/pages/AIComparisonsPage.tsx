@@ -5,7 +5,6 @@ import { useSurveyQuestionStore } from '../stores/surveyQuestionStore';
 import { useConversationStore } from '../stores/conversationStore';
 import { useAIPrompt } from '../hooks/ai/useAIPrompt';
 import { TwoPanelLayout } from '../components/common';
-import Footer from '../components/common/layout/Footer';
 import { 
   ProgressTracker, 
   AIComparisonSidebar, 
@@ -17,6 +16,7 @@ import { useAIGeneration } from '../hooks/ai/useAIGeneration';
 import { useConversationSelection } from '../hooks/conversation/useConversationSelection';
 import { useAIConfiguration } from '../hooks/ai/useAIConfiguration';
 import { useNavigationStore } from '../stores/navigationStore';
+import { useAIComparisonStore } from '../stores/aiComparisonStore';
 
 const AIComparisonsPage: React.FC = () => {
   const { getConversationData } = useSurveyResponseStore();
@@ -24,6 +24,7 @@ const AIComparisonsPage: React.FC = () => {
   const { selectedConversations: storeConversations } = useConversationStore();
   const { generateOpenAIPrompt, generateSystemPromptOnly, generateOpenAIPromptWithCustomSystem } = useAIPrompt();
   const { batchUpdate } = useNavigationStore();
+  const { setExportHandler, setHasComparisonData, clearExportHandler } = useAIComparisonStore();
   const location = useLocation();
 
   // Prompt review modal state
@@ -120,56 +121,57 @@ const AIComparisonsPage: React.FC = () => {
     }
   };
 
+  // Register export handler and update comparison data state
+  useEffect(() => {
+    setExportHandler(handleExportComparison);
+    setHasComparisonData(comparisonData.length > 0);
+    
+    // Cleanup on unmount
+    return () => {
+      clearExportHandler();
+    };
+  }, [comparisonData.length, setExportHandler, setHasComparisonData, clearExportHandler]);
+
   return (
-    <div className="flex flex-col h-screen">
-      <div className="flex-1 overflow-hidden" style={{ minHeight: 0 }}>
-        <TwoPanelLayout
-          sidebarContent={
-            <AIComparisonSidebar
-              conversationsWithData={conversationsWithData}
-              selectedConversationIds={selectedConversationIds}
-              onConversationToggle={toggleConversationSelection}
-              apiKey={apiKey}
-              model={model}
-              onApiKeyChange={setApiKey}
-              onModelChange={setModel}
-              onGenerate={handleGenerateAI}
-              isGenerating={isGenerating}
-              hasSelectedConversations={selectedConversationIds.length > 0}
-              currentTemplate={currentTemplate}
-              storeConversations={storeConversations}
-              generateOpenAIPrompt={generateOpenAIPrompt}
-              onReviewPrompt={handleReviewPrompt}
-            />
-          }
-        >
-          {/* Main Content Area - AI Comparison Results */}
-          <div className="space-y-6">
-            {/* Progress and Status Display */}
-            {isGenerating && (
-              <ProgressTracker
-                progress={generationProgress}
-                storeConversations={storeConversations}
-                selectedConversations={selectedConversationIds}
-              />
-            )}
+    <TwoPanelLayout
+      sidebarContent={
+        <AIComparisonSidebar
+          conversationsWithData={conversationsWithData}
+          selectedConversationIds={selectedConversationIds}
+          onConversationToggle={toggleConversationSelection}
+          apiKey={apiKey}
+          model={model}
+          onApiKeyChange={setApiKey}
+          onModelChange={setModel}
+          onGenerate={handleGenerateAI}
+          isGenerating={isGenerating}
+          hasSelectedConversations={selectedConversationIds.length > 0}
+          currentTemplate={currentTemplate}
+          storeConversations={storeConversations}
+          generateOpenAIPrompt={generateOpenAIPrompt}
+          onReviewPrompt={handleReviewPrompt}
+        />
+      }
+    >
+      {/* Main Content Area - AI Comparison Results */}
+      <div className="space-y-6">
+        {/* Progress and Status Display */}
+        {isGenerating && (
+          <ProgressTracker
+            progress={generationProgress}
+            storeConversations={storeConversations}
+            selectedConversations={selectedConversationIds}
+          />
+        )}
 
-            {/* AI Comparison Results */}
-            <ComparisonResultsDisplay
-              comparisonData={comparisonData}
-              trialComparisons={trialComparisons}
-              currentTemplate={currentTemplate}
-              model={model}
-            />
-          </div>
-        </TwoPanelLayout>
+        {/* AI Comparison Results */}
+        <ComparisonResultsDisplay
+          comparisonData={comparisonData}
+          trialComparisons={trialComparisons}
+          currentTemplate={currentTemplate}
+          model={model}
+        />
       </div>
-
-      {/* Footer with Export Button */}
-      <Footer 
-        onExportComparison={handleExportComparison}
-        hasComparisonData={comparisonData.length > 0}
-      />
 
       {/* Prompt Review Modal */}
       <PromptReviewModal
@@ -189,7 +191,7 @@ const AIComparisonsPage: React.FC = () => {
         model={model}
         accuracy={accuracy}
       />
-    </div>
+    </TwoPanelLayout>
   );
 };
 

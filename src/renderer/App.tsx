@@ -112,27 +112,21 @@ function App() {
         <Sidebar isOpen={isSidebarOpen} onToggleSidebar={toggleSidebar} />
         <div className="flex-1 flex flex-col">
           <Header isSidebarOpen={isSidebarOpen} />
-          {currentPage === 'ai-comparisons' ? (
-            // For AI comparisons page, render it directly without the main wrapper
-            <AIComparisonsPage />
-          ) : (
-            // For other pages, use the normal layout
-            <>
-              <main className="flex-1 overflow-hidden">
-                <NavigationSync />
-                <Routes>
-                  <Route path="/" element={<ConversationSelectorPage />} />
-                  <Route path="/select-conversations" element={<ConversationSelectorPage />} />
-                  <Route path="/label-conversations" element={<LabelConversations />} />
-                  <Route path="/conversation/:id" element={<ConversationPage />} />
-                  <Route path="/survey-templates" element={<SurveyTemplatesPage />} />
-                  <Route path="/survey-template/:id" element={<SurveyQuestionsPage />} />
-                  <Route path="*" element={<ConversationSelectorPage />} />
-                </Routes>
-              </main>
-              <Footer />
-            </>
-          )}
+          {/* All pages use the normal layout with proper routing */}
+          <main className="flex-1 overflow-hidden">
+            <NavigationSync />
+            <Routes>
+              <Route path="/" element={<ConversationSelectorPage />} />
+              <Route path="/select-conversations" element={<ConversationSelectorPage />} />
+              <Route path="/label-conversations" element={<LabelConversations />} />
+              <Route path="/conversation/:id" element={<ConversationPage />} />
+              <Route path="/survey-templates" element={<SurveyTemplatesPage />} />
+              <Route path="/survey-template/:id" element={<SurveyQuestionsPage />} />
+              <Route path="/ai-comparisons" element={<AIComparisonsPage />} />
+              <Route path="*" element={<ConversationSelectorPage />} />
+            </Routes>
+          </main>
+          <Footer />
         </div>
       </div>
     </Router>
