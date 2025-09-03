@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import ConversationSelector from './ConversationSelector';
 import AIConfigurationPanel from './AIConfigurationPanel';
 import { SurveyTemplate } from '../../types/survey';
+import { useAIComparisonStore } from '../../stores/aiComparisonStore';
 
 interface AIComparisonSidebarProps {
   conversationsWithData: Array<{
@@ -42,16 +43,45 @@ export const AIComparisonSidebar: React.FC<AIComparisonSidebarProps> = ({
   generateOpenAIPrompt,
   onReviewPrompt
 }) => {
+  const { hasComparisonData } = useAIComparisonStore();
+
+  // Calculate max height accounting for footer
+  const maxHeight = useMemo(() => {
+    // Base calculation: viewport height minus header, padding, and AI config section
+    // Footer height is approximately 64px (py-4 = 16px top + 16px bottom + content height)
+    const footerHeight = hasComparisonData ? 64 : 0; // Only show footer when there's comparison data
+    return `calc(100vh - 400px - ${footerHeight}px)`;
+  }, [hasComparisonData]);
+
+  // Select all conversations
+  const handleSelectAll = useCallback(() => {
+    conversationsWithData.forEach(conversation => {
+      if (!selectedConversationIds.includes(conversation.id)) {
+        onConversationToggle(conversation.id);
+      }
+    });
+  }, [conversationsWithData, selectedConversationIds, onConversationToggle]);
+
+  // Deselect all conversations
+  const handleDeselectAll = useCallback(() => {
+    selectedConversationIds.forEach(conversationId => {
+      onConversationToggle(conversationId);
+    });
+  }, [selectedConversationIds, onConversationToggle]);
   return (
     <aside className="h-full">
       {/* Chat Selection */}
-      <section>
+      <section className="flex-1 flex flex-col min-h-0">
         <ConversationSelector
           conversations={conversationsWithData}
           selectedConversations={selectedConversationIds}
           onConversationToggle={onConversationToggle}
           showRelevancyChips={false}
           allowToggle={true}
+          onSelectAll={handleSelectAll}
+          onDeselectAll={handleDeselectAll}
+          showSelectAllButtons={true}
+          maxHeight={maxHeight}
         />
       </section>
 

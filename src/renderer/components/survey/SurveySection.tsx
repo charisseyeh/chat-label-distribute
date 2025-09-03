@@ -58,7 +58,7 @@ const SurveySection: React.FC<SurveySectionProps> = ({
 
   if (!currentQuestion) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-6 text-center text-muted-foreground">
+      <div className="border border-gray-200 rounded-lg p-6 text-center text-muted-foreground">
         <p>No questions available for this section</p>
       </div>
     );
@@ -99,7 +99,7 @@ const SurveySection: React.FC<SurveySectionProps> = ({
             {currentQuestionIndex > 0 && (
               <button
                 onClick={goToPreviousQuestion}
-                className="btn btn-ghost btn-sm"
+                className="btn-outline btn-sm"
               >
                 Previous
               </button>
@@ -109,7 +109,7 @@ const SurveySection: React.FC<SurveySectionProps> = ({
             {currentQuestionIndex < totalQuestions - 1 && (
               <button
                 onClick={goToNextQuestion}
-                className="btn btn-primary btn-sm"
+                className="btn-primary btn-sm"
               >
                 Next
               </button>

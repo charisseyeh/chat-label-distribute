@@ -9,6 +9,10 @@ interface ConversationSelectorProps {
   onConversationToggle: (conversationId: string) => void;
   showRelevancyChips?: boolean; // Optional prop to control relevancy chip display
   allowToggle?: boolean; // Optional prop to control whether conversations can be toggled
+  onSelectAll?: () => void; // Optional prop for select all functionality
+  onDeselectAll?: () => void; // Optional prop for deselect all functionality
+  showSelectAllButtons?: boolean; // Optional prop to show/hide select all buttons
+  maxHeight?: string; // Optional prop to set max height for scrollable container
 }
 
 const ConversationSelector: React.FC<ConversationSelectorProps> = ({
@@ -16,7 +20,11 @@ const ConversationSelector: React.FC<ConversationSelectorProps> = ({
   selectedConversations,
   onConversationToggle,
   showRelevancyChips = true, // Default to true to maintain existing behavior
-  allowToggle = false // Default to false to maintain existing behavior
+  allowToggle = false, // Default to false to maintain existing behavior
+  onSelectAll,
+  onDeselectAll,
+  showSelectAllButtons = false, // Default to false to maintain existing behavior
+  maxHeight = 'none' // Default to no max height
 }) => {
   const { selectedConversationIds: storeSelectedConversationIds } = useConversationStore();
 
@@ -94,12 +102,42 @@ const ConversationSelector: React.FC<ConversationSelectorProps> = ({
 
   return (
     <div>
-      {conversationItems}
-      {conversations.length === 0 && (
-        <p className="text-body-secondary text-left p-4">
-          No conversations meet the current filtering criteria. Try adjusting your filters or date range.
-        </p>
-      )}
+
+      {/* Scrollable Conversation List */}
+      <div 
+        className={maxHeight !== 'none' ? 'overflow-y-auto' : ''}
+        style={{ maxHeight: maxHeight !== 'none' ? maxHeight : undefined }}
+      >
+        {conversationItems}
+        {conversations.length === 0 && (
+          <p className="text-body-secondary text-left p-4">
+            No conversations meet the current filtering criteria. Try adjusting your filters or date range.
+          </p>
+        )}
+
+        {/* Select All / Deselect All Buttons */}
+        {showSelectAllButtons && allowToggle && conversations.length > 0 && (
+        <div className="flex justify-between items-center p-4 border-t border-gray-200 sticky bottom-0 bg-background">
+          <span className="text-body-secondary">
+            {selectedConversations.length}/{conversations.length} selected
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={onSelectAll}
+              className="btn-outline btn-sm"
+            >
+              Select All
+            </button>
+            <button
+              onClick={onDeselectAll}
+              className="btn-outline btn-sm"
+            >
+              Deselect All
+            </button>
+          </div>
+        </div>
+        )}
+      </div>
     </div>
   );
 };
