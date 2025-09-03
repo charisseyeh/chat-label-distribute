@@ -33,7 +33,7 @@ export const NavigationItemNested: React.FC<NavigationItemNestedProps> = ({
               e.stopPropagation();
               onRemove();
             }}
-            className="px-2 py-1 text-xs text-red-500 hover:text-red-700 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-all duration-200 ml-2 flex-shrink-0"
+            className="nav-remove-btn ml-2 flex-shrink-0"
             title={`Remove ${label} from selection`}
           >
             ✕

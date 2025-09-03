@@ -70,7 +70,7 @@ const AIComparisonExport: React.FC<AIComparisonExportProps> = ({
         </button>
       </div>
 
-      <div className="border border-gray-200 rounded-lg p-4">
+      <div className="container-export">
         <h4 className="font-medium text-gray-900 mb-2">Export Summary</h4>
         <div className="text-sm text-gray-600 space-y-1">
           <div>• {comparisonData.length} conversations analyzed</div>

@@ -35,6 +35,7 @@ export const ListItem: React.FC<ListItemProps> = ({
   const baseClasses = 'list-item';
   const variantClasses = `list-item--${variant}`;
   const selectedClasses = selected ? 'list-item--selected' : '';
+  const clickableClasses = onClick ? 'list-item--clickable' : '';
   
   const hasCheckToggle = variant.startsWith('check');
   const hasChip = variant.includes('chip');
@@ -44,7 +45,7 @@ export const ListItem: React.FC<ListItemProps> = ({
   
   return (
     <div 
-      className={`${baseClasses} ${variantClasses} ${selectedClasses} ${className}`}
+      className={`${baseClasses} ${variantClasses} ${selectedClasses} ${clickableClasses} ${className}`}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
     >

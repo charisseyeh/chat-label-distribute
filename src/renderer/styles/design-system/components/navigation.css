@@ -44,6 +44,33 @@
 .nav-item-nested {
   padding-left: var(--spacing-3xl);
   padding-right: var(--spacing-lg);
+  margin-bottom: var(--spacing-xs); /* Add y-spacing between nested items */
+}
+
+/* Navigation Remove Button (X) */
+.nav-remove-btn {
+  padding: 2px 4px;
+  font-size: 12px;
+  color: --foreground;
+  border-radius: 12px;
+  opacity: 0;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+}
+
+.nav-remove-btn:hover {
+  color: var(--foreground);
+  background-color: var(--color-secondary-bg-button-hover);
+  opacity: 1;
+}
+
+.group:hover .nav-remove-btn {
+  opacity: 1;
 }
 
 /* Navigation Container */

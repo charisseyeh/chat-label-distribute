@@ -1,0 +1,40 @@
+/* ===== CONTAINER UTILITIES ===== */
+
+/* Base Container */
+.container {
+  @apply border border-gray-200 rounded-lg;
+}
+
+/* Container Sizes */
+.container-sm {
+  @apply container p-3;
+}
+
+.container-md {
+  @apply container p-4;
+}
+
+.container-lg {
+  @apply container p-6;
+}
+
+/* Specialized Containers */
+.container-error {
+  @apply bg-red-50 border border-red-200 rounded-lg p-4 text-red-700;
+}
+
+.container-destructive {
+  @apply container-error;
+}
+
+.container-template {
+  @apply p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 transition-colors;
+}
+
+.container-muted {
+  @apply p-6 bg-muted border border-border rounded-lg;
+}
+
+.container-export {
+  @apply container-md;
+}

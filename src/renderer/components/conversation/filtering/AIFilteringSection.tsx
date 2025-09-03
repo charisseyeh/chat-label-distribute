@@ -226,8 +226,8 @@ export const AIFilteringSection: React.FC<AIFilteringSectionProps> = ({
 
       {/* Error Display */}
       {error && (
-        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="mt-4 p-3 container-error">
+          <p className="text-sm">{error}</p>
         </div>
       )}
     </>

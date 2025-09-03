@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useConversationStore } from '../../../stores/conversationStore';
-import { useNavigationStore } from '../../../stores/navigationStore';
-import { useSurveyResponseStore } from '../../../stores/surveyResponseStore';
-import { useSurveyQuestions } from '../../../hooks/survey/useSurveyQuestions';
-import { List } from '../../common/molecules/list/List';
+import { useConversationStore } from '../stores/conversationStore';
+import { useNavigationStore } from '../stores/navigationStore';
+import { useSurveyResponseStore } from '../stores/surveyResponseStore';
+import { useSurveyQuestions } from '../hooks/survey/useSurveyQuestions';
+import { List } from '../components/common/molecules/list/List';
 
-const LabelConversations: React.FC = () => {
+const LabelConversationsPage: React.FC = () => {
   const { 
     selectedConversationIds, 
     selectedConversations: storeSelectedConversations,
@@ -93,16 +93,16 @@ const LabelConversations: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto mt-6 border border-border overflow-hidden"
-    style={{ borderRadius: 'var(--radius-lg)' }}>
-      <List
+    <div className="max-w-6xl mx-auto p-6 h-screen overflow-y-auto pb-40 ">
+    <div className="border border-border overflow-hidden" style={{ borderRadius: 'var(--radius-lg)' }}>
+        <List
         variant="with-dividers"
         items={listItems}
         listItemVariant="double"
-        spacious
       />
+    </div>
     </div>
   );
 };
 
-export default LabelConversations;
+export default LabelConversationsPage;

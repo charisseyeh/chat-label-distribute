@@ -64,7 +64,7 @@ export const ComparisonResultsDisplay: React.FC<ComparisonResultsDisplayProps> =
   return (
     <div className="p-6 space-y-6">
       {comparisons.map((comparison, index) => (
-        <div key={comparison.conversationId} className="bg-white rounded-lg border border-gray-200 p-6">
+        <div key={comparison.conversationId} className="container-lg">
           {/* Header */}
           <div className="flex items-start justify-between mb-6">
             <div>

@@ -23,7 +23,7 @@ const TemplateCreationForm: React.FC<TemplateCreationFormProps> = ({
         </p>
       </div>
 
-      <div className="p-6 bg-muted border border-border rounded-lg">
+      <div className="container-muted">
         <h3 className="text-lg font-semibold text-foreground mb-4">New Template</h3>
         <div className="flex items-center space-x-4">
           <FloatingLabelInput

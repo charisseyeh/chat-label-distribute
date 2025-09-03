@@ -178,7 +178,7 @@ const ConversationSelectorPage: React.FC = () => {
       )}
 
       {error && (
-        <div className="mb-4 p-3 bg-error/10 text-error/80 border border-error/20 rounded-lg">
+        <div className="mb-4 container-error">
           {error}
         </div>
       )}

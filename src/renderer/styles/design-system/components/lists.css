@@ -35,6 +35,11 @@
   background-color: #f9fafb;
 }
 
+/* Add pointer cursor for clickable list items */
+.list-item--clickable {
+  cursor: pointer;
+}
+
 .list-item--selected {
   background-color: #eff6ff;
 }

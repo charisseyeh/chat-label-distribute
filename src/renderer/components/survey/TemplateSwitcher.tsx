@@ -81,7 +81,7 @@ const TemplateSwitcher: React.FC<TemplateSwitcherProps> = ({
               </div>
               
               {impact.willLoseData && !isCurrent && (
-                <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                <div className="mt-2 p-2 container-error text-xs">
                   <strong>Warning:</strong> Switching to this template will clear {impact.responseCount} existing responses from {impact.affectedConversations.length} conversation(s).
                 </div>
               )}
@@ -91,7 +91,7 @@ const TemplateSwitcher: React.FC<TemplateSwitcherProps> = ({
         
         {/* Option to clear template */}
         <div
-          className="p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 transition-colors"
+          className="container-template"
           onClick={() => handleTemplateSwitch(null)}
         >
           <div className="flex items-center justify-between">

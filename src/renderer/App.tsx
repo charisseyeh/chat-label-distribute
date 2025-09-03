@@ -4,7 +4,7 @@ import Header from './components/common/layout/Header';
 import Sidebar from './components/common/layout/Sidebar';
 import Footer from './components/common/layout/Footer';
 import ConversationSelectorPage from './pages/ConversationSelectorPage';
-import LabelConversations from './components/conversation/management/LabelConversations';
+import LabelConversationsPage from './pages/LabelConversationsPage';
 import ConversationPage from './pages/ConversationPage';
 import AIComparisonsPage from './pages/AIComparisonsPage';
 
@@ -118,7 +118,7 @@ function App() {
             <Routes>
               <Route path="/" element={<ConversationSelectorPage />} />
               <Route path="/select-conversations" element={<ConversationSelectorPage />} />
-              <Route path="/label-conversations" element={<LabelConversations />} />
+              <Route path="/label-conversations" element={<LabelConversationsPage />} />
               <Route path="/conversation/:id" element={<ConversationPage />} />
               <Route path="/survey-templates" element={<SurveyTemplatesPage />} />
               <Route path="/survey-template/:id" element={<SurveyQuestionsPage />} />

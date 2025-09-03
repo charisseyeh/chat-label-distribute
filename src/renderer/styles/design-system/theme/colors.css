@@ -13,6 +13,7 @@
   
   /* Primary Background */
   --primary-bg: #ffffff;
+  --primary-bg-hover: #f8fafc;
   
   /* Secondary Color Palette */
   --secondary-50: #f8fafc;
@@ -58,6 +59,7 @@
   --color-secondary-active: #1f2937;
   --color-secondary-bg-hover: #e5e7eb;
   --color-secondary-bg-active: #e5e7eb;
+  --color-secondary-bg-button-hover: #c0bfbf;
   
   /* Chip colors */
   --color-chip-relevant-bg: #dcfce7;

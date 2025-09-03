@@ -58,7 +58,7 @@ const SurveySection: React.FC<SurveySectionProps> = ({
 
   if (!currentQuestion) {
     return (
-      <div className="border border-gray-200 rounded-lg p-6 text-center text-muted-foreground">
+      <div className="container-lg text-center text-muted-foreground">
         <p>No questions available for this section</p>
       </div>
     );
@@ -68,7 +68,7 @@ const SurveySection: React.FC<SurveySectionProps> = ({
   const currentRating = sectionResponses.find((r: SurveyResponse) => r.questionId === currentQuestion.id)?.rating || 0;
 
   return (
-    <div className="border border-gray-200 rounded-lg p-6">
+    <div className="container-lg">
       {/* Simple Question Display */}
       <div className="space-y-2">
         {/* Question Header */}

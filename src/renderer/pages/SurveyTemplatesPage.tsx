@@ -119,7 +119,7 @@ const SurveyTemplatesPage: React.FC = () => {
 
       {/* Error Display */}
       {error && (
-        <div className="mb-6 p-4 bg-error/10 border border-error/20 rounded-lg">
+        <div className="mb-6 container-error">
           <div className="flex items-center justify-between">
                           <div className="text-error/80">{error}</div>
             <button

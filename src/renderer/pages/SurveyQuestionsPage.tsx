@@ -237,7 +237,6 @@ const SurveyQuestionsPage: React.FC = () => {
   // Handle template creation
   const handleCreateTemplate = async () => {
     if (!uiState.newTemplateName.trim()) return;
-    
     try {
       const newTemplate = await createTemplate(uiState.newTemplateName.trim());
       updateUiState({ newTemplateName: '', isCreatingTemplate: false });
@@ -340,7 +339,7 @@ const SurveyQuestionsPage: React.FC = () => {
     <div className="max-w-6xl mx-auto p-6 h-screen overflow-y-auto pb-40">
       {/* Error Display */}
       {error && (
-        <div className="mb-6 p-4 bg-error/10 border border-error/20 rounded-lg">
+        <div className="mb-6 container-error">
           <div className="flex items-center justify-between">
             <div className="text-error/80">{error}</div>
             <button
