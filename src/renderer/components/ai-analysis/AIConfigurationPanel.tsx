@@ -11,6 +11,7 @@ interface AIConfigurationPanelProps {
   isGenerating: boolean;
   hasSelectedConversations: boolean;
   currentTemplate: SurveyTemplate | null;
+  onReviewPrompt: () => void;
 }
 
 const AIConfigurationPanel: React.FC<AIConfigurationPanelProps> = ({
@@ -21,7 +22,8 @@ const AIConfigurationPanel: React.FC<AIConfigurationPanelProps> = ({
   onGenerate,
   isGenerating,
   hasSelectedConversations,
-  currentTemplate
+  currentTemplate,
+  onReviewPrompt
 }) => {
   return (
     <div className="space-y-2">
@@ -65,11 +67,7 @@ const AIConfigurationPanel: React.FC<AIConfigurationPanelProps> = ({
             Using "{currentTemplate.name}" {' '}
             <button 
               className="btn btn-link btn-sm"
-              onClick={() => {
-                // This could open a modal with full prompt preview
-                console.log('Review prompt clicked for template:', currentTemplate.name);
-                // You could show this in a modal or tooltip
-              }}
+              onClick={onReviewPrompt}
             >
               Review prompt
             </button>

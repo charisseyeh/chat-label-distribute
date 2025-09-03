@@ -28,6 +28,8 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
         return 'Label Conversations';
       case 'ai-comparisons':
         return 'AI Comparisons';
+      case 'ai-simulation':
+        return 'AI Simulation';
       case 'survey-templates':
         return 'Assessment Templates';
       case 'survey-questions':
@@ -60,7 +62,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
     }));
   }, [templates]);
 
-  const handlePageNavigation = useCallback((page: 'select-conversations' | 'label-conversations' | 'ai-comparisons' | 'survey-templates' | 'survey-questions') => {
+  const handlePageNavigation = useCallback((page: 'select-conversations' | 'label-conversations' | 'ai-comparisons' | 'ai-simulation' | 'survey-templates' | 'survey-questions') => {
     setCurrentPage(page);
     navigate(`/${page === 'select-conversations' ? 'select-conversations' : page}`);
   }, [setCurrentPage, navigate]);
@@ -160,13 +162,18 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
 
   // Helper function to determine if a navigation item should be active
   const isNavigationItemActive = useCallback((itemId: string) => {
-    // If we're viewing a specific conversation, only that should be active
-    if (currentConversationId) {
-      return false;
+    // If we're viewing a specific conversation, highlight the label-conversations parent
+    if (currentConversationId && itemId === 'label-conversations') {
+      return true;
     }
     
-    // If we're viewing a specific template, only that should be active
-    if (currentTemplateId) {
+    // If we're viewing a specific template, highlight the survey-templates parent
+    if (currentTemplateId && itemId === 'survey-templates') {
+      return true;
+    }
+    
+    // If we're viewing a specific conversation or template, don't highlight other top-level items
+    if (currentConversationId || currentTemplateId) {
       return false;
     }
     
@@ -195,7 +202,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
     },
     {
       id: 'survey-templates',
-      label: 'Survey Templates',
+      label: 'Assessment Templates',
       icon: <FileText size={20} weight="bold" />,
       onClick: () => handlePageNavigation('survey-templates'),
       hasSubItems: getSelectedTemplateTitles.length > 0,
@@ -210,6 +217,12 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
       label: 'AI Comparisons',
       icon: <Robot size={20} weight="bold" />,
       onClick: () => handlePageNavigation('ai-comparisons')
+    },
+    {
+      id: 'ai-simulation',
+      label: 'AI Simulation',
+      icon: <Robot size={20} weight="bold" />,
+      onClick: () => handlePageNavigation('ai-simulation')
     }
   ], [getSelectedConversationTitles, getSelectedTemplateTitles, truncateTitle, handlePageNavigation, handleConversationClick, handleTemplateClick]);
 
@@ -323,7 +336,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
                   </div>
                 )}
 
-                {/* Sub-items for survey templates */}
+                {/* Sub-items for Assessment templates */}
                 {item.id === 'survey-templates' && hasSubItems && isExpanded && (
                   <div>
                     {item.subItems.map((subItem) => (

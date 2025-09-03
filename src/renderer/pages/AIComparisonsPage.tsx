@@ -8,7 +8,8 @@ import { TwoPanelLayout } from '../components/common';
 import { 
   ProgressTracker, 
   AIComparisonSidebar, 
-  ComparisonResultsDisplay 
+  ComparisonResultsDisplay,
+  PromptReviewModal
 } from '../components/ai-analysis';
 import { useAIGeneration } from '../hooks/ai/useAIGeneration';
 import { useConversationSelection } from '../hooks/conversation/useConversationSelection';
@@ -19,6 +20,10 @@ const AIComparisonsPage: React.FC = () => {
   const { currentTemplate } = useSurveyQuestionStore();
   const { selectedConversations: storeConversations } = useConversationStore();
   const { generateOpenAIPrompt } = useAIPrompt();
+
+  // Prompt review modal state
+  const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
+  const [currentPrompt, setCurrentPrompt] = useState<string>('');
 
   // Custom hooks for different concerns
   const {
@@ -41,6 +46,39 @@ const AIComparisonsPage: React.FC = () => {
     generationProgress,
     generateAIResponses
   } = useAIGeneration();
+
+  // Handle prompt review modal
+  const handleReviewPrompt = () => {
+    if (selectedConversationIds.length === 0) {
+      alert('Please select at least one conversation to review the prompt.');
+      return;
+    }
+
+    const firstConversation = storeConversations.find(c => c.id === selectedConversationIds[0]);
+    if (!firstConversation) {
+      alert('Selected conversation not found.');
+      return;
+    }
+
+    const conversationContext = `Conversation: ${firstConversation.title}`;
+    const prompt = generateOpenAIPrompt(conversationContext, 'beginning'); // Always use 'beginning' position
+    
+    if (prompt) {
+      setCurrentPrompt(prompt);
+      setIsPromptModalOpen(true);
+    } else {
+      alert('Failed to generate prompt. Please check your survey template.');
+    }
+  };
+
+
+
+  // Handle saving edited prompt
+  const handleSavePrompt = (editedPrompt: string) => {
+    setCurrentPrompt(editedPrompt);
+    // Here you could also save the edited prompt to a store or pass it to the AI generation
+    console.log('Saved edited prompt:', editedPrompt);
+  };
 
   // Handle AI generation with error handling
   const handleGenerateAI = async () => {
@@ -77,6 +115,7 @@ const AIComparisonsPage: React.FC = () => {
           currentTemplate={currentTemplate}
           storeConversations={storeConversations}
           generateOpenAIPrompt={generateOpenAIPrompt}
+          onReviewPrompt={handleReviewPrompt}
         />
       }
     >
@@ -99,6 +138,14 @@ const AIComparisonsPage: React.FC = () => {
           model={model}
         />
       </div>
+
+      {/* Prompt Review Modal */}
+      <PromptReviewModal
+        isOpen={isPromptModalOpen}
+        onClose={() => setIsPromptModalOpen(false)}
+        currentPrompt={currentPrompt}
+        onSavePrompt={handleSavePrompt}
+      />
     </TwoPanelLayout>
   );
 };

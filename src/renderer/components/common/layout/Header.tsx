@@ -23,8 +23,10 @@ const Header: React.FC<HeaderProps> = React.memo(({ isSidebarOpen }) => {
         return 'Label Conversations';
       case 'ai-comparisons':
         return 'AI Comparisons';
+      case 'ai-simulation':
+        return 'AI Simulation';
       case 'survey-templates':
-        return 'Templates';
+        return 'Assessment Templates';
       case 'survey-questions':
         return 'Survey Questions';
       default:
@@ -40,8 +42,12 @@ const Header: React.FC<HeaderProps> = React.memo(({ isSidebarOpen }) => {
         return 'Label and categorize selected conversations';
       case 'ai-comparisons':
         return 'Compare AI model performance across conversations';
+      case 'ai-simulation':
+        return 'Simulate AI responses and test prompts';
+      case 'survey-templates':
+        return 'Create and manage assessment templates';
       case 'survey-questions':
-        return 'Create and manage Assessment templates and questions';
+        return 'Create and manage assessment questions';
       default:
         return 'Navigation and analysis tools';
     }

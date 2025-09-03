@@ -106,7 +106,7 @@ const SurveyTemplatesPage: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Loading survey templates...</div>
+        <div className="text-lg">Loading Assessment templates...</div>
       </div>
     );
   }
@@ -135,7 +135,7 @@ const SurveyTemplatesPage: React.FC = () => {
       {/* Templates List using Design System */}
       {templates.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-muted-foreground mb-4">No survey templates found.</p>
+          <p className="text-muted-foreground mb-4">No Assessment templates found.</p>
           <button
             onClick={handleCreateTemplate}
             className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"

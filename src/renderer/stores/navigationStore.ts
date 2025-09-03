@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type Page = 'select-conversations' | 'label-conversations' | 'ai-comparisons' | 'survey-templates' | 'survey-questions';
+export type Page = 'select-conversations' | 'label-conversations' | 'ai-comparisons' | 'ai-simulation' | 'survey-templates' | 'survey-questions';
 
 export interface NavigationState {
   currentPage: Page;

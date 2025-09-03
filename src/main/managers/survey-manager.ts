@@ -103,7 +103,7 @@ export class SurveyManager {
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
     } catch (error) {
-      console.error('Failed to get all survey templates:', error);
+      console.error('Failed to get all Assessment templates:', error);
       return [];
     }
   }

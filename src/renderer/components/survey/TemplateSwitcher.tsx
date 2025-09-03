@@ -38,7 +38,7 @@ const TemplateSwitcher: React.FC<TemplateSwitcherProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-h3 text-foreground">Survey Templates</h3>
+        <h3 className="text-h3 text-foreground">Assessment Templates</h3>
         <div className="text-small text-muted-foreground">
           {currentTemplate ? `Current: ${currentTemplate.name}` : 'No template selected'}
         </div>

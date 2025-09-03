@@ -1,7 +1,6 @@
 import React from 'react';
 import ConversationSelector from './ConversationSelector';
 import AIConfigurationPanel from './AIConfigurationPanel';
-import PromptPreview from './PromptPreview';
 import { SurveyTemplate } from '../../types/survey';
 
 interface AIComparisonSidebarProps {
@@ -24,6 +23,7 @@ interface AIComparisonSidebarProps {
   currentTemplate: SurveyTemplate | null;
   storeConversations: any[];
   generateOpenAIPrompt: (context: string, position: 'beginning' | 'turn6' | 'end') => string | null;
+  onReviewPrompt: () => void;
 }
 
 export const AIComparisonSidebar: React.FC<AIComparisonSidebarProps> = ({
@@ -39,7 +39,8 @@ export const AIComparisonSidebar: React.FC<AIComparisonSidebarProps> = ({
   hasSelectedConversations,
   currentTemplate,
   storeConversations,
-  generateOpenAIPrompt
+  generateOpenAIPrompt,
+  onReviewPrompt
 }) => {
   return (
     <aside className="h-full">
@@ -69,16 +70,7 @@ export const AIComparisonSidebar: React.FC<AIComparisonSidebarProps> = ({
           isGenerating={isGenerating}
           hasSelectedConversations={hasSelectedConversations}
           currentTemplate={currentTemplate}
-        />
-      </section>
-
-      {/* Prompt Preview */}
-      <section>
-        <PromptPreview
-          currentTemplate={currentTemplate}
-          selectedConversations={selectedConversationIds}
-          storeConversations={storeConversations}
-          generateOpenAIPrompt={generateOpenAIPrompt}
+          onReviewPrompt={onReviewPrompt}
         />
       </section>
     </aside>

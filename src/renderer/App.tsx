@@ -7,6 +7,7 @@ import ConversationSelectorPage from './pages/ConversationSelectorPage';
 import LabelConversations from './components/conversation/management/LabelConversations';
 import ConversationPage from './pages/ConversationPage';
 import AIComparisonsPage from './pages/AIComparisonsPage';
+import AISimulationPage from './pages/AISimulationPage';
 import SurveyQuestionsPage from './pages/SurveyQuestionsPage';
 import SurveyTemplatesPage from './pages/SurveyTemplatesPage';
 import { useConversationStore } from './stores/conversationStore';
@@ -28,6 +29,8 @@ const NavigationSync: React.FC = React.memo(() => {
       return { page: 'label-conversations' as const, conversationId: null, templateId: undefined };
     } else if (path === '/ai-comparisons') {
       return { page: 'ai-comparisons' as const, conversationId: null, templateId: undefined };
+    } else if (path === '/ai-simulation') {
+      return { page: 'ai-simulation' as const, conversationId: null, templateId: undefined };
     } else if (path === '/survey-templates') {
       return { page: 'survey-templates' as const, conversationId: null, templateId: undefined };
     } else if (path.startsWith('/conversation/')) {
@@ -49,15 +52,12 @@ const NavigationSync: React.FC = React.memo(() => {
     performanceMonitor.startNavigation(route);
     
     // Use batch update for better performance - single state update instead of three
-    // Only update templateId if it's explicitly provided (not undefined)
+    // Always update templateId to ensure proper state clearing
     const updates: any = {
       currentPage: page,
-      currentConversationId: conversationId
+      currentConversationId: conversationId,
+      currentTemplateId: templateId !== undefined ? templateId : null
     };
-    
-    if (templateId !== undefined) {
-      updates.currentTemplateId = templateId;
-    }
     
     batchUpdate(updates);
     
@@ -121,6 +121,7 @@ function App() {
               <Route path="/label-conversations" element={<LabelConversations />} />
               <Route path="/conversation/:id" element={<ConversationPage />} />
               <Route path="/ai-comparisons" element={<AIComparisonsPage />} />
+              <Route path="/ai-simulation" element={<AISimulationPage />} />
               <Route path="/survey-templates" element={<SurveyTemplatesPage />} />
               <Route path="/survey-template/:id" element={<SurveyQuestionsPage />} />
               <Route path="*" element={<ConversationSelectorPage />} />
