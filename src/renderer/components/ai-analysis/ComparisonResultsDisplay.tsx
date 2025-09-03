@@ -34,12 +34,11 @@ export const ComparisonResultsDisplay: React.FC<ComparisonResultsDisplayProps> =
   currentTemplate,
   model
 }) => {
-  // Use mock data for frontend design development
-  const data = mockComparisonResults;
-  const comparisons = data.comparisons; // Get all comparisons
-  const template = data.template;
+  // Use actual props data
+  const comparisons = comparisonData || [];
+  const template = currentTemplate;
 
-  if (!comparisons || comparisons.length === 0) {
+  if (!comparisons || comparisons.length === 0 || !template) {
     return (
       <div className="m-4 p-8 text-left">
         <h2 className="text-h2 mb-2">No Comparison Results Yet</h2>
@@ -71,7 +70,7 @@ export const ComparisonResultsDisplay: React.FC<ComparisonResultsDisplayProps> =
             <div>
               <h1 className="text-h3 text-gray-900 mb-2">{comparison.conversationTitle}</h1>
               <div className="space-y-0">
-                <p className="text-small">Model for AI labeling: gpt4o</p>
+                <p className="text-small">Model for AI labeling: {model || 'Not specified'}</p>
                 <p className="text-small">Assessment template: {template.name}</p>
               </div>
             </div>

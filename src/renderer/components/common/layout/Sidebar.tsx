@@ -29,7 +29,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
       case 'ai-comparisons':
         return 'AI Comparisons';
       case 'survey-templates':
-        return 'Survey Templates';
+        return 'Assessment Templates';
       case 'survey-questions':
         return 'Survey Questions';
       default:
@@ -129,7 +129,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
       // Check if user is currently viewing this template
       const currentPath = window.location.pathname;
       if (currentPath === `/survey-template/${templateId}`) {
-        // Redirect to survey templates page if viewing the deleted template
+        // Redirect to Assessment templates page if viewing the deleted template
         navigate('/survey-templates');
       }
       

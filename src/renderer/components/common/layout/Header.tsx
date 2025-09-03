@@ -2,6 +2,7 @@ import React, { useMemo, useCallback } from 'react';
 import { List, X, CaretRight } from '@phosphor-icons/react';
 import { useNavigationStore } from '../../../stores/navigationStore';
 import { useConversationStore } from '../../../stores/conversationStore';
+import { useSurveyQuestions } from '../../../hooks/survey/useSurveyQuestions';
 import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
@@ -9,8 +10,9 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = React.memo(({ isSidebarOpen }) => {
-  const { currentPage, currentConversationId } = useNavigationStore();
+  const { currentPage, currentConversationId, currentTemplateId } = useNavigationStore();
   const { selectedConversations } = useConversationStore();
+  const { getTemplateById } = useSurveyQuestions();
   const navigate = useNavigate();
 
   const getPageTitle = useCallback((page: string) => {
@@ -21,6 +23,8 @@ const Header: React.FC<HeaderProps> = React.memo(({ isSidebarOpen }) => {
         return 'Label Conversations';
       case 'ai-comparisons':
         return 'AI Comparisons';
+      case 'survey-templates':
+        return 'Templates';
       case 'survey-questions':
         return 'Survey Questions';
       default:
@@ -37,7 +41,7 @@ const Header: React.FC<HeaderProps> = React.memo(({ isSidebarOpen }) => {
       case 'ai-comparisons':
         return 'Compare AI model performance across conversations';
       case 'survey-questions':
-        return 'Create and manage survey templates and questions';
+        return 'Create and manage Assessment templates and questions';
       default:
         return 'Navigation and analysis tools';
     }
@@ -49,10 +53,17 @@ const Header: React.FC<HeaderProps> = React.memo(({ isSidebarOpen }) => {
     return conversation?.title || 'Unknown Conversation';
   }, [currentConversationId, selectedConversations]);
 
+  const getCurrentTemplateTitle = useCallback(() => {
+    if (!currentTemplateId) return null;
+    const template = getTemplateById(currentTemplateId);
+    return template?.name || 'Unknown Template';
+  }, [currentTemplateId, getTemplateById]);
+
   // Memoize expensive calculations
   const pageTitle = useMemo(() => getPageTitle(currentPage), [getPageTitle, currentPage]);
   const pageDescription = useMemo(() => getPageDescription(currentPage), [getPageDescription, currentPage]);
   const conversationTitle = useMemo(() => getCurrentConversationTitle(), [getCurrentConversationTitle]);
+  const templateTitle = useMemo(() => getCurrentTemplateTitle(), [getCurrentTemplateTitle]);
 
   return (
     <header className="bg-background border-b border-border px-6 py-4">
@@ -64,6 +75,10 @@ const Header: React.FC<HeaderProps> = React.memo(({ isSidebarOpen }) => {
               {currentConversationId ? (
                 <span className="text-h3 text-foreground">
                   Label Conversations
+                </span>
+              ) : currentTemplateId ? (
+                <span className="text-h3 text-foreground">
+                  Survey Questions
                 </span>
               ) : (
                 pageTitle
@@ -78,11 +93,22 @@ const Header: React.FC<HeaderProps> = React.memo(({ isSidebarOpen }) => {
                 </span>
               </>
             )}
+            
+            {currentTemplateId && (
+              <>
+                <CaretRight size={20} className="text-muted-foreground" />
+                <span className="text-h3 text-foreground">
+                  {templateTitle}
+                </span>
+              </>
+            )}
           </div>
           
           <span className="text-sm text-muted-foreground">
             {currentConversationId 
               ? ``
+              : currentTemplateId
+              ? `Create and manage questions for the ${templateTitle} template`
               : pageDescription
             }
           </span>
