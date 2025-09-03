@@ -78,8 +78,11 @@ const SurveyTemplatesPage: React.FC = () => {
 
   // Prepare list items data for the design system
   const listItems = templates.map((template) => {
+    // Get the scale from the first question (assuming all questions have the same scale)
+    const scale = template.questions.length > 0 ? template.questions[0].scale : 7;
+    
     const metadata = [
-      `${template.questions.length} questions • Created ${new Date(template.createdAt).toLocaleDateString()}`
+      `${template.questions.length} questions • ${scale}-point scale • Created ${new Date(template.createdAt).toLocaleDateString()}`
     ];
 
     // Add updated date if different from creation date

@@ -80,13 +80,60 @@ const ExportComparisonModal: React.FC<ExportComparisonModalProps> = ({
       selectedConversationIds.includes(comparison.conversationId)
     );
 
+    // Normalize template to use numerical question IDs
+    const normalizedTemplate = currentTemplate ? {
+      ...currentTemplate,
+      questions: currentTemplate.questions.map((question, index) => ({
+        ...question,
+        id: (index + 1).toString() // Convert to numerical ID
+      }))
+    } : null;
+
+    // Normalize comparison data to use numerical question IDs
+    const normalizedComparisonData = selectedComparisonData.map(comparison => {
+      const normalizedHumanResponses: Record<string, number> = {};
+      const normalizedAiResponses: Record<string, number> = {};
+      
+      // Create a mapping from old IDs to new numerical IDs
+      const questionIdMap: Record<string, string> = {};
+      if (currentTemplate) {
+        currentTemplate.questions.forEach((question, index) => {
+          questionIdMap[question.id] = (index + 1).toString();
+        });
+      }
+
+      // Normalize human responses
+      Object.entries(comparison.humanResponses).forEach(([key, value]) => {
+        const [position, questionId] = key.split('_');
+        const normalizedQuestionId = questionIdMap[questionId] || questionId;
+        normalizedHumanResponses[`${position}_${normalizedQuestionId}`] = value;
+      });
+
+      // Normalize AI responses
+      Object.entries(comparison.aiResponses).forEach(([key, value]) => {
+        const [position, questionId] = key.split('_');
+        const normalizedQuestionId = questionIdMap[questionId] || questionId;
+        normalizedAiResponses[`${position}_${normalizedQuestionId}`] = value;
+      });
+
+      return {
+        ...comparison,
+        humanResponses: normalizedHumanResponses,
+        aiResponses: normalizedAiResponses,
+        differences: comparison.differences.map(diff => ({
+          ...diff,
+          questionId: questionIdMap[diff.questionId] || diff.questionId
+        }))
+      };
+    });
+
     // Create export data
     const exportData = {
       timestamp: new Date().toISOString(),
-      template: currentTemplate,
+      template: normalizedTemplate,
       model: model,
       accuracy: accuracy,
-      comparisons: selectedComparisonData,
+      comparisons: normalizedComparisonData,
       trials: trialComparisons,
       exportInfo: {
         totalConversations: selectedComparisonData.length,

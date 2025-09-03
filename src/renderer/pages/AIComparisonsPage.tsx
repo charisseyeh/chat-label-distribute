@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useSurveyResponseStore } from '../stores/surveyResponseStore';
 import { useSurveyQuestionStore } from '../stores/surveyQuestionStore';
 import { useConversationStore } from '../stores/conversationStore';
@@ -16,12 +16,15 @@ import {
 import { useAIGeneration } from '../hooks/ai/useAIGeneration';
 import { useConversationSelection } from '../hooks/conversation/useConversationSelection';
 import { useAIConfiguration } from '../hooks/ai/useAIConfiguration';
+import { useNavigationStore } from '../stores/navigationStore';
 
 const AIComparisonsPage: React.FC = () => {
   const { getConversationData } = useSurveyResponseStore();
   const { currentTemplate } = useSurveyQuestionStore();
   const { selectedConversations: storeConversations } = useConversationStore();
   const { generateOpenAIPrompt, generateSystemPromptOnly, generateOpenAIPromptWithCustomSystem } = useAIPrompt();
+  const { batchUpdate } = useNavigationStore();
+  const location = useLocation();
 
   // Prompt review modal state
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
@@ -30,6 +33,15 @@ const AIComparisonsPage: React.FC = () => {
 
   // Export modal state
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+
+  // Navigation sync effect
+  useEffect(() => {
+    batchUpdate({
+      currentPage: 'ai-comparisons',
+      currentConversationId: null,
+      currentTemplateId: null
+    });
+  }, [batchUpdate]);
 
   // Custom hooks for different concerns
   const {
@@ -110,7 +122,7 @@ const AIComparisonsPage: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden" style={{ minHeight: 0 }}>
         <TwoPanelLayout
           sidebarContent={
             <AIComparisonSidebar

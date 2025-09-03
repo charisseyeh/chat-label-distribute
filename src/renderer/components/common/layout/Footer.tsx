@@ -16,6 +16,8 @@ const Footer: React.FC<FooterProps> = React.memo(({ className = '', onExportComp
   const { saveHandler, pendingChangesCount, showSaveFeedback, setShowSaveFeedback } = usePageActionsStore();
   const navigate = useNavigate();
 
+
+
   // Memoize expensive calculations
   const selectionInfo = useMemo(() => ({
     selectedCount: selectedConversationIds.length,

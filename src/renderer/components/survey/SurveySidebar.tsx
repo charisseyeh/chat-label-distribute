@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSurveyQuestions } from '../../hooks/survey/useSurveyQuestions';
 import { useSurveyResponses } from '../../hooks/survey/useSurveyResponses';
 import { useConversationStore } from '../../stores/conversationStore';
@@ -18,6 +19,7 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({
   turn6Reached = false,  // Change from callback to boolean
   endReached = false      // Change from callback to boolean
 }) => {
+  const navigate = useNavigate();
   const { currentTemplate } = useSurveyQuestions();
   const { 
     responses, 
@@ -33,20 +35,6 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({
     end: false       // Appears when end is reached
   });
 
-  // Instead of relying on props, listen to scroll tracking state directly
-  // You could create a hook that subscribes to scroll tracking state
-  // or use the existing scroll tracking service state
-
-  // For now, let's use a simple approach - show sections based on message count
-  // Remove the useEffect that was manually setting sections based on message count
-  // since we now rely on the scroll tracking callbacks
-  
-  // Remove this effect:
-  // useEffect(() => {
-  //   if (messages.length === 0) return;
-  //   // Turn 6 and end sections are now controlled by message visibility tracking
-  //   // No need to manually check scroll percentage
-  // }, [messages.length]);
 
   // Create survey sections data
   const surveySections: SurveySectionType[] = [
@@ -114,8 +102,14 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({
     return (
       <div className="p-4">
         <div className="text-center text-gray-500 py-8">
-          <p>No survey template available</p>
-          <p className="text-sm">Please create a template in Survey Questions</p>
+          <p className="mb-2">No assessment questions available</p>
+          <p className="text-sm mb-4">Please select assessments template or create a new one in assessment templates</p>
+          <button
+            onClick={() => navigate('/survey-templates')}
+            className="btn-primary btn-md"
+          >
+            Select a template
+          </button>
         </div>
       </div>
     );
