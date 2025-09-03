@@ -1,4 +1,4 @@
-export interface SurveyQuestion {
+export interface AssessmentQuestion {
   id: string;
   text: string;
   scale: number; // 5, 7, 10, etc.
@@ -6,15 +6,15 @@ export interface SurveyQuestion {
   order: number; // Display order within survey section
 }
 
-export interface SurveyTemplate {
+export interface AssessmentTemplate {
   id: string;
   name: string;
-  questions: SurveyQuestion[];
+  questions: AssessmentQuestion[];
   createdAt: string;
   updatedAt: string;
 }
 
-export interface SurveyResponse {
+export interface AssessmentResponse {
   id: string;
   conversationId: string;
   position: 'beginning' | 'turn6' | 'end';
@@ -23,9 +23,9 @@ export interface SurveyResponse {
   timestamp: string;
 }
 
-export interface ConversationSurveyData {
+export interface ConversationAssessmentData {
   conversationId: string;
-  responses: SurveyResponse[];
+  responses: AssessmentResponse[];
   completedSections: string[];
   lastUpdated: string;
 }
@@ -43,16 +43,16 @@ export interface AIPromptConfig {
   ratingInstructions: string;
 }
 
-export interface SurveySection {
+export interface AssessmentSection {
   position: 'beginning' | 'turn6' | 'end';
   title: string;
   description: string;
   isVisible: boolean;
   isCompleted: boolean;
-  questions: SurveyQuestion[];
+  questions: AssessmentQuestion[];
 }
 
-export interface SurveyProgress {
+export interface AssessmentProgress {
   totalQuestions: number;
   answeredQuestions: number;
   completedSections: string[];

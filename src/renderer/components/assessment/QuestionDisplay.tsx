@@ -1,9 +1,9 @@
 import React from 'react';
-import { SurveyQuestion } from '../../types/survey';
+import { AssessmentQuestion } from '../../types/assessment';
 import RatingScale from './RatingScale';
 
 interface QuestionDisplayProps {
-  question: SurveyQuestion;
+  question: AssessmentQuestion;
   currentRating: number;
   onRatingChange: (rating: number) => void;
   questionNumber: number;

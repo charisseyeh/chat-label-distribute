@@ -1,9 +1,9 @@
 import { useCallback } from 'react';
-import { useSurveyQuestionStore } from '../../stores/surveyQuestionStore';
-import { SurveyQuestion, SurveyTemplate } from '../../types/survey';
-import { QuestionService } from '../../services/survey/questionService';
+import { useAssessmentQuestionStore } from '../../stores/assessmentQuestionStore';
+import { AssessmentQuestion, AssessmentTemplate } from '../../types/assessment';
+import { QuestionService } from '../../services/assessment/questionService';
 
-export const useSurveyQuestions = () => {
+export const useAssessmentQuestions = () => {
   const {
     templates,
     currentTemplate,
@@ -24,7 +24,7 @@ export const useSurveyQuestions = () => {
     getDefaultQuestions,
     loadTemplates,
     loadTemplate
-  } = useSurveyQuestionStore();
+  } = useAssessmentQuestionStore();
 
   // Template loading
   const handleLoadTemplates = useCallback(async () => {
@@ -77,16 +77,16 @@ export const useSurveyQuestions = () => {
     }
   }, [createTemplate, setLoading, setError, clearError]);
 
-  const handleUpdateTemplate = useCallback(async (id: string, updates: Partial<SurveyTemplate>) => {
+  const handleUpdateTemplate = useCallback(async (id: string, updates: Partial<AssessmentTemplate>) => {
     try {
-      console.log('🔄 useSurveyQuestions: handleUpdateTemplate called', { id, updates });
+      console.log('🔄 useAssessmentQuestions: handleUpdateTemplate called', { id, updates });
       setLoading(true);
       clearError();
       
       // Validate template before updating
       if (updates.questions) {
         console.log('🔍 Validating template with questions...');
-        const templateToValidate = { ...currentTemplate, ...updates } as SurveyTemplate;
+        const templateToValidate = { ...currentTemplate, ...updates } as AssessmentTemplate;
         console.log('📋 Template to validate:', templateToValidate);
         const validation = QuestionService.validateTemplate(templateToValidate);
         console.log('✅ Validation result:', validation);
@@ -101,7 +101,7 @@ export const useSurveyQuestions = () => {
       await updateTemplate(id, updates);
       console.log('✅ Store updateTemplate completed');
     } catch (err) {
-      console.error('❌ useSurveyQuestions: handleUpdateTemplate failed:', err);
+      console.error('❌ useAssessmentQuestions: handleUpdateTemplate failed:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to update template';
       setError(errorMessage);
       throw err;
@@ -130,7 +130,7 @@ export const useSurveyQuestions = () => {
   }, [templates.length, deleteTemplate, setLoading, setError, clearError]);
 
   // Question management
-  const handleAddQuestion = useCallback(async (templateId: string, questionData: Omit<SurveyQuestion, 'id' | 'order'>) => {
+  const handleAddQuestion = useCallback(async (templateId: string, questionData: Omit<AssessmentQuestion, 'id' | 'order'>) => {
     try {
       setLoading(true);
       clearError();
@@ -151,7 +151,7 @@ export const useSurveyQuestions = () => {
     }
   }, [addQuestion, setLoading, setError, clearError]);
 
-  const handleUpdateQuestion = useCallback(async (templateId: string, questionId: string, updates: Partial<SurveyQuestion>) => {
+  const handleUpdateQuestion = useCallback(async (templateId: string, questionId: string, updates: Partial<AssessmentQuestion>) => {
     try {
       setLoading(true);
       clearError();
@@ -226,11 +226,11 @@ export const useSurveyQuestions = () => {
     return QuestionService.getQuestionsForPosition(template, position);
   }, [templates]);
 
-  const validateTemplate = useCallback((template: SurveyTemplate) => {
+  const validateTemplate = useCallback((template: AssessmentTemplate) => {
     return QuestionService.validateTemplate(template);
   }, []);
 
-  const validateQuestion = useCallback((question: Partial<SurveyQuestion>) => {
+  const validateQuestion = useCallback((question: Partial<AssessmentQuestion>) => {
     return QuestionService.validateQuestion(question);
   }, []);
 

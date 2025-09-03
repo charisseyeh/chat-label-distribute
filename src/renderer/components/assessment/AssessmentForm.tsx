@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useConversationStore } from '../../stores/conversationStore';
-import { useSurveyStore } from '../../stores/surveyStore';
+import { useSurveyStore } from '../../stores/assessmentStore';
 import { FloatingLabelTextarea } from '../common';
 
 const POSITIONS = [
@@ -146,7 +146,7 @@ const SurveyForm: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Survey Form</h1>
           <p className="text-muted-foreground mt-2">
-            No conversation selected for survey
+            No conversation selected for assessment
           </p>
         </div>
       </div>

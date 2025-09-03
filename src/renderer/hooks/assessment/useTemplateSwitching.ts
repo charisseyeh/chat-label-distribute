@@ -1,18 +1,18 @@
 import { useCallback } from 'react';
-import { useSurveyQuestionStore } from '../../stores/surveyQuestionStore';
-import { useSurveyResponseStore } from '../../stores/surveyResponseStore';
+import { useAssessmentQuestionStore } from '../../stores/assessmentQuestionStore';
+import { useAssessmentResponseStore } from '../../stores/assessmentResponseStore';
 import { useNavigationStore } from '../../stores/navigationStore';
-import { SurveyTemplate } from '../../types/survey';
+import { AssessmentTemplate } from '../../types/assessment';
 
 export const useTemplateSwitching = () => {
-  const { currentTemplate, setCurrentTemplate } = useSurveyQuestionStore();
-  const { conversationData, clearAllResponsesForTemplate } = useSurveyResponseStore();
+  const { currentTemplate, setCurrentTemplate } = useAssessmentQuestionStore();
+  const { conversationData, clearAllResponsesForTemplate } = useAssessmentResponseStore();
   const { currentTemplateId, setCurrentTemplateId } = useNavigationStore();
 
   /**
    * Check if switching to a new template will affect existing responses
    */
-  const checkTemplateSwitchImpact = useCallback((newTemplate: SurveyTemplate | null) => {
+  const checkTemplateSwitchImpact = useCallback((newTemplate: AssessmentTemplate | null) => {
     if (!currentTemplate) {
       return {
         hasExistingResponses: false,
@@ -60,7 +60,7 @@ export const useTemplateSwitching = () => {
    * Safely switch templates with confirmation
    */
   const switchTemplateSafely = useCallback((
-    newTemplate: SurveyTemplate | null,
+    newTemplate: AssessmentTemplate | null,
     onConfirm: () => void,
     onCancel?: () => void
   ) => {
@@ -68,7 +68,7 @@ export const useTemplateSwitching = () => {
 
     if (impact.willLoseData) {
       // Show confirmation dialog
-      const message = `Switching to "${newTemplate?.name || 'No template'}" will clear all existing survey responses from "${currentTemplate?.name}" template.\n\n` +
+      const message = `Switching to "${newTemplate?.name || 'No template'}" will clear all existing assessment responses from "${currentTemplate?.name}" template.\n\n` +
         `This will affect ${impact.affectedConversations.length} conversation(s) with ${impact.responseCount} total responses.\n\n` +
         `Are you sure you want to continue? This action cannot be undone.`;
 

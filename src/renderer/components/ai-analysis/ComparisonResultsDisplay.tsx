@@ -1,5 +1,5 @@
 import React from 'react';
-import { SurveyTemplate } from '../../types/survey';
+import { AssessmentTemplate } from '../../types/assessment';
 
 // Types based on your JSON structure
 interface ComparisonData {
@@ -13,7 +13,7 @@ interface ComparisonData {
 
 interface ComparisonResults {
   timestamp: string;
-  template: SurveyTemplate;
+  template: AssessmentTemplate;
   comparisons: ComparisonData[];
   trials: any[];
   accuracy: number;
@@ -24,7 +24,7 @@ interface ComparisonResults {
 interface ComparisonResultsDisplayProps {
   comparisonData?: ComparisonData[];
   trialComparisons?: any[];
-  currentTemplate?: SurveyTemplate | null;
+  currentTemplate?: AssessmentTemplate | null;
   model?: string;
 }
 

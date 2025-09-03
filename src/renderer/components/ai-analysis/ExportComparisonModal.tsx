@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { List } from '../common/molecules/list';
-import { SurveyTemplate } from '../../types/survey';
+import { AssessmentTemplate } from '../../types/assessment';
 
 interface ComparisonData {
   conversationId: string;
@@ -28,7 +28,7 @@ interface ExportComparisonModalProps {
   onClose: () => void;
   comparisonData: ComparisonData[];
   trialComparisons: TrialComparison[];
-  currentTemplate: SurveyTemplate | null;
+  currentTemplate: AssessmentTemplate | null;
   model: string;
   accuracy: number;
 }

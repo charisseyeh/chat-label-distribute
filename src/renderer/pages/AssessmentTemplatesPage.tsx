@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSurveyQuestions } from '../hooks/survey/useSurveyQuestions';
-import { useTemplateSwitching } from '../hooks/survey/useTemplateSwitching';
-import { SurveyTemplate } from '../types/survey';
+import { useAssessmentQuestions } from '../hooks/assessment/useAssessmentQuestions';
+import { useTemplateSwitching } from '../hooks/assessment/useTemplateSwitching';
+import { AssessmentTemplate } from '../types/assessment';
 import { List, ListItem } from '../components/common';
 import { useNavigationStore } from '../stores/navigationStore';
 
-const SurveyTemplatesPage: React.FC = () => {
+const AssessmentTemplatesPage: React.FC = () => {
   const {
     templates,
     loading,
@@ -15,7 +15,7 @@ const SurveyTemplatesPage: React.FC = () => {
     deleteTemplate,
     initializeTemplate,
     clearError
-  } = useSurveyQuestions();
+  } = useAssessmentQuestions();
 
   const { currentTemplateId, setCurrentTemplateId } = useNavigationStore();
   const { switchTemplateSafely } = useTemplateSwitching();
@@ -35,7 +35,7 @@ const SurveyTemplatesPage: React.FC = () => {
       const newTemplate = await createTemplate('Untitled Template');
       // Set as current template and navigate to it
       setCurrentTemplateId(newTemplate.id);
-      navigate(`/survey-template/${newTemplate.id}`);
+      navigate(`/assessment-template/${newTemplate.id}`);
     } catch (error) {
       console.error('Failed to create template:', error);
     }
@@ -57,7 +57,7 @@ const SurveyTemplatesPage: React.FC = () => {
   };
 
   // Switch template without navigation
-  const handleTemplateClick = (template: SurveyTemplate) => {
+  const handleTemplateClick = (template: AssessmentTemplate) => {
     switchTemplateSafely(
       template,
       () => {
@@ -72,8 +72,8 @@ const SurveyTemplatesPage: React.FC = () => {
   };
 
   // Navigate to template editing page on double-click
-  const handleTemplateDoubleClick = (template: SurveyTemplate) => {
-    navigate(`/survey-template/${template.id}`);
+  const handleTemplateDoubleClick = (template: AssessmentTemplate) => {
+    navigate(`/assessment-template/${template.id}`);
   };
 
   // Prepare list items data for the design system
@@ -175,4 +175,4 @@ const SurveyTemplatesPage: React.FC = () => {
   );
 };
 
-export default SurveyTemplatesPage;
+export default AssessmentTemplatesPage;

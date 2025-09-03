@@ -8,8 +8,8 @@ import LabelConversationsPage from './pages/LabelConversationsPage';
 import ConversationPage from './pages/ConversationPage';
 import AIComparisonsPage from './pages/AIComparisonsPage';
 
-import SurveyQuestionsPage from './pages/SurveyQuestionsPage';
-import SurveyTemplatesPage from './pages/SurveyTemplatesPage';
+import AssessmentQuestionsPage from './pages/AssessmentQuestionsPage';
+import AssessmentTemplatesPage from './pages/AssessmentTemplatesPage';
 import { useConversationStore } from './stores/conversationStore';
 import { useNavigationStore } from './stores/navigationStore';
 import { performanceMonitor } from './utils/performance';
@@ -30,14 +30,14 @@ const NavigationSync: React.FC = React.memo(() => {
     } else if (path === '/ai-comparisons') {
       return { page: 'ai-comparisons' as const, conversationId: null, templateId: undefined };
 
-    } else if (path === '/survey-templates') {
-      return { page: 'survey-templates' as const, conversationId: null, templateId: undefined };
+    } else if (path === '/assessment-templates') {
+      return { page: 'assessment-templates' as const, conversationId: null, templateId: undefined };
     } else if (path.startsWith('/conversation/')) {
       const conversationId = path.split('/conversation/')[1];
       return { page: 'label-conversations' as const, conversationId, templateId: undefined };
-    } else if (path.startsWith('/survey-template/')) {
-      const templateId = path.split('/survey-template/')[1];
-      return { page: 'survey-questions' as const, conversationId: null, templateId };
+    } else if (path.startsWith('/assessment-template/')) {
+      const templateId = path.split('/assessment-template/')[1];
+      return { page: 'assessment-questions' as const, conversationId: null, templateId };
     }
     
     return { page: 'select-conversations' as const, conversationId: null, templateId: undefined };
@@ -120,8 +120,8 @@ function App() {
               <Route path="/select-conversations" element={<ConversationSelectorPage />} />
               <Route path="/label-conversations" element={<LabelConversationsPage />} />
               <Route path="/conversation/:id" element={<ConversationPage />} />
-              <Route path="/survey-templates" element={<SurveyTemplatesPage />} />
-              <Route path="/survey-template/:id" element={<SurveyQuestionsPage />} />
+              <Route path="/assessment-templates" element={<AssessmentTemplatesPage />} />
+              <Route path="/assessment-template/:id" element={<AssessmentQuestionsPage />} />
               <Route path="/ai-comparisons" element={<AIComparisonsPage />} />
               <Route path="*" element={<ConversationSelectorPage />} />
             </Routes>

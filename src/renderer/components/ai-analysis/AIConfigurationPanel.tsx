@@ -1,5 +1,5 @@
 import React from 'react';
-import { SurveyTemplate } from '../../types/survey';
+import { AssessmentTemplate } from '../../types/assessment';
 import { FloatingLabelInput, FloatingLabelSelect } from '../common';
 
 interface AIConfigurationPanelProps {
@@ -10,7 +10,7 @@ interface AIConfigurationPanelProps {
   onGenerate: () => void;
   isGenerating: boolean;
   hasSelectedConversations: boolean;
-  currentTemplate: SurveyTemplate | null;
+  currentTemplate: AssessmentTemplate | null;
   onReviewPrompt: () => void;
 }
 

@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 
-interface SurveyTemplate {
+interface AssessmentTemplate {
   id: string;
   name: string;
   questions: any[];
@@ -10,20 +10,20 @@ interface SurveyTemplate {
   updatedAt: string;
 }
 
-export class SurveyManager {
-  private surveyTemplatesDir: string;
+export class AssessmentManager {
+  private assessmentTemplatesDir: string;
   private writeOperations: Map<string, Promise<boolean>> = new Map();
 
   constructor() {
     // Set up storage directory in user's documents folder
     const userDocumentsPath = path.join(os.homedir(), 'Documents', 'ChatLabelingApp');
-    this.surveyTemplatesDir = path.join(userDocumentsPath, 'question-templates');
+    this.assessmentTemplatesDir = path.join(userDocumentsPath, 'question-templates');
     
     // Ensure the directory exists
-    fs.ensureDirSync(this.surveyTemplatesDir);
+    fs.ensureDirSync(this.assessmentTemplatesDir);
   }
 
-  async storeSurveyTemplate(template: SurveyTemplate): Promise<boolean> {
+  async storeAssessmentTemplate(template: AssessmentTemplate): Promise<boolean> {
     const templateId = template.id;
     
     // If there's already a write operation in progress for this template, wait for it
@@ -45,9 +45,9 @@ export class SurveyManager {
     }
   }
 
-  private async performWrite(template: SurveyTemplate): Promise<boolean> {
+  private async performWrite(template: AssessmentTemplate): Promise<boolean> {
     try {
-      const templatePath = path.join(this.surveyTemplatesDir, `${template.id}.json`);
+      const templatePath = path.join(this.assessmentTemplatesDir, `${template.id}.json`);
       const jsonContent = JSON.stringify(template, null, 2);
       
       // Write to a temporary file first, then rename (atomic operation)
@@ -57,14 +57,14 @@ export class SurveyManager {
       
       return true;
     } catch (error) {
-      console.error('Failed to store survey template:', error);
+      console.error('Failed to store assessment template:', error);
       return false;
     }
   }
 
-  async getSurveyTemplate(templateId: string): Promise<SurveyTemplate | null> {
+  async getAssessmentTemplate(templateId: string): Promise<AssessmentTemplate | null> {
     try {
-      const templatePath = path.join(this.surveyTemplatesDir, `${templateId}.json`);
+      const templatePath = path.join(this.assessmentTemplatesDir, `${templateId}.json`);
       
       if (!await fs.pathExists(templatePath)) {
         return null;
@@ -73,19 +73,19 @@ export class SurveyManager {
       const content = await fs.readFile(templatePath, 'utf-8');
       return JSON.parse(content);
     } catch (error) {
-      console.error('Failed to get survey template:', error);
+      console.error('Failed to get assessment template:', error);
       return null;
     }
   }
 
-  async getAllSurveyTemplates(): Promise<SurveyTemplate[]> {
+  async getAllAssessmentTemplates(): Promise<AssessmentTemplate[]> {
     try {
-      const files = await fs.readdir(this.surveyTemplatesDir);
-      const templates: SurveyTemplate[] = [];
+      const files = await fs.readdir(this.assessmentTemplatesDir);
+      const templates: AssessmentTemplate[] = [];
 
       for (const file of files) {
         if (file.endsWith('.json')) {
-          const templatePath = path.join(this.surveyTemplatesDir, file);
+          const templatePath = path.join(this.assessmentTemplatesDir, file);
           try {
             const content = await fs.readFile(templatePath, 'utf-8');
             const template = JSON.parse(content);
@@ -108,17 +108,17 @@ export class SurveyManager {
     }
   }
 
-  async updateSurveyTemplate(templateId: string, updates: Partial<SurveyTemplate>): Promise<boolean> {
+  async updateAssessmentTemplate(templateId: string, updates: Partial<AssessmentTemplate>): Promise<boolean> {
     try {
-      console.log('🔄 SurveyManager: updateSurveyTemplate called', { templateId, updates });
+      console.log('🔄 AssessmentManager: updateAssessmentTemplate called', { templateId, updates });
       
-      const existingTemplate = await this.getSurveyTemplate(templateId);
+      const existingTemplate = await this.getAssessmentTemplate(templateId);
       if (!existingTemplate) {
-        console.error('❌ SurveyManager: Template not found:', templateId);
+        console.error('❌ AssessmentManager: Template not found:', templateId);
         return false;
       }
 
-      console.log('📄 SurveyManager: Found existing template:', existingTemplate);
+      console.log('📄 AssessmentManager: Found existing template:', existingTemplate);
 
       const updatedTemplate = {
         ...existingTemplate,
@@ -126,20 +126,20 @@ export class SurveyManager {
         updatedAt: new Date().toISOString()
       };
 
-      console.log('💾 SurveyManager: Storing updated template:', updatedTemplate);
-      const result = await this.storeSurveyTemplate(updatedTemplate);
-      console.log('💾 SurveyManager: Store result:', result);
+      console.log('💾 AssessmentManager: Storing updated template:', updatedTemplate);
+      const result = await this.storeAssessmentTemplate(updatedTemplate);
+      console.log('💾 AssessmentManager: Store result:', result);
       
       return result;
     } catch (error) {
-      console.error('❌ SurveyManager: Failed to update survey template:', error);
+      console.error('❌ AssessmentManager: Failed to update assessment template:', error);
       return false;
     }
   }
 
-  async deleteSurveyTemplate(templateId: string): Promise<boolean> {
+  async deleteAssessmentTemplate(templateId: string): Promise<boolean> {
     try {
-      const templatePath = path.join(this.surveyTemplatesDir, `${templateId}.json`);
+      const templatePath = path.join(this.assessmentTemplatesDir, `${templateId}.json`);
       
       if (!await fs.pathExists(templatePath)) {
         return false;
@@ -148,14 +148,14 @@ export class SurveyManager {
       await fs.remove(templatePath);
       return true;
     } catch (error) {
-      console.error('Failed to delete survey template:', error);
+      console.error('Failed to delete assessment template:', error);
       return false;
     }
   }
 
-  async getSurveyTemplateStats(): Promise<{ totalTemplates: number; totalQuestions: number }> {
+  async getAssessmentTemplateStats(): Promise<{ totalTemplates: number; totalQuestions: number }> {
     try {
-      const templates = await this.getAllSurveyTemplates();
+      const templates = await this.getAllAssessmentTemplates();
       const totalTemplates = templates.length;
       const totalQuestions = templates.reduce((sum, template) => 
         sum + (template.questions?.length || 0), 0
@@ -163,12 +163,12 @@ export class SurveyManager {
       
       return { totalTemplates, totalQuestions };
     } catch (error) {
-      console.error('Failed to get survey template stats:', error);
+      console.error('Failed to get assessment template stats:', error);
       return { totalTemplates: 0, totalQuestions: 0 };
     }
   }
 
-  getSurveyTemplatesDirectory(): string {
-    return this.surveyTemplatesDir;
+  getAssessmentTemplatesDirectory(): string {
+    return this.assessmentTemplatesDir;
   }
 }

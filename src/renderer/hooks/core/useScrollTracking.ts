@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { createScrollTracker, ScrollTracker, ScrollTrackingOptions } from '../../services/survey/scrollTrackingService';
+import { createScrollTracker, ScrollTracker, ScrollTrackingOptions } from '../../services/assessment/scrollTrackingService';
 
 export interface UseScrollTrackingOptions extends ScrollTrackingOptions {
   autoStart?: boolean;

@@ -1,20 +1,20 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSurveyQuestions } from '../../hooks/survey/useSurveyQuestions';
-import { useSurveyResponses } from '../../hooks/survey/useSurveyResponses';
+import { useAssessmentQuestions } from '../../hooks/assessment/useAssessmentQuestions';
+import { useAssessmentResponses } from '../../hooks/assessment/useAssessmentResponses';
 import { useConversationStore } from '../../stores/conversationStore';
 import { useNavigationStore } from '../../stores/navigationStore';
-import { SurveySection as SurveySectionType } from '../../types/survey';
-import SurveySection from './SurveySection';
+import { AssessmentSection as AssessmentSectionType } from '../../types/assessment';
+import AssessmentSection from './AssessmentSection';
 
-interface SurveySidebarProps {
+interface AssessmentSidebarProps {
   conversationId: string;
   messages: any[];
   turn6Reached?: boolean;  // Change from callback to boolean
   endReached?: boolean;     // Change from callback to boolean
 }
 
-const SurveySidebar: React.FC<SurveySidebarProps> = ({ 
+const AssessmentSidebar: React.FC<AssessmentSidebarProps> = ({ 
   conversationId, 
   messages, 
   turn6Reached = false,  // Change from callback to boolean
@@ -22,15 +22,15 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({
 }) => {
   const navigate = useNavigate();
   const { setCurrentPage } = useNavigationStore();
-  const { currentTemplate } = useSurveyQuestions();
+  const { currentTemplate } = useAssessmentQuestions();
   const { 
     responses, 
     isPositionCompleted, 
     getPositionProgress,
     autoSaveResponse 
-  } = useSurveyResponses(conversationId);
+  } = useAssessmentResponses(conversationId);
 
-  // Track visible survey sections
+  // Track visible assessment sections
   const [visibleSections, setVisibleSections] = useState({
     beginning: true, // Always visible
     turn6: false,    // Appears when turn 6 is reached
@@ -38,8 +38,8 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({
   });
 
 
-  // Create survey sections data
-  const surveySections: SurveySectionType[] = [
+  // Create assessment sections data
+  const assessmentSections: AssessmentSectionType[] = [
     {
       position: 'beginning',
       title: 'Beginning Assessment',
@@ -66,7 +66,7 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({
     }
   ];
 
-  // Handle survey response
+  // Handle assessment response
   const handleSurveyResponse = async (
     questionId: string,
     position: 'beginning' | 'turn6' | 'end',
@@ -75,7 +75,7 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({
     try {
       await autoSaveResponse(questionId, position, rating);
     } catch (error) {
-      console.error('Failed to save survey response:', error);
+      console.error('Failed to save assessment response:', error);
     }
   };
 
@@ -100,12 +100,12 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({
   // The callbacks will be called by the parent when scroll tracking events occur
   // We just need to make sure our local state handlers are properly set up
 
-  // Handle navigation to survey templates with proper state management
+  // Handle navigation to assessment templates with proper state management
   const handleNavigateToTemplates = useCallback(() => {
     // Update navigation store to ensure proper page state
-    setCurrentPage('survey-templates');
-    // Navigate to survey templates page
-    navigate('/survey-templates');
+    setCurrentPage('assessment-templates');
+    // Navigate to assessment templates page
+    navigate('/assessment-templates');
   }, [setCurrentPage, navigate]);
 
   if (!currentTemplate) {
@@ -129,8 +129,8 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({
     <div className="flex flex-col h-full">
       {/* Survey Sections */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {surveySections.map((section) => (
-          <SurveySection
+        {assessmentSections.map((section) => (
+          <AssessmentSection
             key={section.position}
             section={section}
             onResponse={handleSurveyResponse}
@@ -145,4 +145,4 @@ const SurveySidebar: React.FC<SurveySidebarProps> = ({
   );
 };
 
-export default SurveySidebar;
+export default AssessmentSidebar;

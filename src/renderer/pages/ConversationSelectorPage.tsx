@@ -141,7 +141,7 @@ const ConversationSelectorPage: React.FC = () => {
 
           {/* File List moved to sidebar */}
           {storedFiles.length > 0 && (
-            <div>
+            <div className="p-4">
               <FileList
                 storedFiles={storedFiles}
                 currentSourceFile={currentSourceFile}

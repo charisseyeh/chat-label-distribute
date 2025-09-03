@@ -1,11 +1,11 @@
 import { useState, useMemo } from 'react';
-import { useSurveyResponseStore } from '../../stores/surveyResponseStore';
+import { useAssessmentResponseStore } from '../../stores/assessmentResponseStore';
 import { useConversationStore } from '../../stores/conversationStore';
 
 export const useConversationSelection = () => {
   const [selectedConversationIds, setSelectedConversationIds] = useState<string[]>([]);
   
-  const { conversationData } = useSurveyResponseStore();
+  const { conversationData } = useAssessmentResponseStore();
   const { selectedConversations: storeConversations, getFullConversationData } = useConversationStore();
 
   // Get conversations with survey data - include all selected conversations, not just those with responses

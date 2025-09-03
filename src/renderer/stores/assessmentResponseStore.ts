@@ -1,48 +1,48 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { SurveyResponse, ConversationSurveyData, SurveyProgress } from '../types/survey';
+import { AssessmentResponse, ConversationAssessmentData, AssessmentProgress } from '../types/assessment';
 
-interface SurveyResponseState {
-  responses: SurveyResponse[];
-  conversationData: Record<string, ConversationSurveyData>;
+interface AssessmentResponseState {
+  responses: AssessmentResponse[];
+  conversationData: Record<string, ConversationAssessmentData>;
   loading: boolean;
   error: string | null;
 }
 
-interface SurveyResponseActions {
+interface AssessmentResponseActions {
   // State management
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
   
   // Response management
-  addResponse: (response: SurveyResponse) => void;
-  updateResponse: (id: string, updates: Partial<SurveyResponse>) => void;
+  addResponse: (response: AssessmentResponse) => void;
+  updateResponse: (id: string, updates: Partial<AssessmentResponse>) => void;
   removeResponse: (id: string) => void;
-  getResponsesForConversation: (conversationId: string) => SurveyResponse[];
-  getResponsesForPosition: (conversationId: string, position: 'beginning' | 'turn6' | 'end') => SurveyResponse[];
+  getResponsesForConversation: (conversationId: string) => AssessmentResponse[];
+  getResponsesForPosition: (conversationId: string, position: 'beginning' | 'turn6' | 'end') => AssessmentResponse[];
   
   // Conversation data management
-  getConversationData: (conversationId: string) => ConversationSurveyData;
-  updateConversationData: (conversationId: string, data: Partial<ConversationSurveyData>) => void;
+  getConversationData: (conversationId: string) => ConversationAssessmentData;
+  updateConversationData: (conversationId: string, data: Partial<ConversationAssessmentData>) => void;
   markSectionCompleted: (conversationId: string, position: 'beginning' | 'turn6' | 'end') => void;
   
   // Progress tracking
-  getProgress: (conversationId: string) => SurveyProgress;
-  getOverallProgress: () => SurveyProgress;
+  getProgress: (conversationId: string) => AssessmentProgress;
+  getOverallProgress: () => AssessmentProgress;
   
   // Data persistence
   clearConversationData: (conversationId: string) => void;
-  exportConversationData: (conversationId: string) => ConversationSurveyData | null;
-  importConversationData: (data: ConversationSurveyData) => void;
+  exportConversationData: (conversationId: string) => ConversationAssessmentData | null;
+  importConversationData: (data: ConversationAssessmentData) => void;
   
   // Template switching safety
   clearAllResponsesForTemplate: (templateId: string) => void;
 }
 
-type SurveyResponseStore = SurveyResponseState & SurveyResponseActions;
+type AssessmentResponseStore = AssessmentResponseState & AssessmentResponseActions;
 
-export const useSurveyResponseStore = create<SurveyResponseStore>()(
+export const useAssessmentResponseStore = create<AssessmentResponseStore>()(
   persist(
     (set, get) => ({
       // Initial state
@@ -91,7 +91,7 @@ export const useSurveyResponseStore = create<SurveyResponseStore>()(
         );
         updatedResponses.push(response);
         
-        const updatedData: ConversationSurveyData = {
+        const updatedData: ConversationAssessmentData = {
           ...existingData,
           responses: updatedResponses,
           lastUpdated: new Date().toISOString()
@@ -129,7 +129,7 @@ export const useSurveyResponseStore = create<SurveyResponseStore>()(
           );
           updatedResponses.push(response);
           
-          const updatedData: ConversationSurveyData = {
+          const updatedData: ConversationAssessmentData = {
             ...existingData,
             responses: updatedResponses,
             lastUpdated: new Date().toISOString()
@@ -157,7 +157,7 @@ export const useSurveyResponseStore = create<SurveyResponseStore>()(
         const existingData = conversationData[conversationId];
         if (existingData) {
           const updatedResponses = existingData.responses.filter(r => r.id !== id);
-          const updatedData: ConversationSurveyData = {
+          const updatedData: ConversationAssessmentData = {
             ...existingData,
             responses: updatedResponses,
             lastUpdated: new Date().toISOString()
@@ -204,7 +204,7 @@ export const useSurveyResponseStore = create<SurveyResponseStore>()(
           lastUpdated: new Date().toISOString()
         };
         
-        const updated: ConversationSurveyData = {
+        const updated: ConversationAssessmentData = {
           ...existing,
           ...data,
           lastUpdated: new Date().toISOString()
@@ -350,7 +350,7 @@ export const useSurveyResponseStore = create<SurveyResponseStore>()(
       },
     }),
     {
-      name: 'survey-response-storage',
+      name: 'assessment-response-storage',
       partialize: (state) => ({ 
         responses: state.responses,
         conversationData: state.conversationData

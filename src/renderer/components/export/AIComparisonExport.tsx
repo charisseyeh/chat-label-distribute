@@ -1,5 +1,5 @@
 import React from 'react';
-import { SurveyTemplate } from '../../types/survey';
+import { AssessmentTemplate } from '../../types/assessment';
 
 interface ComparisonData {
   conversationId: string;
@@ -26,7 +26,7 @@ interface AIComparisonExportProps {
   comparisonData: ComparisonData[];
   trialComparisons: TrialComparison[];
   accuracy: number;
-  currentTemplate: SurveyTemplate | null;
+  currentTemplate: AssessmentTemplate | null;
 }
 
 const AIComparisonExport: React.FC<AIComparisonExportProps> = ({
@@ -75,7 +75,7 @@ const AIComparisonExport: React.FC<AIComparisonExportProps> = ({
         <div className="text-sm text-gray-600 space-y-1">
           <div>• {comparisonData.length} conversations analyzed</div>
           <div>• {currentTemplate?.questions.length || 0} questions per conversation</div>
-          <div>• {comparisonData.length * 3} survey positions analyzed</div>
+          <div>• {comparisonData.length * 3} assessment positions analyzed</div>
           <div>• {trialComparisons.length} trials generated</div>
           <div>• Overall accuracy: {accuracy.toFixed(1)}%</div>
           <div>• Timestamp: {new Date().toISOString()}</div>

@@ -1,9 +1,9 @@
 import React from 'react';
-import { SurveyTemplate } from '../../types/survey';
+import { AssessmentTemplate } from '../../types/assessment';
 import { FloatingLabelInput, FloatingLabelSelect } from '../common/molecules/label';
 
 interface SurveyHeaderProps {
-  template: SurveyTemplate;
+  template: AssessmentTemplate;
   globalScale: number;
   onScaleChange: (scale: number) => void;
   onAddQuestion: () => void;

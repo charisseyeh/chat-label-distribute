@@ -43,7 +43,7 @@ interface SurveyActions {
 
 type SurveyStore = SurveyState & SurveyActions;
 
-// Default survey dimensions (matching what's already implemented)
+// Default assessment dimensions (matching what's already implemented)
 const DEFAULT_DIMENSIONS: SurveyDimension[] = [
   {
     id: 'mood',
@@ -137,7 +137,7 @@ export const useSurveyStore = create<SurveyStore>()(
       setDimensions: (dimensions) => set({ dimensions }),
     }),
     {
-      name: 'survey-storage',
+      name: 'assessment-storage',
       // Only persist responses and dimensions, not loading/error states
       partialize: (state) => ({ 
         responses: state.responses,

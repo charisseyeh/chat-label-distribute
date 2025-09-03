@@ -1,22 +1,22 @@
 import { ipcMain, dialog } from 'electron';
 import { FileManager as ConversationManager } from './managers/conversation-manager';
-import { SurveyManager } from './managers/survey-manager';
-import { SurveyHandlers } from './handlers/survey-handlers';
+import { AssessmentManager } from './managers/assessment-manager';
+import { AssessmentHandlers } from './handlers/assessment-handlers';
 import * as fs from 'fs-extra';
 import axios from 'axios';
 
 export class IPCHandlers {
   private conversationManager: ConversationManager;
-  private surveyManager: SurveyManager;
-  private surveyHandlers: SurveyHandlers;
+  private assessmentManager: AssessmentManager;
+  private assessmentHandlers: AssessmentHandlers;
 
   constructor() {
     console.log('🔧 IPCHandlers: Initializing...');
     this.conversationManager = new ConversationManager();
-    this.surveyManager = new SurveyManager();
-    console.log('📊 IPCHandlers: Creating SurveyHandlers...');
-    this.surveyHandlers = new SurveyHandlers(this.surveyManager);
-    console.log('✅ IPCHandlers: SurveyHandlers created successfully');
+    this.assessmentManager = new AssessmentManager();
+    console.log('📊 IPCHandlers: Creating AssessmentHandlers...');
+    this.assessmentHandlers = new AssessmentHandlers(this.assessmentManager);
+    console.log('✅ IPCHandlers: AssessmentHandlers created successfully');
     this.setupConversationHandlers();
     
     // Add a simple test handler to verify IPC is working
@@ -272,7 +272,7 @@ export class IPCHandlers {
             messages: [
               {
                 role: 'system',
-                content: 'You are an expert at analyzing conversations and providing survey ratings. Always respond with the exact format requested.'
+                content: 'You are an expert at analyzing conversations and providing assessment ratings. Always respond with the exact format requested.'
               },
               {
                 role: 'user',

@@ -1,39 +1,39 @@
 import { create } from 'zustand';
-import { SurveyQuestion, SurveyTemplate } from '../types/survey';
-import { generateDefaultLabels } from '../utils/surveyUtils';
+import { AssessmentQuestion, AssessmentTemplate } from '../types/assessment';
+import { generateDefaultLabels } from '../utils/assessmentUtils';
 
-interface SurveyQuestionState {
-  templates: SurveyTemplate[];
-  currentTemplate: SurveyTemplate | null;
+interface AssessmentQuestionState {
+  templates: AssessmentTemplate[];
+  currentTemplate: AssessmentTemplate | null;
   loading: boolean;
   error: string | null;
 }
 
-interface SurveyQuestionActions {
+interface AssessmentQuestionActions {
   // State management
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
   
   // Template management
-  createTemplate: (name: string) => Promise<SurveyTemplate>;
-  updateTemplate: (id: string, updates: Partial<SurveyTemplate>) => Promise<void>;
+  createTemplate: (name: string) => Promise<AssessmentTemplate>;
+  updateTemplate: (id: string, updates: Partial<AssessmentTemplate>) => Promise<void>;
   deleteTemplate: (id: string) => Promise<void>;
-  setCurrentTemplate: (template: SurveyTemplate | null) => void;
-  setCurrentTemplateSafely: (template: SurveyTemplate | null, onConfirm: () => void) => void;
+  setCurrentTemplate: (template: AssessmentTemplate | null) => void;
+  setCurrentTemplateSafely: (template: AssessmentTemplate | null, onConfirm: () => void) => void;
   
   // Question management
-  addQuestion: (templateId: string, question: Omit<SurveyQuestion, 'id' | 'order'>) => Promise<void>;
-  updateQuestion: (templateId: string, questionId: string, updates: Partial<SurveyQuestion>) => Promise<void>;
+  addQuestion: (templateId: string, question: Omit<AssessmentQuestion, 'id' | 'order'>) => Promise<void>;
+  updateQuestion: (templateId: string, questionId: string, updates: Partial<AssessmentQuestion>) => Promise<void>;
   deleteQuestion: (templateId: string, questionId: string) => Promise<void>;
   reorderQuestions: (templateId: string, questionIds: string[]) => Promise<void>;
   
   // Default template initialization
   initializeDefaultTemplate: () => Promise<void>;
-  getDefaultQuestions: () => SurveyQuestion[];
+  getDefaultQuestions: () => AssessmentQuestion[];
   
   // Template switching safety
-  checkTemplateSwitchImpact: (newTemplate: SurveyTemplate | null) => {
+  checkTemplateSwitchImpact: (newTemplate: AssessmentTemplate | null) => {
     hasExistingResponses: boolean;
     responseCount: number;
     willLoseData: boolean;
@@ -41,13 +41,13 @@ interface SurveyQuestionActions {
 
   // Load templates from file storage
   loadTemplates: () => Promise<void>;
-  loadTemplate: (templateId: string) => Promise<SurveyTemplate | null>;
+  loadTemplate: (templateId: string) => Promise<AssessmentTemplate | null>;
 }
 
-type SurveyQuestionStore = SurveyQuestionState & SurveyQuestionActions;
+type AssessmentQuestionStore = AssessmentQuestionState & AssessmentQuestionActions;
 
-// Default survey questions based on the existing implementation
-const getDefaultQuestions = (): SurveyQuestion[] => [
+// Default assessment questions based on the existing implementation
+const getDefaultQuestions = (): AssessmentQuestion[] => [
   {
     id: '1',
     text: 'How would you rate the overall mood or emotional tone?',
@@ -125,7 +125,7 @@ const getDefaultQuestions = (): SurveyQuestion[] => [
   }
 ];
 
-export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
+export const useAssessmentQuestionStore = create<AssessmentQuestionStore>()(
   (set, get) => {
     return {
       // Initial state
@@ -144,8 +144,8 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
         try {
           set({ loading: true, error: null });
           
-          if (window.electronAPI?.getAllSurveyTemplates) {
-            const result = await window.electronAPI.getAllSurveyTemplates();
+          if (window.electronAPI?.getAllAssessmentTemplates) {
+            const result = await window.electronAPI.getAllAssessmentTemplates();
             if (result.success) {
               set({ templates: result.data || [] });
             } else {
@@ -164,8 +164,8 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
 
       loadTemplate: async (templateId: string) => {
         try {
-          if (window.electronAPI?.getSurveyTemplate) {
-            const result = await window.electronAPI.getSurveyTemplate(templateId);
+          if (window.electronAPI?.getAssessmentTemplate) {
+            const result = await window.electronAPI.getAssessmentTemplate(templateId);
             if (result.success) {
               return result.data;
             } else {
@@ -185,7 +185,7 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
         try {
           set({ loading: true, error: null });
           
-          const newTemplate: SurveyTemplate = {
+          const newTemplate: AssessmentTemplate = {
             id: `template_${Date.now()}`,
             name,
             questions: getDefaultQuestions(),
@@ -193,8 +193,8 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
             updatedAt: new Date().toISOString()
           };
           
-          if (window.electronAPI?.createSurveyTemplate) {
-            const result = await window.electronAPI.createSurveyTemplate(newTemplate);
+          if (window.electronAPI?.createAssessmentTemplate) {
+            const result = await window.electronAPI.createAssessmentTemplate(newTemplate);
             if (result.success) {
               set({ 
                 templates: [...get().templates, newTemplate],
@@ -225,18 +225,18 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
 
       updateTemplate: async (id, updates) => {
         try {
-          console.log('🔄 SurveyQuestionStore: updateTemplate called', { id, updates });
+          console.log('🔄 AssessmentQuestionStore: updateTemplate called', { id, updates });
           
-          if (window.electronAPI?.updateSurveyTemplate) {
-            console.log('📡 Calling electronAPI.updateSurveyTemplate...');
-            const result = await window.electronAPI.updateSurveyTemplate(id, updates);
-            console.log('📡 electronAPI.updateSurveyTemplate result:', result);
+          if (window.electronAPI?.updateAssessmentTemplate) {
+            console.log('📡 Calling electronAPI.updateAssessmentTemplate...');
+            const result = await window.electronAPI.updateAssessmentTemplate(id, updates);
+            console.log('📡 electronAPI.updateAssessmentTemplate result:', result);
             
             if (!result.success) {
               throw new Error(result.error || 'Failed to update template');
             }
           } else {
-            console.warn('⚠️ window.electronAPI.updateSurveyTemplate not available');
+            console.warn('⚠️ window.electronAPI.updateAssessmentTemplate not available');
           }
           
           const { templates } = get();
@@ -253,9 +253,9 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
             set({ currentTemplate: newCurrentTemplate });
           }
           
-          console.log('✅ SurveyQuestionStore: updateTemplate completed successfully');
+          console.log('✅ AssessmentQuestionStore: updateTemplate completed successfully');
         } catch (error) {
-          console.error('❌ SurveyQuestionStore: updateTemplate failed:', error);
+          console.error('❌ AssessmentQuestionStore: updateTemplate failed:', error);
           set({ error: error instanceof Error ? error.message : 'Failed to update template' });
           throw error;
         }
@@ -263,8 +263,8 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
 
       deleteTemplate: async (id) => {
         try {
-          if (window.electronAPI?.deleteSurveyTemplate) {
-            const result = await window.electronAPI.deleteSurveyTemplate(id);
+          if (window.electronAPI?.deleteAssessmentTemplate) {
+            const result = await window.electronAPI.deleteAssessmentTemplate(id);
             if (!result.success) {
               throw new Error(result.error || 'Failed to delete template');
             }
@@ -300,7 +300,7 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
           const template = templates.find(t => t.id === templateId);
           if (!template) return;
 
-          const newQuestion: SurveyQuestion = {
+          const newQuestion: AssessmentQuestion = {
             ...questionData,
             id: `question_${Date.now()}`,
             order: template.questions.length + 1
@@ -416,7 +416,7 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
           const reorderedQuestions = questionIds.map((id, index) => {
             const question = template.questions.find(q => q.id === id);
             return question ? { ...question, order: index + 1 } : null;
-          }).filter(Boolean) as SurveyQuestion[];
+          }).filter(Boolean) as AssessmentQuestion[];
 
           const updatedTemplate = {
             ...template,
@@ -476,7 +476,7 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
           };
         }
 
-        // For now, return a basic check - this will be enhanced when we integrate with survey response store
+        // For now, return a basic check - this will be enhanced when we integrate with assessment response store
         return {
           hasExistingResponses: false,
           responseCount: 0,

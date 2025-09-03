@@ -1,4 +1,4 @@
-import { SurveyTemplate } from '../../types/survey';
+import { AssessmentTemplate } from '../../types/assessment';
 
 export interface ComparisonData {
   conversationId: string;
@@ -64,7 +64,7 @@ export const calculateAgreement = (human: Record<string, number>, ai: Record<str
 export const calculateDifferences = (
   human: Record<string, number>, 
   ai: Record<string, number>, 
-  template: SurveyTemplate
+  template: AssessmentTemplate
 ): Array<{
   questionId: string;
   questionText: string;

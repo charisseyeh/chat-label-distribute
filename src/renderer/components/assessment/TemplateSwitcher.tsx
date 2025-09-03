@@ -1,10 +1,10 @@
 import React from 'react';
-import { useTemplateSwitching } from '../../hooks/survey/useTemplateSwitching';
-import { SurveyTemplate } from '../../types/survey';
+import { useTemplateSwitching } from '../../hooks/assessment/useTemplateSwitching';
+import { AssessmentTemplate } from '../../types/assessment';
 
 interface TemplateSwitcherProps {
-  templates: SurveyTemplate[];
-  onTemplateSwitch?: (template: SurveyTemplate | null) => void;
+  templates: AssessmentTemplate[];
+  onTemplateSwitch?: (template: AssessmentTemplate | null) => void;
 }
 
 const TemplateSwitcher: React.FC<TemplateSwitcherProps> = ({ 
@@ -13,7 +13,7 @@ const TemplateSwitcher: React.FC<TemplateSwitcherProps> = ({
 }) => {
   const { currentTemplate, checkTemplateSwitchImpact, switchTemplateSafely } = useTemplateSwitching();
 
-  const handleTemplateSwitch = (template: SurveyTemplate | null) => {
+  const handleTemplateSwitch = (template: AssessmentTemplate | null) => {
     const impact = checkTemplateSwitchImpact(template);
     
     if (impact.willLoseData) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSurveyResponseStore } from '../../stores/surveyResponseStore';
+import { useAssessmentResponseStore } from '../../stores/assessmentResponseStore';
 
 interface Conversation {
   id: string;
@@ -10,7 +10,7 @@ interface Conversation {
   messageCount: number;
 }
 
-interface SurveyResponse {
+interface AssessmentResponse {
   position: string;
   ratings: Record<string, number>;
   notes: string;
@@ -19,18 +19,18 @@ interface SurveyResponse {
 
 interface ExportOptions {
   includeConversations: boolean;
-  includeSurveyResponses: boolean;
+  includeAssessmentResponses: boolean;
   includeMessages: boolean;
   format: 'json' | 'csv';
   filterCompleted: boolean;
 }
 
 const ExportPanel: React.FC = () => {
-  const { conversationData } = useSurveyResponseStore();
+  const { conversationData } = useAssessmentResponseStore();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
     includeConversations: true,
-    includeSurveyResponses: true,
+    includeAssessmentResponses: true,
     includeMessages: false,
     format: 'json',
     filterCompleted: false
@@ -65,7 +65,7 @@ const ExportPanel: React.FC = () => {
     }
   };
 
-  const getSurveyResponses = (conversationId: string) => {
+  const getAssessmentResponses = (conversationId: string) => {
     try {
       // Use the store data instead of localStorage
       const storeData = conversationData[conversationId];
@@ -114,11 +114,11 @@ const ExportPanel: React.FC = () => {
       }
       
       // Fallback to localStorage for backward compatibility
-      const savedResponses = localStorage.getItem(`survey_responses_${conversationId}`);
+      const savedResponses = localStorage.getItem(`assessment_responses_${conversationId}`);
       console.log('🔍 Fallback localStorage responses:', savedResponses);
       return savedResponses ? JSON.parse(savedResponses) : {};
     } catch (err) {
-      console.error('Error loading survey responses:', err);
+      console.error('Error loading assessment responses:', err);
       return {};
     }
   };
@@ -158,7 +158,7 @@ const ExportPanel: React.FC = () => {
     }
     
     // Fallback to old method
-    const responses = getSurveyResponses(conversationId);
+    const responses = getAssessmentResponses(conversationId);
     const positions = ['beginning', 'turn6', 'end'];
     return positions.every(pos => responses[pos]);
   };
@@ -171,7 +171,7 @@ const ExportPanel: React.FC = () => {
         options: exportOptions
       },
       conversations: [],
-      surveyResponses: [],
+      assessmentResponses: [],
       messages: []
     };
 
@@ -192,8 +192,8 @@ const ExportPanel: React.FC = () => {
         });
       }
 
-      if (exportOptions.includeSurveyResponses) {
-        const responses = getSurveyResponses(conversation.id);
+      if (exportOptions.includeAssessmentResponses) {
+        const responses = getAssessmentResponses(conversation.id);
         if (Object.keys(responses).length > 0) {
           // Get all human responses from the store, not just the current template
           const storeData = conversationData[conversation.id];
@@ -216,7 +216,7 @@ const ExportPanel: React.FC = () => {
             });
           }
           
-          exportData.surveyResponses.push({
+          exportData.assessmentResponses.push({
             conversationId: conversation.id,
             conversationTitle: conversation.title,
             responses: allHumanResponses,
@@ -297,15 +297,15 @@ const ExportPanel: React.FC = () => {
   const getExportSummary = () => {
     const totalConversations = conversations.length;
     const completedConversations = conversations.filter(c => isConversationComplete(c.id)).length;
-    const totalSurveyResponses = conversations.reduce((total, c) => {
-      const responses = getSurveyResponses(c.id);
+    const totalAssessmentResponses = conversations.reduce((total, c) => {
+      const responses = getAssessmentResponses(c.id);
       return total + Object.keys(responses).length;
     }, 0);
     
     return {
       totalConversations,
       completedConversations,
-      totalSurveyResponses,
+      totalAssessmentResponses,
       completionRate: totalConversations > 0 ? (completedConversations / totalConversations * 100).toFixed(1) : '0'
     };
   };
@@ -335,7 +335,7 @@ const ExportPanel: React.FC = () => {
               <div className="text-sm text-muted-foreground">Completed Surveys</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-blue-600">{summary.totalSurveyResponses}</div>
+              <div className="text-2xl font-bold text-blue-600">{summary.totalAssessmentResponses}</div>
               <div className="text-sm text-muted-foreground">Survey Responses</div>
             </div>
             <div>
@@ -367,11 +367,11 @@ const ExportPanel: React.FC = () => {
                 <label className="flex items-center space-x-2">
                   <input
                     type="checkbox"
-                    checked={exportOptions.includeSurveyResponses}
-                    onChange={(e) => setExportOptions(prev => ({ ...prev, includeSurveyResponses: e.target.checked }))}
+                    checked={exportOptions.includeAssessmentResponses}
+                    onChange={(e) => setExportOptions(prev => ({ ...prev, includeAssessmentResponses: e.target.checked }))}
                     className="rounded border-gray-300"
                   />
-                  <span>Include survey responses</span>
+                  <span>Include assessment responses</span>
                 </label>
                 
                 <label className="flex items-center space-x-2">

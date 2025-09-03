@@ -1,4 +1,4 @@
-import { Conversation, ParsedConversation } from '../../../types/conversation';
+import { Conversation, ParsedConversation } from '../../types/conversation';
 import { MessageExtractor } from './messageExtractor';
 // import { ValidationService } from './validationService'; // Comment out validation import
 

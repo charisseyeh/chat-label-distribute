@@ -2,8 +2,8 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useConversationStore } from '../stores/conversationStore';
 import { useNavigationStore } from '../stores/navigationStore';
-import { useSurveyResponseStore } from '../stores/surveyResponseStore';
-import { useSurveyQuestions } from '../hooks/survey/useSurveyQuestions';
+import { useAssessmentResponseStore } from '../stores/assessmentResponseStore';
+import { useAssessmentQuestions } from '../hooks/assessment/useAssessmentQuestions';
 import { List } from '../components/common/molecules/list/List';
 
 const LabelConversationsPage: React.FC = () => {
@@ -15,8 +15,8 @@ const LabelConversationsPage: React.FC = () => {
     clearAllSelectedAndSave
   } = useConversationStore();
   const { selectedConversations, setSelectedConversations } = useNavigationStore();
-  const { getProgress } = useSurveyResponseStore();
-  const { currentTemplate } = useSurveyQuestions();
+  const { getProgress } = useAssessmentResponseStore();
+  const { currentTemplate } = useAssessmentQuestions();
   const navigate = useNavigate();
 
   // Load selected conversations from permanent storage on mount

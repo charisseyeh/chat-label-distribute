@@ -8,7 +8,7 @@ import { useParams, useNavigate } from 'react-router-dom';
  * New structure:
  * - ConversationPage: Main page component with layout and navigation
  * - ConversationDetail: Component for displaying conversation messages
- * - SurveySidebar: Survey functionality (unchanged)
+ * - AssessmentSidebar: Assessment functionality (unchanged)
  */
 const LabelingPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();

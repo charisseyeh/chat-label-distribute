@@ -13,7 +13,7 @@ export interface ScrollTracker {
 }
 
 export interface ScrollTrackingOptions {
-  turn6Threshold?: number; // Number of messages to trigger turn 6 survey
+  turn6Threshold?: number; // Number of messages to trigger turn 6 assessment
   intersectionThreshold?: number; // How much of a message needs to be visible (0-1)
 }
 

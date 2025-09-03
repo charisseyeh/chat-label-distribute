@@ -1,8 +1,8 @@
 import { useCallback, useMemo } from 'react';
-import { useSurveyResponseStore } from '../../stores/surveyResponseStore';
-import { SurveyResponse, ConversationSurveyData, SurveyProgress } from '../../types/survey';
+import { useAssessmentResponseStore } from '../../stores/assessmentResponseStore';
+import { AssessmentResponse, ConversationAssessmentData, AssessmentProgress } from '../../types/assessment';
 
-export const useSurveyResponses = (conversationId?: string) => {
+export const useAssessmentResponses = (conversationId?: string) => {
   const {
     responses,
     conversationData,
@@ -24,7 +24,7 @@ export const useSurveyResponses = (conversationId?: string) => {
     clearConversationData,
     exportConversationData,
     importConversationData
-  } = useSurveyResponseStore();
+  } = useAssessmentResponseStore();
 
   // Get responses for current conversation
   const currentConversationResponses = useMemo(() => {
@@ -58,7 +58,7 @@ export const useSurveyResponses = (conversationId?: string) => {
       setLoading(true);
       clearError();
 
-      const response: SurveyResponse = {
+      const response: AssessmentResponse = {
         id: `response_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         conversationId,
         position,
@@ -91,7 +91,7 @@ export const useSurveyResponses = (conversationId?: string) => {
 
   const handleUpdateResponse = useCallback(async (
     responseId: string,
-    updates: Partial<SurveyResponse>
+    updates: Partial<AssessmentResponse>
   ) => {
     try {
       setLoading(true);
@@ -208,7 +208,7 @@ export const useSurveyResponses = (conversationId?: string) => {
   }, [conversationId, exportConversationData, setLoading, setError, clearError]);
 
   // Data import
-  const handleImportConversationData = useCallback(async (data: ConversationSurveyData) => {
+  const handleImportConversationData = useCallback(async (data: ConversationAssessmentData) => {
     try {
       setLoading(true);
       clearError();

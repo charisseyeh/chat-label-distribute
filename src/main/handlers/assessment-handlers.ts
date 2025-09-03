@@ -1,22 +1,22 @@
 import { ipcMain } from 'electron';
-import { SurveyManager } from '../managers/survey-manager';
+import { AssessmentManager } from '../managers/assessment-manager';
 
-export class SurveyHandlers {
-  private surveyManager: SurveyManager;
+export class AssessmentHandlers {
+  private assessmentManager: AssessmentManager;
 
-  constructor(surveyManager: SurveyManager) {
-    console.log('📊 SurveyHandlers: Constructor called');
-    this.surveyManager = surveyManager;
-    console.log('📊 SurveyHandlers: Setting up handlers...');
+  constructor(assessmentManager: AssessmentManager) {
+    console.log('📊 AssessmentHandlers: Constructor called');
+    this.assessmentManager = assessmentManager;
+    console.log('📊 AssessmentHandlers: Setting up handlers...');
     this.setupHandlers();
-    console.log('✅ SurveyHandlers: Handlers set up successfully');
+    console.log('✅ AssessmentHandlers: Handlers set up successfully');
   }
 
   private setupHandlers() {
-    // Survey Template Operations
-    ipcMain.handle('survey:create-template', async (event, template: any) => {
+    // Assessment Template Operations
+    ipcMain.handle('assessment:create-template', async (event, template: any) => {
       try {
-        const success = await this.surveyManager.storeSurveyTemplate(template);
+        const success = await this.assessmentManager.storeAssessmentTemplate(template);
         if (success) {
           return { success: true, data: template };
         } else {
@@ -30,9 +30,9 @@ export class SurveyHandlers {
       }
     });
 
-    ipcMain.handle('survey:get-template', async (event, templateId: string) => {
+    ipcMain.handle('assessment:get-template', async (event, templateId: string) => {
       try {
-        const template = await this.surveyManager.getSurveyTemplate(templateId);
+        const template = await this.assessmentManager.getAssessmentTemplate(templateId);
         if (template) {
           return { success: true, data: template };
         } else {
@@ -46,9 +46,9 @@ export class SurveyHandlers {
       }
     });
 
-    ipcMain.handle('survey:get-all-templates', async () => {
+    ipcMain.handle('assessment:get-all-templates', async () => {
       try {
-        const templates = await this.surveyManager.getAllSurveyTemplates();
+        const templates = await this.assessmentManager.getAllAssessmentTemplates();
         return { success: true, data: templates };
       } catch (error) {
         return { 
@@ -58,21 +58,21 @@ export class SurveyHandlers {
       }
     });
 
-    ipcMain.handle('survey:update-template', async (event, templateId: string, updates: any) => {
+    ipcMain.handle('assessment:update-template', async (event, templateId: string, updates: any) => {
       try {
-        console.log('🔄 SurveyHandlers: survey:update-template called', { templateId, updates });
-        const success = await this.surveyManager.updateSurveyTemplate(templateId, updates);
-        console.log('📁 SurveyManager: updateSurveyTemplate result:', success);
+        console.log('🔄 AssessmentHandlers: assessment:update-template called', { templateId, updates });
+        const success = await this.assessmentManager.updateAssessmentTemplate(templateId, updates);
+        console.log('📁 AssessmentManager: updateAssessmentTemplate result:', success);
         
         if (success) {
-          console.log('✅ SurveyHandlers: Template updated successfully');
+          console.log('✅ AssessmentHandlers: Template updated successfully');
           return { success: true, data: { updated: true } };
         } else {
-          console.error('❌ SurveyHandlers: Failed to update template');
+          console.error('❌ AssessmentHandlers: Failed to update template');
           return { success: false, error: 'Failed to update template' };
         }
       } catch (error) {
-        console.error('❌ SurveyHandlers: Error updating template:', error);
+        console.error('❌ AssessmentHandlers: Error updating template:', error);
         return { 
           success: false, 
           error: error instanceof Error ? error.message : 'Unknown error occurred' 
@@ -80,9 +80,9 @@ export class SurveyHandlers {
       }
     });
 
-    ipcMain.handle('survey:delete-template', async (event, templateId: string) => {
+    ipcMain.handle('assessment:delete-template', async (event, templateId: string) => {
       try {
-        const success = await this.surveyManager.deleteSurveyTemplate(templateId);
+        const success = await this.assessmentManager.deleteAssessmentTemplate(templateId);
         if (success) {
           return { success: true, data: { deleted: true } };
         } else {
@@ -96,9 +96,9 @@ export class SurveyHandlers {
       }
     });
 
-    ipcMain.handle('survey:get-template-stats', async () => {
+    ipcMain.handle('assessment:get-template-stats', async () => {
       try {
-        const stats = await this.surveyManager.getSurveyTemplateStats();
+        const stats = await this.assessmentManager.getAssessmentTemplateStats();
         return { success: true, data: stats };
       } catch (error) {
         return { 

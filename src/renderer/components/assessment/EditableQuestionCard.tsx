@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { SurveyQuestion } from '../../types/survey';
-import { generateDefaultLabels } from '../../utils/surveyUtils';
+import { AssessmentQuestion } from '../../types/assessment';
+import { generateDefaultLabels } from '../../utils/assessmentUtils';
 
 interface EditableQuestionCardProps {
-  question: SurveyQuestion;
+  question: AssessmentQuestion;
   index: number;
   globalScale: number;
-  onSave: (questionData: Partial<SurveyQuestion>) => void;
+  onSave: (questionData: Partial<AssessmentQuestion>) => void;
   onDelete: () => void;
-  onTrackChanges: (questionData: Partial<SurveyQuestion>) => void;
+  onTrackChanges: (questionData: Partial<AssessmentQuestion>) => void;
 }
 
 const EditableQuestionCard: React.FC<EditableQuestionCardProps> = ({ 

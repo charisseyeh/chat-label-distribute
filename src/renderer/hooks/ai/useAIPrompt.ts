@@ -1,10 +1,10 @@
 import { useCallback, useMemo } from 'react';
-import { useSurveyQuestionStore } from '../../stores/surveyQuestionStore';
-import { AIPromptService } from '../../services/survey/aiPromptService';
-import { AIPromptConfig, SurveyTemplate } from '../../types/survey';
+import { useAssessmentQuestionStore } from '../../stores/assessmentQuestionStore';
+import { AIPromptService } from '../../services/assessment/aiPromptService';
+import { AIPromptConfig, AssessmentTemplate } from '../../types/assessment';
 
 export const useAIPrompt = () => {
-  const { currentTemplate } = useSurveyQuestionStore();
+  const { currentTemplate } = useAssessmentQuestionStore();
 
   // Generate prompt configuration for a specific position
   const generatePromptConfig = useCallback((
@@ -12,7 +12,7 @@ export const useAIPrompt = () => {
     position: 'beginning' | 'turn6' | 'end'
   ): AIPromptConfig | null => {
     if (!currentTemplate) {
-      console.warn('No survey template available for AI prompt generation');
+      console.warn('No assessment template available for AI prompt generation');
       return null;
     }
 
@@ -34,7 +34,7 @@ export const useAIPrompt = () => {
     position: 'beginning' | 'turn6' | 'end'
   ): string | null => {
     if (!currentTemplate) {
-      console.warn('No survey template available for AI prompt generation');
+      console.warn('No assessment template available for AI prompt generation');
       return null;
     }
 
@@ -53,7 +53,7 @@ export const useAIPrompt = () => {
   // Generate system prompt only (for editing)
   const generateSystemPromptOnly = useCallback((): string | null => {
     if (!currentTemplate) {
-      console.warn('No survey template available for system prompt generation');
+      console.warn('No assessment template available for system prompt generation');
       return null;
     }
 
@@ -72,7 +72,7 @@ export const useAIPrompt = () => {
     position: 'beginning' | 'turn6' | 'end'
   ): string | null => {
     if (!currentTemplate) {
-      console.warn('No survey template available for AI prompt generation');
+      console.warn('No assessment template available for AI prompt generation');
       return null;
     }
 
@@ -98,16 +98,16 @@ export const useAIPrompt = () => {
   }, []);
 
   // Parse AI response to extract ratings
-  const parseAIResponse = useCallback((
+  const parseAIResponse = useCallback(async (
     response: string
-  ): Record<string, number> | null => {
+  ): Promise<Record<string, number> | null> => {
     if (!currentTemplate) {
-      console.warn('No survey template available for AI response parsing');
+      console.warn('No assessment template available for AI response parsing');
       return null;
     }
 
     try {
-      return AIPromptService.parseAIResponse(response, currentTemplate);
+      return await AIPromptService.parseAIResponse(response, currentTemplate);
     } catch (error) {
       console.error('Failed to parse AI response:', error);
       return null;
@@ -119,7 +119,7 @@ export const useAIPrompt = () => {
     ratings: Record<string, number>
   ): { isValid: boolean; errors: string[] } | null => {
     if (!currentTemplate) {
-      console.warn('No survey template available for AI rating validation');
+      console.warn('No assessment template available for AI rating validation');
       return null;
     }
 
@@ -136,7 +136,7 @@ export const useAIPrompt = () => {
     position: 'beginning' | 'turn6' | 'end'
   ): string | null => {
     if (!currentTemplate) {
-      console.warn('No survey template available for rating instructions');
+      console.warn('No assessment template available for rating instructions');
       return null;
     }
 
@@ -205,7 +205,7 @@ export const useAIPrompt = () => {
   // Validate template for AI usage
   const validateTemplateForAI = useCallback((): { isValid: boolean; errors: string[] } => {
     if (!currentTemplate) {
-      return { isValid: false, errors: ['No survey template available'] };
+      return { isValid: false, errors: ['No assessment template available'] };
     }
 
     const errors: string[] = [];

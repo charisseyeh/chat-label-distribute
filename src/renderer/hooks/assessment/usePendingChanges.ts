@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { usePageActionsStore } from '../../stores/pageActionsStore';
-import { SurveyTemplate, SurveyQuestion } from '../../types/survey';
+import { AssessmentTemplate, AssessmentQuestion } from '../../types/assessment';
 
 export const usePendingChanges = (
-  currentTemplate: SurveyTemplate | null,
-  updateQuestion: (templateId: string, questionId: string, questionData: Partial<SurveyQuestion>) => Promise<void>
+  currentTemplate: AssessmentTemplate | null,
+  updateQuestion: (templateId: string, questionId: string, questionData: Partial<AssessmentQuestion>) => Promise<void>
 ) => {
-  const [pendingChanges, setPendingChanges] = useState<Map<string, Partial<SurveyQuestion>>>(new Map());
+  const [pendingChanges, setPendingChanges] = useState<Map<string, Partial<AssessmentQuestion>>>(new Map());
   const { setSaveHandler, clearSaveHandler, setPendingChangesCount } = usePageActionsStore();
   const pendingChangesRef = useRef(pendingChanges);
 
@@ -55,7 +55,7 @@ export const usePendingChanges = (
 
   return { 
     pendingChanges, 
-    setPendingChanges: (changes: Map<string, Partial<SurveyQuestion>>) => {
+    setPendingChanges: (changes: Map<string, Partial<AssessmentQuestion>>) => {
       setPendingChanges(changes);
     }
   };

@@ -1,14 +1,14 @@
-import { ConversationSurveyData, SurveyResponse } from '../../types/survey';
+import { ConversationAssessmentData, AssessmentResponse } from '../../types/assessment';
 
 export class SurveyExportService {
   /**
-   * Exports survey data for a specific conversation
+   * Exports assessment data for a specific conversation
    */
-  static exportConversationData(data: ConversationSurveyData): string {
+  static exportConversationData(data: ConversationAssessmentData): string {
     const exportData = {
       conversationId: data.conversationId,
       exportDate: new Date().toISOString(),
-      surveyData: data,
+      assessmentData: data,
       metadata: {
         totalResponses: data.responses.length,
         completedSections: data.completedSections,
@@ -20,9 +20,9 @@ export class SurveyExportService {
   }
 
   /**
-   * Exports all survey data
+   * Exports all assessment data
    */
-  static exportAllData(allData: Record<string, ConversationSurveyData>): string {
+  static exportAllData(allData: Record<string, ConversationAssessmentData>): string {
     const exportData = {
       exportDate: new Date().toISOString(),
       totalConversations: Object.keys(allData).length,
@@ -38,13 +38,13 @@ export class SurveyExportService {
   }
 
   /**
-   * Exports survey data in research format
+   * Exports assessment data in research format
    */
-  static exportResearchFormat(data: ConversationSurveyData): string {
+  static exportResearchFormat(data: ConversationAssessmentData): string {
     const researchData = {
       conversation_id: data.conversationId,
       export_timestamp: new Date().toISOString(),
-      survey_responses: data.responses.map(response => ({
+      assessment_responses: data.responses.map(response => ({
         question_id: response.questionId,
         position: response.position,
         rating: response.rating,
@@ -84,17 +84,17 @@ export class SurveyExportService {
   static generateFilename(conversationId: string, format: 'full' | 'research' = 'full'): string {
     const timestamp = new Date().toISOString().split('T')[0];
     const formatSuffix = format === 'research' ? '_research' : '';
-    return `survey_data_${conversationId}${formatSuffix}_${timestamp}.json`;
+    return `assessment_data_${conversationId}${formatSuffix}_${timestamp}.json`;
   }
 
   /**
    * Exports data for multiple conversations
    */
   static exportMultipleConversations(
-    conversationsData: Record<string, ConversationSurveyData>,
+    conversationsData: Record<string, ConversationAssessmentData>,
     conversationIds: string[]
   ): string {
-    const selectedData: Record<string, ConversationSurveyData> = {};
+    const selectedData: Record<string, ConversationAssessmentData> = {};
     
     conversationIds.forEach(id => {
       if (conversationsData[id]) {
@@ -108,7 +108,7 @@ export class SurveyExportService {
   /**
    * Exports data in CSV format (alternative to JSON)
    */
-  static exportToCSV(data: ConversationSurveyData): string {
+  static exportToCSV(data: ConversationAssessmentData): string {
     const headers = ['Conversation ID', 'Position', 'Question ID', 'Rating', 'Timestamp'];
     const rows = data.responses.map(response => [
       data.conversationId,
@@ -128,7 +128,7 @@ export class SurveyExportService {
   /**
    * Validates export data before download
    */
-  static validateExportData(data: ConversationSurveyData): { isValid: boolean; errors: string[] } {
+  static validateExportData(data: ConversationAssessmentData): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
 
     if (!data.conversationId) {
@@ -136,7 +136,7 @@ export class SurveyExportService {
     }
 
     if (!data.responses || data.responses.length === 0) {
-      errors.push('No survey responses found');
+      errors.push('No assessment responses found');
     }
 
     if (!data.lastUpdated) {

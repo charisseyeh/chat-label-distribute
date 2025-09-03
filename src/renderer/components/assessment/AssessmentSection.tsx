@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { SurveySection as SurveySectionType, SurveyResponse } from '../../types/survey';
-import { useSurveyResponseStore } from '../../stores/surveyResponseStore';
+import { AssessmentSection as AssessmentSectionType, AssessmentResponse } from '../../types/assessment';
+import { useAssessmentResponseStore } from '../../stores/assessmentResponseStore';
 import QuestionDisplay from './QuestionDisplay';
 
-interface SurveySectionProps {
-  section: SurveySectionType;
+interface AssessmentSectionProps {
+  section: AssessmentSectionType;
   onResponse: (questionId: string, position: 'beginning' | 'turn6' | 'end', rating: number) => void;
   isVisible: boolean;
   conversationId: string;
 }
 
-const SurveySection: React.FC<SurveySectionProps> = ({ 
+const AssessmentSection: React.FC<AssessmentSectionProps> = ({ 
   section, 
   onResponse, 
   isVisible,
@@ -19,7 +19,7 @@ const SurveySection: React.FC<SurveySectionProps> = ({
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   
   // Subscribe to conversation-specific responses instead of filtering global responses
-  const conversationData = useSurveyResponseStore(state => state.conversationData[conversationId]);
+  const conversationData = useAssessmentResponseStore(state => state.conversationData[conversationId]);
   const storeResponses = conversationData?.responses || [];
   
   // Filter responses for this specific section position
@@ -65,7 +65,7 @@ const SurveySection: React.FC<SurveySectionProps> = ({
   }
 
   // Use section responses for current rating to ensure UI updates
-  const currentRating = sectionResponses.find((r: SurveyResponse) => r.questionId === currentQuestion.id)?.rating || 0;
+  const currentRating = sectionResponses.find((r: AssessmentResponse) => r.questionId === currentQuestion.id)?.rating || 0;
 
   return (
     <div className="container-lg">
@@ -121,4 +121,4 @@ const SurveySection: React.FC<SurveySectionProps> = ({
   );
 };
 
-export default SurveySection;
+export default AssessmentSection;

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { AIService } from '../../services/ai/ai-service';
 import { useAIPrompt } from './useAIPrompt';
-import { useSurveyQuestionStore } from '../../stores/surveyQuestionStore';
+import { useAssessmentQuestionStore } from '../../stores/assessmentQuestionStore';
 import { useConversationStore } from '../../stores/conversationStore';
 import {
   ComparisonData,
@@ -29,7 +29,7 @@ export const useAIGeneration = () => {
     currentPrompt: ''
   });
 
-  const { currentTemplate } = useSurveyQuestionStore();
+  const { currentTemplate } = useAssessmentQuestionStore();
   const { selectedConversations: storeConversations } = useConversationStore();
   const { generateOpenAIPrompt, generateOpenAIPromptWithCustomSystem, parseAIResponse } = useAIPrompt();
 
@@ -67,7 +67,7 @@ export const useAIGeneration = () => {
     }
 
     if (!currentTemplate) {
-      throw new Error('No survey template available. Please create survey questions first.');
+      throw new Error('No assessment template available. Please create assessment questions first.');
     }
 
     if (selectedConversationIds.length === 0) {

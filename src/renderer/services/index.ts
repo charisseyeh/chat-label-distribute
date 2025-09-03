@@ -3,8 +3,8 @@ export * from './conversation';
 export * from './ai';
 export * from './core';
 
-// Survey services
-export * from './survey/questionService';
-export * from './survey/surveyExportService';
-export * from './survey/aiPromptService';
-export * from './survey/scrollTrackingService';
+// Assessment services
+export * from './assessment/questionService';
+export * from './assessment/assessmentExportService';
+export * from './assessment/aiPromptService';
+export * from './assessment/scrollTrackingService';

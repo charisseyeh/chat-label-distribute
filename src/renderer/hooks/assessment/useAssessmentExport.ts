@@ -1,10 +1,10 @@
 import { useCallback } from 'react';
-import { useSurveyResponseStore } from '../../stores/surveyResponseStore';
-import { SurveyExportService } from '../../services/survey/surveyExportService';
-import { ConversationSurveyData } from '../../types/survey';
+import { useAssessmentResponseStore } from '../../stores/assessmentResponseStore';
+import { SurveyExportService } from '../../services/assessment/assessmentExportService';
+import { ConversationAssessmentData } from '../../types/assessment';
 
-export const useSurveyExport = () => {
-  const { conversationData } = useSurveyResponseStore();
+export const useAssessmentExport = () => {
+  const { conversationData } = useAssessmentResponseStore();
 
   // Export single conversation data
   const exportConversationData = useCallback(async (conversationId: string, format: 'full' | 'research' = 'full') => {
@@ -49,7 +49,7 @@ export const useSurveyExport = () => {
       }
 
       const exportContent = SurveyExportService.exportAllData(conversationData);
-      const filename = `all_survey_data_${new Date().toISOString().split('T')[0]}.json`;
+      const filename = `all_assessment_data_${new Date().toISOString().split('T')[0]}.json`;
 
       // Trigger download
       SurveyExportService.downloadData(exportContent, filename);
@@ -69,7 +69,7 @@ export const useSurveyExport = () => {
       }
 
       const exportContent = SurveyExportService.exportMultipleConversations(conversationData, conversationIds);
-      const filename = `selected_survey_data_${new Date().toISOString().split('T')[0]}.json`;
+      const filename = `selected_assessment_data_${new Date().toISOString().split('T')[0]}.json`;
 
       // Trigger download
       SurveyExportService.downloadData(exportContent, filename);
@@ -90,7 +90,7 @@ export const useSurveyExport = () => {
       }
 
       const csvContent = SurveyExportService.exportToCSV(data);
-      const filename = `survey_data_${conversationId}_${new Date().toISOString().split('T')[0]}.csv`;
+      const filename = `assessment_data_${conversationId}_${new Date().toISOString().split('T')[0]}.csv`;
 
       // Create and download CSV
       const blob = new Blob([csvContent], { type: 'text/csv' });

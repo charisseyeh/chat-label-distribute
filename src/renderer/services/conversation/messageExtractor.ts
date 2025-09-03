@@ -1,4 +1,4 @@
-import { ParsedMessage } from '../../../types/conversation';
+import { ParsedMessage } from '../../types/conversation';
 
 export class MessageExtractor {
   /**

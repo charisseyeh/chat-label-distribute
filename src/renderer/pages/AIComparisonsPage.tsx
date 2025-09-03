@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useSurveyResponseStore } from '../stores/surveyResponseStore';
-import { useSurveyQuestionStore } from '../stores/surveyQuestionStore';
+import { useAssessmentResponseStore } from '../stores/assessmentResponseStore';
+import { useAssessmentQuestionStore } from '../stores/assessmentQuestionStore';
 import { useConversationStore } from '../stores/conversationStore';
 import { useAIPrompt } from '../hooks/ai/useAIPrompt';
 import { TwoPanelLayout } from '../components/common';
@@ -19,8 +19,8 @@ import { useNavigationStore } from '../stores/navigationStore';
 import { useAIComparisonStore } from '../stores/aiComparisonStore';
 
 const AIComparisonsPage: React.FC = () => {
-  const { getConversationData } = useSurveyResponseStore();
-  const { currentTemplate } = useSurveyQuestionStore();
+  const { getConversationData } = useAssessmentResponseStore();
+  const { currentTemplate } = useAssessmentQuestionStore();
   const { selectedConversations: storeConversations } = useConversationStore();
   const { generateOpenAIPrompt, generateSystemPromptOnly, generateOpenAIPromptWithCustomSystem } = useAIPrompt();
   const { batchUpdate } = useNavigationStore();
@@ -84,7 +84,7 @@ const AIComparisonsPage: React.FC = () => {
       }
       setIsPromptModalOpen(true);
     } else {
-      alert('Failed to generate system prompt. Please check your survey template.');
+      alert('Failed to generate system prompt. Please check your assessment template.');
     }
   };
 

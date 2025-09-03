@@ -2,7 +2,7 @@ import React, { useMemo, useCallback } from 'react';
 import { List, X, CaretRight } from '@phosphor-icons/react';
 import { useNavigationStore } from '../../../stores/navigationStore';
 import { useConversationStore } from '../../../stores/conversationStore';
-import { useSurveyQuestions } from '../../../hooks/survey/useSurveyQuestions';
+import { useAssessmentQuestions } from '../../../hooks/assessment/useAssessmentQuestions';
 import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
@@ -12,7 +12,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = React.memo(({ isSidebarOpen }) => {
   const { currentPage, currentConversationId, currentTemplateId } = useNavigationStore();
   const { selectedConversations } = useConversationStore();
-  const { getTemplateById } = useSurveyQuestions();
+  const { getTemplateById } = useAssessmentQuestions();
   const navigate = useNavigate();
 
   const getPageTitle = useCallback((page: string) => {

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Sidebar as SidebarIcon, X, ClipboardText, Tag, FileText, Robot, SidebarSimpleIcon, CaretDown, CaretRight } from '@phosphor-icons/react';
 import { useNavigationStore } from '../../../stores/navigationStore';
 import { useConversationStore } from '../../../stores/conversationStore';
-import { useSurveyQuestions } from '../../../hooks/survey/useSurveyQuestions';
+import { useAssessmentQuestions } from '../../../hooks/assessment/useAssessmentQuestions';
 import { NavigationItem, NavigationItemNested, NavigationSection } from '../navigation';
 
 interface SidebarProps {
@@ -14,7 +14,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar }) => {
   const { currentPage, setCurrentPage, selectedConversations, removeSelectedConversation, currentConversationId, currentTemplateId, setCurrentTemplateId } = useNavigationStore();
   const { selectedConversationIds, removeSelectedConversation: removeFromStore, saveSelectedConversationsToStorage } = useConversationStore();
-  const { templates, deleteTemplate } = useSurveyQuestions();
+  const { templates, deleteTemplate } = useAssessmentQuestions();
   const navigate = useNavigate();
   
   // State for expanded navigation items
@@ -61,7 +61,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
     }));
   }, [templates]);
 
-  const handlePageNavigation = useCallback((page: 'select-conversations' | 'label-conversations' | 'ai-comparisons' | 'survey-templates' | 'survey-questions') => {
+  const handlePageNavigation = useCallback((page: 'select-conversations' | 'label-conversations' | 'ai-comparisons' | 'assessment-templates' | 'assessment-questions') => {
     setCurrentPage(page);
     navigate(`/${page === 'select-conversations' ? 'select-conversations' : page}`);
   }, [setCurrentPage, navigate]);
@@ -193,7 +193,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
       id: 'survey-templates',
       label: 'Assessment Templates',
       icon: <FileText size={20} weight="bold" />,
-      onClick: () => handlePageNavigation('survey-templates'),
+      onClick: () => handlePageNavigation('assessment-templates'),
       hasSubItems: getSelectedTemplateTitles.length > 0,
       subItems: getSelectedTemplateTitles.map(template => ({
         id: template.id,

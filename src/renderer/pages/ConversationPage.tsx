@@ -9,9 +9,9 @@ import {
   useConversationError
 } from '../stores/conversationStore';
 import { useNavigationStore } from '../stores/navigationStore';
-import { useSurveyStore } from '../stores/surveyStore';
+import { useSurveyStore } from '../stores/assessmentStore';
 import { TwoPanelLayout } from '../components/common';
-import SurveySidebar from '../components/survey/SurveySidebar';
+import AssessmentSidebar from '../components/assessment/AssessmentSidebar';
 import ConversationDetail from '../components/conversation/core/ConversationDetail';
 
 const ConversationPage: React.FC = () => {
@@ -36,7 +36,7 @@ const ConversationPage: React.FC = () => {
   } = useConversationStore();
   
   const { selectedConversations, setSelectedConversations, setCurrentConversationId } = useNavigationStore();
-  const { responses: surveyResponses } = useSurveyStore();
+  const { responses: assessmentResponses } = useSurveyStore();
 
   // Add state to track scroll tracking events
   const [scrollTrackingState, setScrollTrackingState] = useState({
@@ -130,11 +130,11 @@ const ConversationPage: React.FC = () => {
     });
   }, [id]);
 
-  // Get survey completion status
+  // Get assessment completion status
   const getSurveyCompletionStatus = () => {
     if (!id) return { completed: 0, total: 3 };
     
-    const conversationResponses = surveyResponses.filter((r: any) => r.conversationId === id);
+    const conversationResponses = assessmentResponses.filter((r: any) => r.conversationId === id);
     const completedPositions = new Set(conversationResponses.map((r: any) => r.position));
     
     return {
@@ -192,12 +192,12 @@ const ConversationPage: React.FC = () => {
     );
   }
 
-  const surveyStatus = getSurveyCompletionStatus();
+  const assessmentStatus = getSurveyCompletionStatus();
 
   return (
     <TwoPanelLayout
       sidebarContent={
-        <SurveySidebar 
+        <AssessmentSidebar 
           conversationId={id || ''}
           messages={[]}
           turn6Reached={scrollTrackingState.turn6Reached}  // Pass boolean instead of callback

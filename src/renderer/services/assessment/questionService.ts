@@ -1,11 +1,11 @@
-import { SurveyQuestion, SurveyTemplate } from '../../types/survey';
-import { QuestionValidation, QuestionCategory } from '../../types/question';
+import { AssessmentQuestion, AssessmentTemplate } from '../../types/assessment';
+import { QuestionValidation } from '../../types/question';
 
 export class QuestionService {
   /**
-   * Validates a survey question
+   * Validates a assessment question
    */
-  static validateQuestion(question: Partial<SurveyQuestion>): QuestionValidation {
+  static validateQuestion(question: Partial<AssessmentQuestion>): QuestionValidation {
     const errors: string[] = [];
 
     if (!question.text || question.text.trim().length === 0) {
@@ -22,7 +22,7 @@ export class QuestionService {
 
     if (question.labels) {
       // Check if all scale values have labels
-      for (let i = 1; i <= question.scale; i++) {
+      for (let i = 1; i <= (question.scale || 5); i++) {
         if (!question.labels[i]) {
           errors.push(`Missing label for rating ${i}`);
         }
@@ -36,9 +36,9 @@ export class QuestionService {
   }
 
   /**
-   * Validates a complete survey template
+   * Validates a complete assessment template
    */
-  static validateTemplate(template: SurveyTemplate): QuestionValidation {
+  static validateTemplate(template: AssessmentTemplate): QuestionValidation {
     const errors: string[] = [];
 
     if (!template.name || template.name.trim().length === 0) {
@@ -72,7 +72,7 @@ export class QuestionService {
   /**
    * Creates a new question with default values
    */
-  static createDefaultQuestion(): Omit<SurveyQuestion, 'id' | 'order'> {
+  static createDefaultQuestion(): Omit<AssessmentQuestion, 'id' | 'order'> {
     return {
       text: '',
       scale: 5,
@@ -83,7 +83,7 @@ export class QuestionService {
         4: 'Good',
         5: 'Excellent'
       },
-      category: 'custom'
+      // category: 'custom' // Not part of AssessmentQuestion interface
     };
   }
 
@@ -133,11 +133,11 @@ export class QuestionService {
   /**
    * Reorders questions in a template
    */
-  static reorderQuestions(template: SurveyTemplate, newOrder: string[]): SurveyTemplate {
+  static reorderQuestions(template: AssessmentTemplate, newOrder: string[]): AssessmentTemplate {
     const reorderedQuestions = newOrder.map((id, index) => {
       const question = template.questions.find(q => q.id === id);
       return question ? { ...question, order: index + 1 } : null;
-    }).filter(Boolean) as SurveyQuestion[];
+    }).filter(Boolean) as AssessmentQuestion[];
 
     return {
       ...template,
@@ -147,9 +147,9 @@ export class QuestionService {
   }
 
   /**
-   * Gets questions for a specific survey position
+   * Gets questions for a specific assessment position
    */
-  static getQuestionsForPosition(template: SurveyTemplate, position: 'beginning' | 'turn6' | 'end'): SurveyQuestion[] {
+  static getQuestionsForPosition(template: AssessmentTemplate, position: 'beginning' | 'turn6' | 'end'): AssessmentQuestion[] {
     // For now, all questions apply to all positions
     // This could be extended to have position-specific questions
     return template.questions.sort((a, b) => a.order - b.order);

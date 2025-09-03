@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import ConversationSelector from './ConversationSelector';
 import AIConfigurationPanel from './AIConfigurationPanel';
-import { SurveyTemplate } from '../../types/survey';
+import { AssessmentTemplate } from '../../types/assessment';
 import { useAIComparisonStore } from '../../stores/aiComparisonStore';
 
 interface AIComparisonSidebarProps {
@@ -21,7 +21,7 @@ interface AIComparisonSidebarProps {
   onGenerate: () => void;
   isGenerating: boolean;
   hasSelectedConversations: boolean;
-  currentTemplate: SurveyTemplate | null;
+  currentTemplate: AssessmentTemplate | null;
   storeConversations: any[];
   generateOpenAIPrompt: (context: string, position: 'beginning' | 'turn6' | 'end') => string | null;
   onReviewPrompt: () => void;

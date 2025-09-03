@@ -1,4 +1,4 @@
 // AI hooks
-export { default as useAIGeneration } from './useAIGeneration';
-export { default as useAIConfiguration } from './useAIConfiguration';
-export { default as useAIPrompt } from './useAIPrompt';
+export { useAIGeneration } from './useAIGeneration';
+export { useAIConfiguration } from './useAIConfiguration';
+export { useAIPrompt } from './useAIPrompt';

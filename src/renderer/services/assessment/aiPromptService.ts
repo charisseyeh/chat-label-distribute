@@ -1,11 +1,11 @@
-import { SurveyTemplate, AIPromptConfig } from '../../types/survey';
+import { AssessmentTemplate, AIPromptConfig } from '../../types/assessment';
 
 export class AIPromptService {
   /**
-   * Generates AI prompt configuration from survey template
+   * Generates AI prompt configuration from assessment template
    */
   static generatePromptConfig(
-    template: SurveyTemplate,
+    template: AssessmentTemplate,
     conversationContext: string,
     position: 'beginning' | 'turn6' | 'end'
   ): AIPromptConfig {
@@ -30,7 +30,7 @@ export class AIPromptService {
   /**
    * Generates rating instructions for AI
    */
-  static generateRatingInstructions(template: SurveyTemplate, position: 'beginning' | 'turn6' | 'end'): string {
+  static generateRatingInstructions(template: AssessmentTemplate, position: 'beginning' | 'turn6' | 'end'): string {
     const positionText = this.getPositionText(position);
     
     let instructions = `You are analyzing a conversation for psychological assessment. `;
@@ -68,7 +68,7 @@ export class AIPromptService {
    * Generates the complete AI prompt for OpenAI API
    */
   static generateOpenAIPrompt(
-    template: SurveyTemplate,
+    template: AssessmentTemplate,
     conversationContext: string,
     position: 'beginning' | 'turn6' | 'end'
   ): string {
@@ -85,7 +85,7 @@ export class AIPromptService {
   /**
    * Generates only the system prompt (for editing purposes)
    */
-  static generateSystemPromptOnly(template: SurveyTemplate): string {
+  static generateSystemPromptOnly(template: AssessmentTemplate): string {
     return this.generateSystemPrompt(template);
   }
 
@@ -94,7 +94,7 @@ export class AIPromptService {
    */
   static generateOpenAIPromptWithCustomSystem(
     customSystemPrompt: string,
-    template: SurveyTemplate,
+    template: AssessmentTemplate,
     conversationContext: string,
     position: 'beginning' | 'turn6' | 'end'
   ): string {
@@ -105,7 +105,7 @@ export class AIPromptService {
   /**
    * Generates system prompt for OpenAI API
    */
-  private static generateSystemPrompt(template: SurveyTemplate): string {
+  private static generateSystemPrompt(template: AssessmentTemplate): string {
     console.log('🔍 Generating system prompt for template with questions:', template.questions.length);
     
     let prompt = `You are an expert psychological assessor analyzing conversations. `;
@@ -141,7 +141,7 @@ export class AIPromptService {
   /**
    * Generates user prompt for OpenAI API
    */
-  private static generateUserPrompt(template: SurveyTemplate, conversationContext: string, position: 'beginning' | 'turn6' | 'end'): string {
+  private static generateUserPrompt(template: AssessmentTemplate, conversationContext: string, position: 'beginning' | 'turn6' | 'end'): string {
     const positionText = this.getPositionText(position);
     
     let prompt = `Please analyze the following conversation and provide psychological ratings for the ${positionText}.\n\n`;
@@ -162,7 +162,7 @@ export class AIPromptService {
   /**
    * Parses AI response to extract ratings
    */
-  static async parseAIResponse(response: string, template: SurveyTemplate): Promise<Record<string, number>> {
+  static async parseAIResponse(response: string, template: AssessmentTemplate): Promise<Record<string, number>> {
     try {
       const ratings: Record<string, number> = {};
       
@@ -238,7 +238,7 @@ export class AIPromptService {
   /**
    * Validates AI response ratings
    */
-  static validateAIRatings(ratings: Record<string, number>, template: SurveyTemplate): { isValid: boolean; errors: string[] } {
+  static validateAIRatings(ratings: Record<string, number>, template: AssessmentTemplate): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
     
     template.questions.forEach(question => {

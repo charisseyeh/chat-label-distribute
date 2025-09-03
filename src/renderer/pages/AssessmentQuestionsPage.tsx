@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSurveyQuestions } from '../hooks/survey/useSurveyQuestions';
+import { useAssessmentQuestions } from '../hooks/assessment/useAssessmentQuestions';
 import { usePageActionsStore } from '../stores/pageActionsStore';
 import { useNavigationStore } from '../stores/navigationStore';
-import { generateDefaultLabels } from '../utils/surveyUtils';
-import { SurveyTemplate, SurveyQuestion } from '../types/survey';
-import { TemplateCreationForm, SurveyHeader, EditableQuestionCard } from '../components/survey';
+import { generateDefaultLabels } from '../utils/assessmentUtils';
+import { AssessmentTemplate, AssessmentQuestion } from '../types/assessment';
+import { TemplateCreationForm, AssessmentHeader, EditableQuestionCard } from '../components/assessment';
 
-const SurveyQuestionsPage: React.FC = () => {
+const AssessmentQuestionsPage: React.FC = () => {
   const { id: templateId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const {
@@ -22,7 +22,7 @@ const SurveyQuestionsPage: React.FC = () => {
     initializeTemplate,
     clearError,
     loadTemplates
-  } = useSurveyQuestions();
+  } = useAssessmentQuestions();
 
   // Consolidated state management
   const [uiState, setUiState] = useState({
@@ -30,7 +30,7 @@ const SurveyQuestionsPage: React.FC = () => {
     newTemplateName: '',
     globalScale: 7,
     localTitle: '',
-    pendingChanges: new Map<string, Partial<SurveyQuestion>>(),
+    pendingChanges: new Map<string, Partial<AssessmentQuestion>>(),
     hasTitleChanges: false,
     hasScaleChanges: false,
     deletedQuestions: new Set<string>()
@@ -52,7 +52,7 @@ const SurveyQuestionsPage: React.FC = () => {
     setUiState(prev => ({ ...prev, ...updates }));
   }, []);
   
-  const updatePendingChanges = useCallback((questionId: string, questionData: Partial<SurveyQuestion>) => {
+  const updatePendingChanges = useCallback((questionId: string, questionData: Partial<AssessmentQuestion>) => {
     setUiState(prev => {
       const newPendingChanges = new Map(prev.pendingChanges);
       newPendingChanges.set(questionId, questionData);
@@ -85,7 +85,7 @@ const SurveyQuestionsPage: React.FC = () => {
     
     try {
       // Prepare template updates
-      const templateUpdates: Partial<SurveyTemplate> = {};
+      const templateUpdates: Partial<AssessmentTemplate> = {};
       
       // 1. Handle title changes
       if (hasTitleChanges && localTitle !== currentTemplate.name) {
@@ -241,7 +241,7 @@ const SurveyQuestionsPage: React.FC = () => {
       const newTemplate = await createTemplate(uiState.newTemplateName.trim());
       updateUiState({ newTemplateName: '', isCreatingTemplate: false });
       // Navigate to the new template
-      navigate(`/survey-template/${newTemplate.id}`);
+      navigate(`/assessment-template/${newTemplate.id}`);
     } catch (error) {
       console.error('Failed to create template:', error);
     }
@@ -276,7 +276,7 @@ const SurveyQuestionsPage: React.FC = () => {
   }, [currentTemplate, uiState.globalScale, addQuestion, generateDefaultLabels]);
 
   // Handle question update - now just tracks changes for batch saving
-  const handleUpdateQuestion = useCallback(async (questionId: string, questionData: Partial<SurveyQuestion>) => {
+  const handleUpdateQuestion = useCallback(async (questionId: string, questionData: Partial<AssessmentQuestion>) => {
     if (!currentTemplate) return;
 
     // Just track the changes - they will be saved when user clicks "Save Changes"
@@ -318,7 +318,7 @@ const SurveyQuestionsPage: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Loading survey questions...</div>
+        <div className="text-lg">Loading assessment questions...</div>
       </div>
     );
   }
@@ -330,7 +330,7 @@ const SurveyQuestionsPage: React.FC = () => {
         newTemplateName={uiState.newTemplateName}
         onNameChange={(name) => updateUiState({ newTemplateName: name })}
         onSubmit={handleCreateTemplate}
-        onCancel={() => navigate('/survey-templates')}
+        onCancel={() => navigate('/assessment-templates')}
       />
     );
   }
@@ -359,7 +359,7 @@ const SurveyQuestionsPage: React.FC = () => {
       {/* Survey Header */}
       {currentTemplate && (
         <>
-          <SurveyHeader
+          <AssessmentHeader
             template={{ ...currentTemplate, name: uiState.localTitle }}
             globalScale={uiState.globalScale}
             onScaleChange={handleGlobalScaleChange}
@@ -405,4 +405,4 @@ const SurveyQuestionsPage: React.FC = () => {
   );
 };
 
-export default SurveyQuestionsPage;
+export default AssessmentQuestionsPage;
