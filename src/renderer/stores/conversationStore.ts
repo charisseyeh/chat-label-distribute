@@ -94,6 +94,7 @@ interface ConversationActions {
   setSelectedConversationsWithFile: (conversations: SelectedConversation[]) => void; // New
   removeSelectedConversation: (id: string) => void; // New: remove individual selected conversation
   clearSelection: () => void;
+  clearTemporarySelection: () => void;
   
   // File management
   setCurrentSourceFile: (filePath: string | null) => void; // New
@@ -307,6 +308,7 @@ export const useConversationStore = create<ConversationStore>()(
         },
 
         clearSelection: () => set({ selectedConversationIds: [], selectedConversations: [] }),
+        clearTemporarySelection: () => set({ selectedConversationIds: [] }),
 
         // File management
         setCurrentSourceFile: (filePath) => set({ currentSourceFile: filePath }), // New
@@ -400,7 +402,7 @@ export const useConversationStore = create<ConversationStore>()(
 
         // Convert temporary selection to permanent storage
         commitTemporarySelection: () => {
-          const { selectedConversationIds, loadedConversations } = get();
+          const { selectedConversationIds, loadedConversations, selectedConversations: existingSelectedConversations } = get();
           
           // Convert selected IDs to full conversation objects
           const newSelectedConversations = loadedConversations
@@ -411,7 +413,11 @@ export const useConversationStore = create<ConversationStore>()(
               sourceFilePath: conv.sourceFilePath || ''
             }));
           
-          set({ selectedConversations: newSelectedConversations });
+          // Merge with existing selected conversations, avoiding duplicates
+          const existingIds = new Set(existingSelectedConversations.map(conv => conv.id));
+          const uniqueNewConversations = newSelectedConversations.filter(conv => !existingIds.has(conv.id));
+          
+          set({ selectedConversations: [...existingSelectedConversations, ...uniqueNewConversations] });
         },
 
         // Permanent storage operations

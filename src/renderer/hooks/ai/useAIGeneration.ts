@@ -5,7 +5,10 @@ import { useSurveyQuestionStore } from '../../stores/surveyQuestionStore';
 import { useConversationStore } from '../../stores/conversationStore';
 import {
   ComparisonData,
-  TrialComparison
+  TrialComparison,
+  GenerationProgress,
+  calculateAgreement,
+  calculateDifferences
 } from '../../services/ai/aiComparisonService';
 
 export const useAIGeneration = () => {
@@ -14,7 +17,7 @@ export const useAIGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiService, setAIService] = useState<AIService | null>(null);
   const [accuracy, setAccuracy] = useState<number>(0);
-  const [generationProgress, setGenerationProgress] = useState<any>({
+  const [generationProgress, setGenerationProgress] = useState<GenerationProgress>({
     currentTrial: 0,
     totalTrials: 3,
     currentConversation: 0,
@@ -98,11 +101,11 @@ export const useAIGeneration = () => {
         const conversation = storeConversations.find(c => c.id === conversationId);
         if (!conversation) continue;
 
-        setGenerationProgress(prev => ({ 
-          ...prev, 
-          currentConversation: convIndex + 1,
-          currentOperation: `Processing conversation: ${conversation.title}`
-        }));
+              setGenerationProgress((prev: GenerationProgress) => ({ 
+        ...prev, 
+        currentConversation: convIndex + 1,
+        currentOperation: `Processing conversation: ${conversation.title}`
+      }));
 
         const data = getConversationData(conversationId);
         const humanResponses: Record<string, number> = {};
@@ -123,7 +126,7 @@ export const useAIGeneration = () => {
             const prompt = generateOpenAIPrompt(conversationContext, position);
             if (!prompt) continue;
 
-            setGenerationProgress(prev => ({ 
+            setGenerationProgress((prev: GenerationProgress) => ({ 
               ...prev, 
               currentPosition: posIndex + 1,
               currentOperation: `Generating AI response for ${position} position: ${conversation.title}`,
@@ -131,7 +134,10 @@ export const useAIGeneration = () => {
             }));
 
             const aiResponse = await service.generateSurveyResponses(prompt);
-            const parsedRatings = parseAIResponse(aiResponse);
+            console.log('🤖 AI Response received:', aiResponse);
+            
+            const parsedRatings = await parseAIResponse(aiResponse);
+            console.log('📊 Parsed ratings:', parsedRatings);
             
             if (parsedRatings) {
               Object.entries(parsedRatings).forEach(([questionId, rating]) => {
@@ -144,8 +150,8 @@ export const useAIGeneration = () => {
           }
         }
 
-        const agreement = 0; // Placeholder, actual calculation needs to be implemented
-        const differences = 0; // Placeholder, actual calculation needs to be implemented
+        const agreement = calculateAgreement(humanResponses, aiResponses);
+        const differences = calculateDifferences(humanResponses, aiResponses, currentTemplate);
 
         results.push({
           conversationId,
@@ -157,7 +163,7 @@ export const useAIGeneration = () => {
         });
       }
 
-      setGenerationProgress(prev => ({ 
+      setGenerationProgress((prev: GenerationProgress) => ({ 
         ...prev, 
         status: 'processing',
         currentOperation: 'Processing results and calculating accuracy...'
@@ -169,7 +175,7 @@ export const useAIGeneration = () => {
       const overallAccuracy = 0; // Placeholder, actual calculation needs to be implemented
       setAccuracy(overallAccuracy);
 
-      setGenerationProgress(prev => ({ 
+      setGenerationProgress((prev: GenerationProgress) => ({ 
         ...prev, 
         status: 'complete',
         currentOperation: 'AI generation completed successfully!'
@@ -177,7 +183,7 @@ export const useAIGeneration = () => {
 
     } catch (error) {
       console.error('Error generating AI responses:', error);
-      setGenerationProgress(prev => ({ 
+      setGenerationProgress((prev: GenerationProgress) => ({ 
         ...prev, 
         status: 'error',
         error: error instanceof Error ? error.message : 'Unknown error occurred'

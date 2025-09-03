@@ -25,6 +25,7 @@ const ConversationSelectorPage: React.FC = () => {
     toggleConversationSelection, 
     setSelectedConversations,
     clearSelection,
+    clearTemporarySelection,
     loadedConversations,
     filteredConversations,
     currentSourceFile,
@@ -87,7 +88,7 @@ const ConversationSelectorPage: React.FC = () => {
   };
 
   const handleDeselectAll = () => {
-    clearSelection();
+    clearTemporarySelection();
   };
 
 

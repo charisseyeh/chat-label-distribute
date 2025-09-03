@@ -62,8 +62,6 @@ const ConversationSelector: React.FC<ConversationSelectorProps> = ({
     const currentSelectedIds = allowToggle ? selectedConversations : storeSelectedConversationIds;
     
     return conversations.map(conversation => {
-      // In AIComparisonSidebar context, selectedConversations is the same as selectedConversationIds
-      // So we need to check if this is truly a permanently stored conversation
       const isPermanentlyStored = !allowToggle && selectedConversations.includes(conversation.id);
       const isCurrentlySelected = currentSelectedIds.includes(conversation.id);
       
