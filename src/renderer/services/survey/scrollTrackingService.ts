@@ -78,13 +78,11 @@ export class ScrollTrackingService implements ScrollTracker {
     
     // Check if we've reached turn 6 threshold
     if (!this.turn6Reached && this.messageCount > 0 && highestVisibleIndex >= this.options.turn6Threshold) {
-      console.log(`🎯 Turn 6 threshold reached (message ${highestVisibleIndex}/${this.messageCount})`);
       this.triggerTurn6();
     }
     
     // Check if we've reached the end (last message is visible)
     if (!this.endReached && this.messageCount > 0 && highestVisibleIndex >= this.messageCount - 1) {
-      console.log(`🎯 End of conversation reached (message ${highestVisibleIndex}/${this.messageCount})`);
       this.triggerEnd();
     }
   }

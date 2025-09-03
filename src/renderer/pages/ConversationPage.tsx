@@ -46,12 +46,10 @@ const ConversationPage: React.FC = () => {
 
   // Add callback handlers for scroll tracking events
   const handleTurn6Reached = useCallback(() => {
-    console.log('🎯 Turn 6 reached - showing survey section');
     setScrollTrackingState(prev => ({ ...prev, turn6Reached: true }));
   }, []);
 
   const handleEndReached = useCallback(() => {
-    console.log('🎯 End reached - showing survey section');
     setScrollTrackingState(prev => ({ ...prev, endReached: true }));
   }, []);
 

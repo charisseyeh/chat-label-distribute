@@ -164,13 +164,15 @@ const AIComparisonsPage: React.FC = () => {
           />
         )}
 
-        {/* AI Comparison Results */}
-        <ComparisonResultsDisplay
-          comparisonData={comparisonData}
-          trialComparisons={trialComparisons}
-          currentTemplate={currentTemplate}
-          model={model}
-        />
+        {/* AI Comparison Results - only show when not generating */}
+        {!isGenerating && (
+          <ComparisonResultsDisplay
+            comparisonData={comparisonData}
+            trialComparisons={trialComparisons}
+            currentTemplate={currentTemplate}
+            model={model}
+          />
+        )}
       </div>
 
       {/* Prompt Review Modal */}

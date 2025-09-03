@@ -40,7 +40,7 @@ export const ComparisonResultsDisplay: React.FC<ComparisonResultsDisplayProps> =
 
   if (!comparisons || comparisons.length === 0 || !template) {
     return (
-      <div className="m-4 p-8 text-left">
+      <div className="m-4 p-6 text-left">
         <h2 className="text-h2 mb-2">No Comparison Results Yet</h2>
         <p className="text-body-secondary">
           Select conversations from the sidebar and run AI comparison to see results here.

@@ -35,12 +35,10 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = React.memo(({
 
   // Memoize callback functions to prevent infinite re-renders
   const handleTurn6Reached = useCallback(() => {
-    console.log('🔄 Turn 6 reached in conversation display');
     onTurn6Reached?.(); // Call parent callback
   }, [onTurn6Reached]);
 
   const handleEndReached = useCallback(() => {
-    console.log('🔄 End reached in conversation display');
     onEndReached?.(); // Call parent callback
   }, [onEndReached]);
 
