@@ -33,28 +33,42 @@ const ConversationSelectorPage: React.FC = () => {
     activeFilters,
     toggleFilter,
     clearFilters,
-    applyFilters
+    applyFilters,
+    ensureConversationsLoaded
   } = useConversationStore();
 
-  // Check if we have loaded conversations on mount and restore them
+  // Consolidated effect for state restoration and filter management
   useEffect(() => {
-    if (currentSourceFile && loadedConversations.length > 0) {
-      // Restoring loaded conversations from store
-    }
-  }, [currentSourceFile, loadedConversations]);
-
-  // Apply filters when conversations or filters change
-  useEffect(() => {
-    if (loadedConversations.length > 0) {
-      // Only apply filters if we have conversations with more than 9 messages
-      const validConversations = loadedConversations.filter(conv => conv.messageCount > 9);
-      if (validConversations.length !== loadedConversations.length) {
-        // Silent warning - no console log needed
+    const handleStateRestoration = async () => {
+      // If we have a currentSourceFile but no loadedConversations, restore them
+      if (currentSourceFile && loadedConversations.length === 0) {
+        try {
+          await ensureConversationsLoaded(currentSourceFile);
+        } catch (error) {
+          console.warn('Failed to restore conversations on page load:', error);
+        }
       }
-      
-      applyFilters();
-    }
-  }, [loadedConversations, activeFilters, applyFilters]);
+    };
+
+    const handleFilterApplication = () => {
+      // Apply filters when we have conversations
+      if (loadedConversations.length > 0) {
+        // Only apply filters if we have conversations with more than 9 messages
+        const validConversations = loadedConversations.filter(conv => conv.messageCount > 9);
+        if (validConversations.length !== loadedConversations.length) {
+          // Silent warning - no console log needed
+        }
+        
+        applyFilters();
+      }
+    };
+
+    // Handle state restoration first
+    handleStateRestoration();
+    
+    // Then handle filter application
+    handleFilterApplication();
+  }, [currentSourceFile, loadedConversations, activeFilters, ensureConversationsLoaded, applyFilters]);
 
   // Load conversations from a stored file
   const loadConversationsFromStoredFile = async (filePath: string) => {

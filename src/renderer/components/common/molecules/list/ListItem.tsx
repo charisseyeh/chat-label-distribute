@@ -17,6 +17,10 @@ export interface ListItemProps {
   onClick?: () => void;
   onDoubleClick?: () => void;
   selected?: boolean;
+  // Chevron button props
+  showChevron?: boolean;
+  chevronExpanded?: boolean;
+  onChevronClick?: () => void;
 }
 
 export const ListItem: React.FC<ListItemProps> = ({
@@ -30,7 +34,10 @@ export const ListItem: React.FC<ListItemProps> = ({
   className = '',
   onClick,
   onDoubleClick,
-  selected = false
+  selected = false,
+  showChevron = false,
+  chevronExpanded = false,
+  onChevronClick
 }) => {
   const baseClasses = 'list-item';
   const variantClasses = `list-item--${variant}`;
@@ -143,6 +150,34 @@ export const ListItem: React.FC<ListItemProps> = ({
               d="M216 48h-40v-8a24 24 0 0 0-24-24h-48a24 24 0 0 0-24 24v8H40a8 8 0 0 0 0 16h8v144a16 16 0 0 0 16 16h128a16 16 0 0 0 16-16V64h8a8 8 0 0 0 0-16ZM96 40a8 8 0 0 1 8-8h48a8 8 0 0 1 8 8v8H96Zm96 168H64V64h128v144Zm-80-104v64a8 8 0 0 1-16 0v-64a8 8 0 0 1 16 0Zm48 0v64a8 8 0 0 1-16 0v-64a8 8 0 0 1 16 0Z"
               fill="currentColor"
             />
+          </svg>
+        </button>
+      )}
+      
+      {/* Chevron Button */}
+      {showChevron && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onChevronClick) {
+              onChevronClick();
+            }
+          }}
+          className="btn-chevron btn-chevron-md"
+          aria-label={chevronExpanded ? 'Collapse preview' : 'Expand preview'}
+        >
+          <svg
+            className={`chevron-icon chevron-icon-md ${chevronExpanded ? 'chevron-icon--expanded' : ''}`}
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M19 9l-7 7-7-7" />
           </svg>
         </button>
       )}

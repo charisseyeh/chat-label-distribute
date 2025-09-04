@@ -306,3 +306,81 @@
          bg-red-100 
          text-red-800;
 }
+
+/* ===== CHEVRON BUTTONS ===== */
+.btn-chevron {
+  @apply inline-flex 
+         items-center 
+         justify-center 
+         p-2 
+         rounded-full 
+         transition-colors 
+         flex-shrink-0
+         focus:outline-none;
+  /* Override base btn focus styles */
+  box-shadow: none !important;
+}
+
+.btn-chevron:focus {
+  @apply outline-none;
+  box-shadow: none !important;
+  /* Remove any ring styles */
+  --tw-ring-width: 0px;
+  --tw-ring-offset-width: 0px;
+}
+
+/* Chevron button hover states based on parent selection */
+.list-item--selected .btn-chevron:hover {
+  background-color: var(--primary-300);
+}
+
+.list-item:not(.list-item--selected) .btn-chevron:hover {
+  background-color: var(--color-secondary-bg-active);
+}
+
+.btn-chevron-sm {
+  @apply btn-chevron 
+         w-6 
+         h-6 
+         p-1;
+}
+
+.btn-chevron-md {
+  @apply btn-chevron 
+         w-8 
+         h-8;
+}
+
+.btn-chevron-lg {
+  @apply btn-chevron 
+         w-10 
+         h-10;
+}
+
+/* Chevron Icon */
+.chevron-icon {
+  @apply w-4 
+         h-4 
+         transition-transform 
+         duration-200;
+}
+
+.chevron-icon--expanded {
+  @apply rotate-180;
+}
+
+/* Chevron Icon Sizes */
+.chevron-icon-sm {
+  @apply w-3 
+         h-3;
+}
+
+.chevron-icon-md {
+  @apply w-4 
+         h-4;
+}
+
+.chevron-icon-lg {
+  @apply w-5 
+         h-5;
+}

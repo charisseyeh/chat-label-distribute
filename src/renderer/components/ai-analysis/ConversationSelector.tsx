@@ -1,6 +1,7 @@
 import React, { useMemo, useCallback } from 'react';
 import { ListItem } from '../common';
 import { useConversationStore } from '../../stores/conversationStore';
+import ConversationPreview from '../conversation/core/ConversationPreview';
 import type { ConversationData } from '../../services/conversation';
 
 interface ConversationSelectorProps {
@@ -26,7 +27,11 @@ const ConversationSelector: React.FC<ConversationSelectorProps> = ({
   showSelectAllButtons = false, // Default to false to maintain existing behavior
   maxHeight = 'none' // Default to no max height
 }) => {
-  const { selectedConversationIds: storeSelectedConversationIds } = useConversationStore();
+  const { 
+    selectedConversationIds: storeSelectedConversationIds,
+    toggleConversationExpansion,
+    isConversationExpanded
+  } = useConversationStore();
 
   const formatDate = useCallback((timestamp: number | string | undefined) => {
     if (!timestamp) return 'No date';
@@ -72,33 +77,45 @@ const ConversationSelector: React.FC<ConversationSelectorProps> = ({
     return conversations.map(conversation => {
       const isPermanentlyStored = !allowToggle && selectedConversations.includes(conversation.id);
       const isCurrentlySelected = currentSelectedIds.includes(conversation.id);
+      const isExpanded = isConversationExpanded(conversation.id);
       
       // Format the date properly
       const formattedDate = formatDate(conversation.createTime || conversation.createdAt);
       
       return (
-        <ListItem
-          key={conversation.id}
-          variant="check-single"
-          title={conversation.title || 'Untitled Conversation'}
-          metadata={isPermanentlyStored 
-            ? 'Selected for labeling'
-            : formattedDate}
-          chip={isPermanentlyStored 
-            ? undefined
-            : showRelevancyChips && conversation.aiRelevancy ? {
-                variant: conversation.aiRelevancy.category === 'relevant' ? 'relevant' : 'not-relevant',
-                text: conversation.aiRelevancy.category === 'relevant' ? '✓ Relevant' : '✗ Not Relevant'
-              } : undefined}
-          checked={allowToggle ? isCurrentlySelected : (isPermanentlyStored || isCurrentlySelected)}
-          onCheckChange={allowToggle ? () => handleConversationToggle(conversation.id) : (isPermanentlyStored ? undefined : () => handleConversationToggle(conversation.id))}
-          selected={allowToggle ? isCurrentlySelected : (isPermanentlyStored || isCurrentlySelected)}
-          onClick={allowToggle ? () => handleConversationToggle(conversation.id) : (isPermanentlyStored ? undefined : () => handleConversationToggle(conversation.id))}
-          className="hover:border-gray-300 transition-colors"
-        />
+        <div key={conversation.id}>
+          <ListItem
+            variant="check-single"
+            title={conversation.title || 'Untitled Conversation'}
+            metadata={isPermanentlyStored 
+              ? 'Selected for labeling'
+              : formattedDate}
+            chip={isPermanentlyStored 
+              ? undefined
+              : showRelevancyChips && conversation.aiRelevancy ? {
+                  variant: conversation.aiRelevancy.category === 'relevant' ? 'relevant' : 'not-relevant',
+                  text: conversation.aiRelevancy.category === 'relevant' ? '✓ Relevant' : '✗ Not Relevant'
+                } : undefined}
+            checked={allowToggle ? isCurrentlySelected : (isPermanentlyStored || isCurrentlySelected)}
+            onCheckChange={allowToggle ? () => handleConversationToggle(conversation.id) : (isPermanentlyStored ? undefined : () => handleConversationToggle(conversation.id))}
+            selected={allowToggle ? isCurrentlySelected : (isPermanentlyStored || isCurrentlySelected)}
+            onClick={allowToggle ? () => handleConversationToggle(conversation.id) : (isPermanentlyStored ? undefined : () => handleConversationToggle(conversation.id))}
+            className="hover:border-gray-300 transition-colors"
+            showChevron={true}
+            chevronExpanded={isExpanded}
+            onChevronClick={() => toggleConversationExpansion(conversation.id)}
+          />
+          {isExpanded && (
+            <ConversationPreview
+              conversationId={conversation.id}
+              conversation={conversation}
+              maxMessages={6}
+            />
+          )}
+        </div>
       );
     });
-  }, [conversations, selectedConversations, storeSelectedConversationIds, formatDate, handleConversationToggle, allowToggle, showRelevancyChips]);
+  }, [conversations, selectedConversations, storeSelectedConversationIds, formatDate, handleConversationToggle, allowToggle, showRelevancyChips, isConversationExpanded, toggleConversationExpansion]);
 
   return (
     <div>
