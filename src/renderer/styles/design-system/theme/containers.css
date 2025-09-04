@@ -2,7 +2,7 @@
 
 /* Base Container */
 .container {
-  @apply border border-gray-200 rounded-lg;
+  @apply border border-border rounded-lg;
 }
 
 /* Container Sizes */
@@ -28,7 +28,7 @@
 }
 
 .container-template {
-  @apply p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 transition-colors;
+  @apply p-3 border border-border rounded-lg cursor-pointer hover:border-gray-300 transition-colors;
 }
 
 .container-muted {

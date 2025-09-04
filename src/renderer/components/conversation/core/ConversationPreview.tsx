@@ -111,7 +111,7 @@ const ConversationPreview: React.FC<ConversationPreviewProps> = ({
 
   if (loading) {
     return (
-      <div className="p-4 border-t border-gray-200 bg-gray-50">
+      <div className="p-4 border-t border-border bg-gray-50">
         <div className="text-center text-sm text-gray-500">
           Loading conversation preview...
         </div>
@@ -121,7 +121,7 @@ const ConversationPreview: React.FC<ConversationPreviewProps> = ({
 
   if (error) {
     return (
-      <div className="p-4 border-t border-gray-200 bg-red-50">
+      <div className="p-4 border-t border-border bg-red-50">
         <div className="text-center text-sm text-red-500">
           {error}
         </div>
@@ -131,7 +131,7 @@ const ConversationPreview: React.FC<ConversationPreviewProps> = ({
 
   if (messages.length === 0) {
     return (
-      <div className="p-4 border-t border-gray-200 bg-gray-50">
+      <div className="p-4 border-t border-border bg-gray-50">
         <div className="text-center text-sm text-gray-500">
           No messages found in this conversation
         </div>
@@ -140,11 +140,8 @@ const ConversationPreview: React.FC<ConversationPreviewProps> = ({
   }
 
   return (
-    <div className="border-t border-gray-200 bg-gray-50">
-      <div className="p-4">
-        <div className="text-xs text-gray-500 mb-3 font-medium">
-          Conversation Preview ({messages.length} messages shown)
-        </div>
+    <div className="border-y border-border">
+      <div className="px-4">
         <div className="max-h-64 overflow-y-auto">
           <MessageList
             messages={messages.map((msg, index) => ({
@@ -156,7 +153,7 @@ const ConversationPreview: React.FC<ConversationPreviewProps> = ({
             }))}
             layout="single"
             messageVariant="bubble"
-            showRole={true}
+            showRole={false}
             showTimestamp={false}
             className="space-y-2"
           />

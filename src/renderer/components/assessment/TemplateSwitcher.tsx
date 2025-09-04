@@ -55,7 +55,7 @@ const TemplateSwitcher: React.FC<TemplateSwitcherProps> = ({
               className={`p-3 border rounded-lg cursor-pointer transition-colors ${
                 isCurrent 
                   ? 'border-blue-500 bg-blue-50' 
-                  : 'border-gray-200 hover:border-gray-300'
+                  : 'border-border hover:border-gray-300'
               }`}
               onClick={() => handleTemplateSwitch(template)}
             >

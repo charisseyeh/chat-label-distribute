@@ -34,7 +34,7 @@ export const AIFilteringPanel: React.FC<AIFilteringPanelProps> = ({
   };
 
   return (
-    <div className="p-6 border-b border-gray-200">
+    <div className="p-6 border-b border-border">
       <div className="mb-4">
         <h2 className="text-h3">Filter by date and find relevant topics</h2>
         <p className="text-body-secondary mt-1">Select the date range you'd like to view and/or use AI to search relevant conversations</p>

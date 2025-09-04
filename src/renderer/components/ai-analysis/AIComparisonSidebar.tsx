@@ -86,7 +86,7 @@ export const AIComparisonSidebar: React.FC<AIComparisonSidebarProps> = ({
       </section>
 
       {/* AI Configuration */}
-      <section className="pl-4 pr-4 pt-4 border-t border-gray-200">
+      <section className="pl-4 pr-4 pt-4 border-t border-border">
         <h3 className="text-h3 pb-1">AI Comparison</h3>
         <p className="text-body-secondary pb-3">
           Add your API key and model to compare conversations

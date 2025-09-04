@@ -32,9 +32,9 @@ const Message: React.FC<MessageProps> = ({
       case 'assistant':
         return 'bg-green-100 text-green-800 border-green-200';
       case 'system':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-gray-100 text-gray-800 border-border';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-gray-100 text-gray-800 border-border';
     }
   };
 

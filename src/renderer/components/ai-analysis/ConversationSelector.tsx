@@ -129,7 +129,7 @@ const ConversationSelector: React.FC<ConversationSelectorProps> = ({
 
         {/* Select All / Deselect All Buttons */}
         {showSelectAllButtons && allowToggle && conversations.length > 0 && (
-        <div className="flex justify-between items-center p-4 border-t border-gray-200 sticky bottom-0 bg-background">
+        <div className="flex justify-between items-center p-4 border-t border-border sticky bottom-0 bg-background">
           <span className="text-body-secondary">
             {selectedConversations.length}/{conversations.length} selected
           </span>
