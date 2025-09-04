@@ -11,19 +11,15 @@ export class IPCHandlers {
   private assessmentHandlers: AssessmentHandlers;
 
   constructor() {
-    console.log('🔧 IPCHandlers: Initializing...');
     this.conversationManager = new ConversationManager();
     this.assessmentManager = new AssessmentManager();
-    console.log('📊 IPCHandlers: Creating AssessmentHandlers...');
     this.assessmentHandlers = new AssessmentHandlers(this.assessmentManager);
-    console.log('✅ IPCHandlers: AssessmentHandlers created successfully');
     this.setupConversationHandlers();
     
     // Add a simple test handler to verify IPC is working
     ipcMain.handle('test:ping', () => {
       return { success: true, message: 'pong' };
     });
-    console.log('✅ IPCHandlers: All handlers initialized');
   }
 
   private setupConversationHandlers() {

@@ -3,7 +3,7 @@
   "compilerOptions": {
     "module": "CommonJS",
     "moduleResolution": "node",
-    "outDir": "./dist/main",
+    "outDir": "./dist",
     "noEmit": false,
     "jsx": "react-jsx",
     "esModuleInterop": true,

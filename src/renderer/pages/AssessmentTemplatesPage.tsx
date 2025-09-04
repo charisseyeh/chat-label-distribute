@@ -13,6 +13,7 @@ const AssessmentTemplatesPage: React.FC = () => {
     error,
     createTemplate,
     deleteTemplate,
+    loadTemplates,
     initializeTemplate,
     clearError
   } = useAssessmentQuestions();
@@ -21,10 +22,21 @@ const AssessmentTemplatesPage: React.FC = () => {
   const { switchTemplateSafely } = useTemplateSwitching();
   const navigate = useNavigate();
 
-  // Initialize default template on mount
+  // Load templates and initialize on mount
   useEffect(() => {
-    initializeTemplate();
-  }, [initializeTemplate]);
+    const loadAndInitialize = async () => {
+      try {
+        // First load templates from the main process
+        await loadTemplates();
+        // Then initialize (select first template if none selected)
+        await initializeTemplate();
+      } catch (error) {
+        console.error('Failed to load templates:', error);
+      }
+    };
+    
+    loadAndInitialize();
+  }, [loadTemplates, initializeTemplate, templates.length]);
 
   // Note: Removed automatic template selection to allow proper navigation highlighting
   // Users must explicitly click on a template to navigate to it
@@ -66,7 +78,6 @@ const AssessmentTemplatesPage: React.FC = () => {
       },
       () => {
         // Cancel callback - user cancelled the switch
-        console.log('Template switch cancelled by user');
       }
     );
   };
@@ -141,7 +152,7 @@ const AssessmentTemplatesPage: React.FC = () => {
           <p className="text-muted-foreground mb-4">No Assessment templates found.</p>
           <button
             onClick={handleCreateTemplate}
-            className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            className="btn-primary btn-md"
           >
             Create Your First Template
           </button>

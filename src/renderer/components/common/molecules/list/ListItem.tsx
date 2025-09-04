@@ -43,11 +43,55 @@ export const ListItem: React.FC<ListItemProps> = ({
   
   const metadataArray = Array.isArray(metadata) ? metadata : [metadata];
   
+  // Handle click events with proper double-click detection
+  const clickTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  
+  // Cleanup timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current);
+      }
+    };
+  }, []);
+  
+  const handleClick = (e: React.MouseEvent) => {
+    // Clear any existing timeout
+    if (clickTimeoutRef.current) {
+      clearTimeout(clickTimeoutRef.current);
+      clickTimeoutRef.current = null;
+      return; // This was a double-click, don't execute single click
+    }
+    
+    // Set a timeout to execute single click after a delay
+    clickTimeoutRef.current = setTimeout(() => {
+      if (onClick) {
+        onClick();
+      }
+      clickTimeoutRef.current = null;
+    }, 300); // 300ms delay to detect double-click
+  };
+  
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Clear the single click timeout
+    if (clickTimeoutRef.current) {
+      clearTimeout(clickTimeoutRef.current);
+      clickTimeoutRef.current = null;
+    }
+    
+    if (onDoubleClick) {
+      onDoubleClick();
+    }
+  };
+  
   return (
     <div 
       className={`${baseClasses} ${variantClasses} ${selectedClasses} ${clickableClasses} ${className}`}
-      onClick={onClick}
-      onDoubleClick={onDoubleClick}
+      onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
     >
       {/* Check Toggle */}
       {hasCheckToggle && (

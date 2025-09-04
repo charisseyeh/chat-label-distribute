@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { AssessmentQuestion, AssessmentTemplate } from '../types/assessment';
-import { generateDefaultLabels } from '../utils/assessmentUtils';
-import { getDefaultTemplates } from '../services/assessment/defaultTemplatesService';
+import { getDefaultTemplates } from '../../shared/data/defaultTemplates';
 
 interface AssessmentQuestionState {
   templates: AssessmentTemplate[];
@@ -74,15 +73,15 @@ export const useAssessmentQuestionStore = create<AssessmentQuestionStore>()(
           
           if (window.electronAPI?.getAllAssessmentTemplates) {
             const result = await window.electronAPI.getAllAssessmentTemplates();
+            
             if (result.success) {
               const templates = result.data || [];
               
               // If no templates exist, try to initialize default templates
               if (templates.length === 0 && window.electronAPI?.initializeDefaultTemplates) {
-                console.log('🔍 No templates found, attempting to initialize default templates...');
                 const initResult = await window.electronAPI.initializeDefaultTemplates();
+                
                 if (initResult.success && initResult.data?.initialized) {
-                  console.log('✅ Default templates initialized, reloading...');
                   // Reload templates after initialization
                   const reloadResult = await window.electronAPI.getAllAssessmentTemplates();
                   if (reloadResult.success) {
@@ -173,18 +172,12 @@ export const useAssessmentQuestionStore = create<AssessmentQuestionStore>()(
 
       updateTemplate: async (id, updates) => {
         try {
-          console.log('🔄 AssessmentQuestionStore: updateTemplate called', { id, updates });
-          
           if (window.electronAPI?.updateAssessmentTemplate) {
-            console.log('📡 Calling electronAPI.updateAssessmentTemplate...');
             const result = await window.electronAPI.updateAssessmentTemplate(id, updates);
-            console.log('📡 electronAPI.updateAssessmentTemplate result:', result);
             
             if (!result.success) {
               throw new Error(result.error || 'Failed to update template');
             }
-          } else {
-            console.warn('⚠️ window.electronAPI.updateAssessmentTemplate not available');
           }
           
           const { templates } = get();
@@ -200,10 +193,7 @@ export const useAssessmentQuestionStore = create<AssessmentQuestionStore>()(
             const newCurrentTemplate = updated.find(t => t.id === id) || null;
             set({ currentTemplate: newCurrentTemplate });
           }
-          
-          console.log('✅ AssessmentQuestionStore: updateTemplate completed successfully');
         } catch (error) {
-          console.error('❌ AssessmentQuestionStore: updateTemplate failed:', error);
           set({ error: error instanceof Error ? error.message : 'Failed to update template' });
           throw error;
         }
