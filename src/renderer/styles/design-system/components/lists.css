@@ -9,7 +9,7 @@
 
 /* List with dividing lines */
 .list--with-dividers .list-item {
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border);
 }
 
 .list--with-dividers .list-item:last-child {
@@ -32,7 +32,7 @@
 
 /* ===== LIST STATES ===== */
 .list-item:hover {
-  background-color: #f9fafb;
+  background-color: var(--muted);
 }
 
 /* Add pointer cursor for clickable list items */
@@ -41,9 +41,10 @@
 }
 
 .list-item--selected {
-  background-color: #eff6ff;
+  background-color: var(--primary-100);
 }
 
 .list-item--selected:hover {
-  background-color: #dbeafe;
+  background-color: var(--primary-100);
 }
+

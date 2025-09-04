@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Header from './components/common/layout/Header';
 import Sidebar from './components/common/layout/Sidebar';
@@ -73,34 +73,10 @@ NavigationSync.displayName = 'NavigationSync';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const { loadSelectedConversationsFromStorage, selectedConversations } = useConversationStore();
-  const { setSelectedConversations, currentPage } = useNavigationStore();
-
-  // Load selected conversations from permanent storage on app startup
-  useEffect(() => {
-    const loadOnStartup = async () => {
-      try {
-        await loadSelectedConversationsFromStorage();
-      } catch (error) {
-        console.warn('Failed to load selected conversations on startup:', error);
-      }
-    };
-    loadOnStartup();
-  }, [loadSelectedConversationsFromStorage]);
-
-  // Synchronize navigation store with conversation store when selected conversations change
-  useEffect(() => {
-    if (selectedConversations.length > 0) {
-      // Sync the navigation store with the conversation store
-      setSelectedConversations(selectedConversations.map(conv => ({
-        id: conv.id,
-        title: conv.title
-      })));
-    } else {
-      // Clear the navigation store if there are no selected conversations
-      setSelectedConversations([]);
-    }
-  }, [selectedConversations, setSelectedConversations]);
+  
+  // Use custom hooks for better separation of concerns
+  useStartupLoading();
+  useStoreSync();
 
   const toggleSidebar = useCallback(() => {
     setIsSidebarOpen(prev => !prev);

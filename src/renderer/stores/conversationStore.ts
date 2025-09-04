@@ -72,6 +72,8 @@ interface ConversationState {
   };
   // Add full conversation data storage
   fullConversationData: Map<string, any>; // Store full conversation data by ID
+  // Add expanded conversations state
+  expandedConversations: Set<string>; // Track which conversations are expanded for preview
 }
 
 interface ConversationActions {
@@ -122,6 +124,11 @@ interface ConversationActions {
   // Convert temporary selection to permanent storage
   commitTemporarySelection: () => void;
 
+  // Expanded conversations management
+  toggleConversationExpansion: (conversationId: string) => void;
+  isConversationExpanded: (conversationId: string) => boolean;
+  clearExpandedConversations: () => void;
+
   // Permanent storage operations
   loadSelectedConversationsFromStorage: () => Promise<boolean>;
   saveSelectedConversationsToStorage: () => Promise<boolean>;
@@ -155,6 +162,8 @@ export const useConversationStore = create<ConversationStore>()(
         },
         // Add full conversation data storage
         fullConversationData: new Map(),
+        // Add expanded conversations state
+        expandedConversations: new Set(),
 
         // State management
         setLoading: (loading) => set({ loading }),
@@ -418,6 +427,29 @@ export const useConversationStore = create<ConversationStore>()(
           const uniqueNewConversations = newSelectedConversations.filter(conv => !existingIds.has(conv.id));
           
           set({ selectedConversations: [...existingSelectedConversations, ...uniqueNewConversations] });
+        },
+
+        // Expanded conversations management
+        toggleConversationExpansion: (conversationId) => {
+          const { expandedConversations } = get();
+          const newExpanded = new Set(expandedConversations);
+          
+          if (newExpanded.has(conversationId)) {
+            newExpanded.delete(conversationId);
+          } else {
+            newExpanded.add(conversationId);
+          }
+          
+          set({ expandedConversations: newExpanded });
+        },
+
+        isConversationExpanded: (conversationId) => {
+          const { expandedConversations } = get();
+          return expandedConversations.has(conversationId);
+        },
+
+        clearExpandedConversations: () => {
+          set({ expandedConversations: new Set() });
         },
 
         // Permanent storage operations
