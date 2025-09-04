@@ -317,7 +317,7 @@ const AssessmentQuestionsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="container-empty-state">
         <div className="text-lg">Loading assessment questions...</div>
       </div>
     );
@@ -356,7 +356,7 @@ const AssessmentQuestionsPage: React.FC = () => {
 
 
 
-      {/* Survey Header */}
+      {/* Assessment Header */}
       {currentTemplate && (
         <>
           <AssessmentHeader
@@ -397,7 +397,7 @@ const AssessmentQuestionsPage: React.FC = () => {
 
       {/* No Template Selected */}
       {!currentTemplate && templates.length > 0 && (
-        <div className="text-center py-12">
+        <div className="container-empty-state">
           <p className="text-muted-foreground">Template not found or not loaded.</p>
         </div>
       )}

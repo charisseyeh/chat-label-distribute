@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export interface SurveyResponse {
+export interface AssessmentResponse {
   id: string;
   conversationId: string;
   position: 'beginning' | 'turn6' | 'end';
@@ -10,7 +10,7 @@ export interface SurveyResponse {
   timestamp: string;
 }
 
-export interface SurveyDimension {
+export interface AssessmentDimension {
   id: string;
   name: string;
   description: string;
@@ -18,33 +18,33 @@ export interface SurveyDimension {
   scale: number;
 }
 
-interface SurveyState {
-  responses: SurveyResponse[];
-  dimensions: SurveyDimension[];
+interface AssessmentState {
+  responses: AssessmentResponse[];
+  dimensions: AssessmentDimension[];
   loading: boolean;
   error: string | null;
 }
 
-interface SurveyActions {
+interface AssessmentActions {
   // State management
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
   
-  // Survey responses
-  addResponse: (response: SurveyResponse) => void;
-  updateResponse: (id: string, updates: Partial<SurveyResponse>) => void;
+  // Assessment responses
+  addResponse: (response: AssessmentResponse) => void;
+  updateResponse: (id: string, updates: Partial<AssessmentResponse>) => void;
   removeResponse: (id: string) => void;
-  getResponsesForConversation: (conversationId: string) => SurveyResponse[];
+  getResponsesForConversation: (conversationId: string) => AssessmentResponse[];
   
-  // Survey dimensions (could be configurable later)
-  setDimensions: (dimensions: SurveyDimension[]) => void;
+  // Assessment dimensions (could be configurable later)
+  setDimensions: (dimensions: AssessmentDimension[]) => void;
 }
 
-type SurveyStore = SurveyState & SurveyActions;
+type AssessmentStore = AssessmentState & AssessmentActions;
 
 // Default assessment dimensions (matching what's already implemented)
-const DEFAULT_DIMENSIONS: SurveyDimension[] = [
+const DEFAULT_DIMENSIONS: AssessmentDimension[] = [
   {
     id: 'mood',
     name: 'Mood State',
@@ -82,7 +82,7 @@ const DEFAULT_DIMENSIONS: SurveyDimension[] = [
   }
 ];
 
-export const useSurveyStore = create<SurveyStore>()(
+export const useAssessmentStore = create<AssessmentStore>()(
   persist(
     (set, get) => ({
       // Initial state
@@ -96,7 +96,7 @@ export const useSurveyStore = create<SurveyStore>()(
       setError: (error) => set({ error }),
       clearError: () => set({ error: null }),
 
-      // Survey responses
+      // Assessment responses
       addResponse: (response) => {
         const { responses } = get();
         const existingIndex = responses.findIndex(r => 
@@ -133,7 +133,7 @@ export const useSurveyStore = create<SurveyStore>()(
         return responses.filter(r => r.conversationId === conversationId);
       },
 
-      // Survey dimensions
+      // Assessment dimensions
       setDimensions: (dimensions) => set({ dimensions }),
     }),
     {

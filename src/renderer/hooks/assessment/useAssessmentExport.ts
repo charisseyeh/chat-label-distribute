@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useAssessmentResponseStore } from '../../stores/assessmentResponseStore';
-import { SurveyExportService } from '../../services/assessment/assessmentExportService';
+import { AssessmentExportService } from '../../services/assessment/assessmentExportService';
 import { ConversationAssessmentData } from '../../types/assessment';
 
 export const useAssessmentExport = () => {
@@ -15,7 +15,7 @@ export const useAssessmentExport = () => {
       }
 
       // Validate data before export
-      const validation = SurveyExportService.validateExportData(data);
+      const validation = AssessmentExportService.validateExportData(data);
       if (!validation.isValid) {
         throw new Error(`Export validation failed: ${validation.errors.join(', ')}`);
       }
@@ -24,15 +24,15 @@ export const useAssessmentExport = () => {
       let filename: string;
 
       if (format === 'research') {
-        exportContent = SurveyExportService.exportResearchFormat(data);
-        filename = SurveyExportService.generateFilename(conversationId, 'research');
+        exportContent = AssessmentExportService.exportResearchFormat(data);
+        filename = AssessmentExportService.generateFilename(conversationId, 'research');
       } else {
-        exportContent = SurveyExportService.exportConversationData(data);
-        filename = SurveyExportService.generateFilename(conversationId, 'full');
+        exportContent = AssessmentExportService.exportConversationData(data);
+        filename = AssessmentExportService.generateFilename(conversationId, 'full');
       }
 
       // Trigger download
-      SurveyExportService.downloadData(exportContent, filename);
+      AssessmentExportService.downloadData(exportContent, filename);
 
       return { success: true, filename };
     } catch (error) {
@@ -48,11 +48,11 @@ export const useAssessmentExport = () => {
         throw new Error('No conversation data found');
       }
 
-      const exportContent = SurveyExportService.exportAllData(conversationData);
+      const exportContent = AssessmentExportService.exportAllData(conversationData);
       const filename = `all_assessment_data_${new Date().toISOString().split('T')[0]}.json`;
 
       // Trigger download
-      SurveyExportService.downloadData(exportContent, filename);
+      AssessmentExportService.downloadData(exportContent, filename);
 
       return { success: true, filename };
     } catch (error) {
@@ -68,11 +68,11 @@ export const useAssessmentExport = () => {
         throw new Error('No conversations selected for export');
       }
 
-      const exportContent = SurveyExportService.exportMultipleConversations(conversationData, conversationIds);
+      const exportContent = AssessmentExportService.exportMultipleConversations(conversationData, conversationIds);
       const filename = `selected_assessment_data_${new Date().toISOString().split('T')[0]}.json`;
 
       // Trigger download
-      SurveyExportService.downloadData(exportContent, filename);
+      AssessmentExportService.downloadData(exportContent, filename);
 
       return { success: true, filename };
     } catch (error) {
@@ -89,7 +89,7 @@ export const useAssessmentExport = () => {
         throw new Error('No data found for this conversation');
       }
 
-      const csvContent = SurveyExportService.exportToCSV(data);
+      const csvContent = AssessmentExportService.exportToCSV(data);
       const filename = `assessment_data_${conversationId}_${new Date().toISOString().split('T')[0]}.csv`;
 
       // Create and download CSV
@@ -146,7 +146,7 @@ export const useAssessmentExport = () => {
       return { isValid: false, errors: ['No data found for this conversation'] };
     }
 
-    return SurveyExportService.validateExportData(data);
+    return AssessmentExportService.validateExportData(data);
   }, [conversationData]);
 
   // Check if conversation has exportable data

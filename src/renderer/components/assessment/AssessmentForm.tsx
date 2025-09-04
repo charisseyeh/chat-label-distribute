@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useConversationStore } from '../../stores/conversationStore';
-import { useSurveyStore } from '../../stores/assessmentStore';
+import { useAssessmentStore } from '../../stores/assessmentStore';
 import { FloatingLabelTextarea } from '../common';
 
 const POSITIONS = [
@@ -10,7 +10,7 @@ const POSITIONS = [
   { id: 'end', label: 'End', description: 'Post-conversation state' }
 ];
 
-const SurveyForm: React.FC = () => {
+const AssessmentForm: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const conversationId = searchParams.get('conversationId');
@@ -22,7 +22,7 @@ const SurveyForm: React.FC = () => {
     addResponse, 
     updateResponse,
     getResponsesForConversation 
-  } = useSurveyStore();
+  } = useAssessmentStore();
   
   const [currentPosition, setCurrentPosition] = useState<'beginning' | 'turn6' | 'end'>('beginning');
   const [ratings, setRatings] = useState<Record<string, number>>({});
@@ -144,7 +144,7 @@ const SurveyForm: React.FC = () => {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Survey Form</h1>
+          <h1 className="text-3xl font-bold text-foreground">Assessment Form</h1>
           <p className="text-muted-foreground mt-2">
             No conversation selected for assessment
           </p>
@@ -159,7 +159,7 @@ const SurveyForm: React.FC = () => {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Survey Form</h1>
+          <h1 className="text-3xl font-bold text-foreground">Assessment Form</h1>
           <p className="text-muted-foreground mt-2">
             Loading conversation...
           </p>
@@ -172,7 +172,7 @@ const SurveyForm: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Survey Form</h1>
+          <h1 className="text-3xl font-bold text-foreground">Assessment Form</h1>
           <p className="text-muted-foreground mt-2">
             Rate conversation: {conversation.title}
           </p>
@@ -183,7 +183,7 @@ const SurveyForm: React.FC = () => {
             onClick={handleComplete}
             className="btn-outline"
           >
-            Complete Survey
+            Complete Assessment
           </button>
         </div>
       </div>
@@ -210,7 +210,7 @@ const SurveyForm: React.FC = () => {
         </div>
       </div>
 
-      {/* Survey Form */}
+      {/* Assessment Form */}
       <div className="card">
         <div className="card-content space-y-6">
           <div className="text-center">
@@ -289,4 +289,4 @@ const SurveyForm: React.FC = () => {
   );
 };
 
-export default SurveyForm;
+export default AssessmentForm;

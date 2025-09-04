@@ -1,6 +1,6 @@
 import { ConversationAssessmentData, AssessmentResponse } from '../../types/assessment';
 
-export class SurveyExportService {
+export class AssessmentExportService {
   /**
    * Exports assessment data for a specific conversation
    */

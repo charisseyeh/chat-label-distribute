@@ -242,12 +242,14 @@ export const useAssessmentQuestions = () => {
     return QuestionService.generateDefaultLabels(scale);
   }, []);
 
-  // Initialize default template on mount
+  // Initialize default template on mount (now handled by main process)
   const initializeTemplate = useCallback(async () => {
-    if (templates.length === 0) {
-      await initializeDefaultTemplate();
+    // Templates are now initialized by the main process on app startup
+    // This hook just ensures we have a current template selected
+    if (templates.length > 0 && !currentTemplate) {
+      setCurrentTemplate(templates[0]);
     }
-  }, [templates.length, initializeDefaultTemplate]);
+  }, [templates.length, currentTemplate, setCurrentTemplate]);
 
   return {
     // State

@@ -140,7 +140,7 @@ export const useAIGeneration = () => {
               currentPrompt: prompt
             }));
 
-            const aiResponse = await service.generateSurveyResponses(prompt);
+            const aiResponse = await service.generateAssessmentResponses(prompt);
             console.log(`🤖 AI Response received for ${position}:`, aiResponse);
             
             const parsedRatings = await parseAIResponse(aiResponse);

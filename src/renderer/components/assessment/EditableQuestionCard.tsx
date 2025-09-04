@@ -124,11 +124,11 @@ const EditableQuestionCard: React.FC<EditableQuestionCardProps> = ({
         </div>
         
         {/* Delete Question Button */}
-        <div className="bg-red-400/10 hover:bg-red-600/30">
+        <div className="container-destructive">
           <button
             type="button"
             onClick={onDelete}
-            className="w-full py-2 px-4 text-red-600 hover:text-red-700 transition-colors text-left"
+            className="btn-unstyled"
           >
             Delete question
           </button>

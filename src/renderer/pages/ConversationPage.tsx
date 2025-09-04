@@ -9,7 +9,7 @@ import {
   useConversationError
 } from '../stores/conversationStore';
 import { useNavigationStore } from '../stores/navigationStore';
-import { useSurveyStore } from '../stores/assessmentStore';
+import { useAssessmentStore } from '../stores/assessmentStore';
 import { TwoPanelLayout } from '../components/common';
 import AssessmentSidebar from '../components/assessment/AssessmentSidebar';
 import ConversationDetail from '../components/conversation/core/ConversationDetail';
@@ -36,7 +36,7 @@ const ConversationPage: React.FC = () => {
   } = useConversationStore();
   
   const { selectedConversations, setSelectedConversations, setCurrentConversationId } = useNavigationStore();
-  const { responses: assessmentResponses } = useSurveyStore();
+  const { responses: assessmentResponses } = useAssessmentStore();
 
   // Add state to track scroll tracking events
   const [scrollTrackingState, setScrollTrackingState] = useState({
@@ -131,7 +131,7 @@ const ConversationPage: React.FC = () => {
   }, [id]);
 
   // Get assessment completion status
-  const getSurveyCompletionStatus = () => {
+  const getAssessmentCompletionStatus = () => {
     if (!id) return { completed: 0, total: 3 };
     
     const conversationResponses = assessmentResponses.filter((r: any) => r.conversationId === id);
@@ -192,7 +192,7 @@ const ConversationPage: React.FC = () => {
     );
   }
 
-  const assessmentStatus = getSurveyCompletionStatus();
+  const assessmentStatus = getAssessmentCompletionStatus();
 
   return (
     <TwoPanelLayout

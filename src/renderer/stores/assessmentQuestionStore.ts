@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { AssessmentQuestion, AssessmentTemplate } from '../types/assessment';
 import { generateDefaultLabels } from '../utils/assessmentUtils';
+import { getDefaultTemplates } from '../services/assessment/defaultTemplatesService';
 
 interface AssessmentQuestionState {
   templates: AssessmentTemplate[];
@@ -46,84 +47,11 @@ interface AssessmentQuestionActions {
 
 type AssessmentQuestionStore = AssessmentQuestionState & AssessmentQuestionActions;
 
-// Default assessment questions based on the existing implementation
-const getDefaultQuestions = (): AssessmentQuestion[] => [
-  {
-    id: '1',
-    text: 'How would you rate the overall mood or emotional tone?',
-    scale: 7,
-    labels: {
-      1: 'Very negative',
-      2: 'Negative', 
-      3: 'Somewhat negative',
-      4: 'Neutral',
-      5: 'Somewhat positive',
-      6: 'Positive',
-      7: 'Very positive'
-    },
-    order: 1
-  },
-  {
-    id: '2',
-    text: 'How well is the person managing and controlling their emotions?',
-    scale: 7,
-    labels: {
-      1: 'Poor control',
-      2: 'Below average',
-      3: 'Somewhat poor',
-      4: 'Average',
-      5: 'Somewhat good',
-      6: 'Good control',
-      7: 'Excellent control'
-    },
-    order: 2
-  },
-  {
-    id: '3',
-    text: 'How stressed or overwhelmed does the person appear to be?',
-    scale: 7,
-    labels: {
-      1: 'Extremely stressed',
-      2: 'Very stressed',
-      3: 'Stressed',
-      4: 'Moderate',
-      5: 'Somewhat relaxed',
-      6: 'Relaxed',
-      7: 'No stress'
-    },
-    order: 3
-  },
-  {
-    id: '4',
-    text: 'How energetic and engaged does the person seem?',
-    scale: 7,
-    labels: {
-      1: 'Very low energy',
-      2: 'Low energy',
-      3: 'Somewhat low',
-      4: 'Moderate',
-      5: 'Somewhat high',
-      6: 'High energy',
-      7: 'Very high energy'
-    },
-    order: 4
-  },
-  {
-    id: '5',
-    text: 'How would you rate the person\'s overall psychological wellbeing?',
-    scale: 7,
-    labels: {
-      1: 'Very poor',
-      2: 'Poor',
-      3: 'Below average',
-      4: 'Average',
-      5: 'Above average',
-      6: 'Good',
-      7: 'Excellent'
-    },
-    order: 5
-  }
-];
+// Get default questions from the first default template (Emotional Wellbeing)
+const getDefaultQuestions = (): AssessmentQuestion[] => {
+  const defaultTemplates = getDefaultTemplates();
+  return defaultTemplates[0]?.questions || [];
+};
 
 export const useAssessmentQuestionStore = create<AssessmentQuestionStore>()(
   (set, get) => {
@@ -147,7 +75,27 @@ export const useAssessmentQuestionStore = create<AssessmentQuestionStore>()(
           if (window.electronAPI?.getAllAssessmentTemplates) {
             const result = await window.electronAPI.getAllAssessmentTemplates();
             if (result.success) {
-              set({ templates: result.data || [] });
+              const templates = result.data || [];
+              
+              // If no templates exist, try to initialize default templates
+              if (templates.length === 0 && window.electronAPI?.initializeDefaultTemplates) {
+                console.log('🔍 No templates found, attempting to initialize default templates...');
+                const initResult = await window.electronAPI.initializeDefaultTemplates();
+                if (initResult.success && initResult.data?.initialized) {
+                  console.log('✅ Default templates initialized, reloading...');
+                  // Reload templates after initialization
+                  const reloadResult = await window.electronAPI.getAllAssessmentTemplates();
+                  if (reloadResult.success) {
+                    set({ templates: reloadResult.data || [] });
+                  } else {
+                    set({ templates: [] });
+                  }
+                } else {
+                  set({ templates: [] });
+                }
+              } else {
+                set({ templates });
+              }
             } else {
               set({ error: result.error || 'Failed to load templates' });
             }
@@ -451,10 +399,8 @@ export const useAssessmentQuestionStore = create<AssessmentQuestionStore>()(
           await get().loadTemplates();
           const { templates } = get();
           
-          if (templates.length === 0) {
-            const defaultTemplate = await get().createTemplate('Default Survey Template');
-            set({ currentTemplate: defaultTemplate });
-          } else if (!get().currentTemplate) {
+          // Just set the current template if none is selected
+          if (templates.length > 0 && !get().currentTemplate) {
             set({ currentTemplate: templates[0] });
           }
         } catch (error) {

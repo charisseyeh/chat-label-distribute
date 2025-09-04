@@ -332,11 +332,11 @@ const ExportPanel: React.FC = () => {
             </div>
             <div>
               <div className="text-2xl font-bold text-green-600">{summary.completedConversations}</div>
-              <div className="text-sm text-muted-foreground">Completed Surveys</div>
+              <div className="text-sm text-muted-foreground">Completed Assessments</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-blue-600">{summary.totalAssessmentResponses}</div>
-              <div className="text-sm text-muted-foreground">Survey Responses</div>
+              <div className="text-sm text-muted-foreground">Assessment Responses</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-purple-600">{summary.completionRate}%</div>
@@ -393,7 +393,7 @@ const ExportPanel: React.FC = () => {
                     onChange={(e) => setExportOptions(prev => ({ ...prev, filterCompleted: e.target.checked }))}
                     className="rounded border-gray-300"
                   />
-                  <span>Only export completed surveys</span>
+                  <span>Only export completed Assessments</span>
                 </label>
                 
                 <div>

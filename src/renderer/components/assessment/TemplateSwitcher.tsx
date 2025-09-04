@@ -68,13 +68,13 @@ const TemplateSwitcher: React.FC<TemplateSwitcherProps> = ({
                 </div>
                 
                 {isCurrent && (
-                  <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                  <span className="badge-blue">
                     Current
                   </span>
                 )}
                 
                 {impact.willLoseData && !isCurrent && (
-                  <span className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">
+                  <span className="badge-red">
                     ⚠️ Will clear data
                   </span>
                 )}
@@ -101,7 +101,7 @@ const TemplateSwitcher: React.FC<TemplateSwitcherProps> = ({
             </div>
             
             {currentTemplate && checkTemplateSwitchImpact(null).willLoseData && (
-              <span className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">
+              <span className="badge-red">
                 ⚠️ Will clear data
               </span>
             )}

@@ -185,7 +185,7 @@ export const useAIPrompt = () => {
     }
 
     try {
-      let summary = `Survey Questions (${currentTemplate.questions.length} total):\n\n`;
+      let summary = `Assessment Questions (${currentTemplate.questions.length} total):\n\n`;
       
       currentTemplate.questions.forEach((question, index) => {
         summary += `${index + 1}. ${question.text}\n`;

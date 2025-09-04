@@ -29,7 +29,7 @@ export class AIService {
     this.config = { apiKey, model };
   }
 
-  async generateSurveyResponses(prompt: string): Promise<string> {
+  async generateAssessmentResponses(prompt: string): Promise<string> {
     try {
       // Use the exposed electronAPI method from preload script
       const response = await (window as any).electronAPI.callOpenAIAPI({

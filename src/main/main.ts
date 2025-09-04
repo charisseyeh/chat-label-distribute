@@ -32,12 +32,27 @@ const createWindow = () => {
   });
 };
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   createWindow();
   try {
     console.log('🚀 Initializing IPC handlers...');
     const ipcHandlers = new IPCHandlers();
     console.log('✅ IPC handlers initialized successfully');
+    
+    // Initialize default templates on first run
+    console.log('🔍 Checking for first run and initializing default templates...');
+    try {
+      const { AssessmentManager } = await import('./managers/assessment-manager');
+      const assessmentManager = new AssessmentManager();
+      const initialized = await assessmentManager.initializeDefaultTemplates();
+      if (initialized) {
+        console.log('🎉 Default templates initialized successfully');
+      } else {
+        console.log('ℹ️ Default templates already exist or initialization not needed');
+      }
+    } catch (error) {
+      console.error('❌ Failed to initialize default templates:', error);
+    }
   } catch (error) {
     console.error('❌ Failed to initialize IPC handlers:', error);
   }

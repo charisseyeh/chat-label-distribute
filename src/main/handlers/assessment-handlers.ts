@@ -107,5 +107,41 @@ export class AssessmentHandlers {
         };
       }
     });
+
+    // Initialize default templates (for first run)
+    ipcMain.handle('assessment:initialize-default-templates', async () => {
+      try {
+        console.log('🔄 AssessmentHandlers: assessment:initialize-default-templates called');
+        const initialized = await this.assessmentManager.initializeDefaultTemplates();
+        console.log('📁 AssessmentManager: initializeDefaultTemplates result:', initialized);
+        
+        if (initialized) {
+          console.log('✅ AssessmentHandlers: Default templates initialized successfully');
+          return { success: true, data: { initialized: true } };
+        } else {
+          console.log('ℹ️ AssessmentHandlers: Default templates already exist, no initialization needed');
+          return { success: true, data: { initialized: false, reason: 'Templates already exist' } };
+        }
+      } catch (error) {
+        console.error('❌ AssessmentHandlers: Error initializing default templates:', error);
+        return { 
+          success: false, 
+          error: error instanceof Error ? error.message : 'Unknown error occurred' 
+        };
+      }
+    });
+
+    // Check if this is first run
+    ipcMain.handle('assessment:is-first-run', async () => {
+      try {
+        const isFirstRun = await this.assessmentManager.isFirstRun();
+        return { success: true, data: { isFirstRun } };
+      } catch (error) {
+        return { 
+          success: false, 
+          error: error instanceof Error ? error.message : 'Unknown error occurred' 
+        };
+      }
+    });
   }
 }

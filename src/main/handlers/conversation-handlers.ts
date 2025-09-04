@@ -371,7 +371,7 @@ export class IPCHandlers {
             messages: [
               {
                 role: 'system',
-                content: 'You are an expert at analyzing conversations and providing survey ratings. Always respond with the exact format requested.'
+                content: 'You are an expert at analyzing conversations and providing assessment ratings. Always respond with the exact format requested.'
               },
               {
                 role: 'user',

@@ -8,7 +8,7 @@ export const useConversationSelection = () => {
   const { conversationData } = useAssessmentResponseStore();
   const { selectedConversations: storeConversations, getFullConversationData } = useConversationStore();
 
-  // Get conversations with survey data - include all selected conversations, not just those with responses
+  // Get conversations with Assessment data - include all selected conversations, not just those with responses
   const conversationsWithData = useMemo(() => {
     return storeConversations.map(conversation => {
       const data = conversationData[conversation.id] || {

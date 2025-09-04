@@ -24,10 +24,10 @@ const Header: React.FC<HeaderProps> = React.memo(({ isSidebarOpen }) => {
       case 'ai-comparisons':
         return 'AI Comparisons';
 
-      case 'survey-templates':
+      case 'assessment-templates':
         return 'Assessment Templates';
-      case 'survey-questions':
-        return 'Survey Questions';
+      case 'assessment-questions':
+        return 'Assessment Questions';
       default:
         return 'Unknown Page';
     }
@@ -42,9 +42,9 @@ const Header: React.FC<HeaderProps> = React.memo(({ isSidebarOpen }) => {
       case 'ai-comparisons':
         return 'Compare AI model performance across conversations';
 
-      case 'survey-templates':
+      case 'assessment-templates':
         return 'Create and manage assessment templates';
-      case 'survey-questions':
+      case 'assessment-questions':
         return 'Create and manage assessment questions';
       default:
         return 'Navigation and analysis tools';
@@ -82,7 +82,7 @@ const Header: React.FC<HeaderProps> = React.memo(({ isSidebarOpen }) => {
                 </span>
               ) : currentTemplateId ? (
                 <span className="text-h3 text-foreground">
-                  Survey Questions
+                  Assessment Questions
                 </span>
               ) : (
                 pageTitle

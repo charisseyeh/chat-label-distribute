@@ -29,10 +29,10 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
       case 'ai-comparisons':
         return 'AI Comparisons';
 
-      case 'survey-templates':
+      case 'assessment-templates':
         return 'Assessment Templates';
-      case 'survey-questions':
-        return 'Survey Questions';
+      case 'assessment-questions':
+        return 'Assessment Questions';
       default:
         return 'Unknown Page';
     }
@@ -71,7 +71,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
   }, [navigate]);
 
   const handleTemplateClick = useCallback((templateId: string) => {
-    navigate(`/survey-template/${templateId}`);
+    navigate(`/assessment-template/${templateId}`);
   }, [navigate]);
 
   const handleRemoveConversation = useCallback(async (conversationId: string) => {
@@ -129,9 +129,9 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
       
       // Check if user is currently viewing this template
       const currentPath = window.location.pathname;
-      if (currentPath === `/survey-template/${templateId}`) {
+      if (currentPath === `/assessment-template/${templateId}`) {
         // Redirect to Assessment templates page if viewing the deleted template
-        navigate('/survey-templates');
+        navigate('/assessment-templates');
       }
       
       // Delete the template
@@ -190,7 +190,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
       }))
     },
     {
-      id: 'survey-templates',
+      id: 'assessment-templates',
       label: 'Assessment Templates',
       icon: <FileText size={20} weight="bold" />,
       onClick: () => handlePageNavigation('assessment-templates'),
@@ -321,7 +321,7 @@ const Sidebar: React.FC<SidebarProps> = React.memo(({ isOpen, onToggleSidebar })
                 )}
 
                 {/* Sub-items for Assessment templates */}
-                {item.id === 'survey-templates' && hasSubItems && isExpanded && (
+                {item.id === 'assessment-templates' && hasSubItems && isExpanded && (
                   <div>
                     {item.subItems.map((subItem) => (
                       <NavigationItemNested

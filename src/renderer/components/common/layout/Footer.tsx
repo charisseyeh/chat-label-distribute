@@ -91,7 +91,7 @@ const Footer: React.FC<FooterProps> = React.memo(({ className = '', onExportComp
     );
   }
 
-  // For survey questions page, show save changes footer
+  // For Assessment questions page, show save changes footer
   if (currentPage === 'assessment-questions' || currentPage === 'assessment-templates') {
     if (!saveHandler) {
       return null; // Don't show footer if no save handler is set

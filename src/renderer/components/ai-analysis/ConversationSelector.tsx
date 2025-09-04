@@ -109,11 +109,6 @@ const ConversationSelector: React.FC<ConversationSelectorProps> = ({
         style={{ maxHeight: maxHeight !== 'none' ? maxHeight : undefined }}
       >
         {conversationItems}
-        {conversations.length === 0 && (
-          <p className="text-body-secondary text-left p-4">
-            No conversations meet the current filtering criteria. Try adjusting your filters or date range.
-          </p>
-        )}
 
         {/* Select All / Deselect All Buttons */}
         {showSelectAllButtons && allowToggle && conversations.length > 0 && (

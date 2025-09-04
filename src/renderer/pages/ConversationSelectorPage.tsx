@@ -260,14 +260,7 @@ const ConversationSelectorPage: React.FC = () => {
               selectedConversations={selectedConversations.map(conv => conv.id)}
               onConversationToggle={toggleConversationSelection}
             />
-            {/* Debug info */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="mt-4 p-2 bg-gray-100 text-xs">
-                <div>Debug: Filtered conversations count: {filteredConversations.length}</div>
-                <div>Debug: Message count range: {filteredConversations.length > 0 ? `${Math.min(...filteredConversations.map(c => c.messageCount))} - ${Math.max(...filteredConversations.map(c => c.messageCount))}` : 'N/A'}</div>
-                <div>Debug: Conversations with ≤9 messages: {filteredConversations.filter(c => c.messageCount <= 9).length}</div>
-              </div>
-            )}
+
           </div>
         </div>
       )}

@@ -2,7 +2,7 @@ import React from 'react';
 import { AssessmentTemplate } from '../../types/assessment';
 import { FloatingLabelInput, FloatingLabelSelect } from '../common/molecules/label';
 
-interface SurveyHeaderProps {
+interface AssessmentHeaderProps {
   template: AssessmentTemplate;
   globalScale: number;
   onScaleChange: (scale: number) => void;
@@ -10,7 +10,7 @@ interface SurveyHeaderProps {
   onTitleChange: (newTitle: string) => void;
 }
 
-const SurveyHeader: React.FC<SurveyHeaderProps> = ({
+const AssessmentHeader: React.FC<AssessmentHeaderProps> = ({
   template,
   globalScale,
   onScaleChange,
@@ -24,7 +24,7 @@ const SurveyHeader: React.FC<SurveyHeaderProps> = ({
           label="Title"
           value={template.name}
           onChange={onTitleChange}
-          placeholder="Survey title"
+          placeholder="Assessment title"
           className="w-full border-b border-border hover:bg-gray-50 focus-within:bg-white transition-colors"
           noBorder={true}
         />
@@ -44,24 +44,10 @@ const SurveyHeader: React.FC<SurveyHeaderProps> = ({
         />
       </div>
 
-      <div 
-        className="mb-4 border border-primary-200 overflow-hidden" 
-        style={{ 
-          borderRadius: 'var(--radius-lg)',
-          backgroundColor: 'rgba(2, 132, 199, 0.1)',
-          transition: 'background-color 0.2s'
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = 'rgba(2, 132, 199, 0.2)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = 'rgba(2, 132, 199, 0.1)';
-        }}
-      >
+      <div className="mb-4 container-create">
         <button
           onClick={onAddQuestion}
-          className="w-full py-3 px-4 text-left transition-colors hover:bg-primary-50"
-          style={{ color: 'var(--primary-600)' }}
+          className="btn-unstyled"
         >
           + Add new question
         </button>
@@ -70,4 +56,4 @@ const SurveyHeader: React.FC<SurveyHeaderProps> = ({
   );
 };
 
-export default SurveyHeader;
+export default AssessmentHeader;

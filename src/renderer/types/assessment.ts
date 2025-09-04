@@ -3,7 +3,7 @@ export interface AssessmentQuestion {
   text: string;
   scale: number; // 5, 7, 10, etc.
   labels: Record<number, string>; // {1: "Very Poor", 2: "Poor", ...}
-  order: number; // Display order within survey section
+  order: number; // Display order within Assessment section
 }
 
 export interface AssessmentTemplate {

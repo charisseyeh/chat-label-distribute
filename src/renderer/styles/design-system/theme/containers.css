@@ -24,7 +24,7 @@
 }
 
 .container-destructive {
-  @apply container-error;
+  @apply border-t border-red-200 bg-red-50 text-red-700 font-bold hover:bg-red-100 transition-colors py-3 px-4 rounded-b-lg cursor-pointer;
 }
 
 .container-template {
@@ -37,4 +37,26 @@
 
 .container-export {
   @apply container-md;
+}
+
+/* Assessment Page Containers */
+.container-empty-state {
+  @apply text-center py-12;
+}
+
+.container-empty-state-sm {
+  @apply text-center py-8;
+}
+
+.container-templates-list {
+  @apply border border-border overflow-hidden;
+  border-radius: var(--radius-lg);
+}
+
+.container-create {
+  @apply border border-primary-100 bg-primary-50 text-primary-700 font-bold hover:bg-primary-200 transition-colors py-3 px-4 rounded-lg;
+}
+
+.container-create-footer {
+  @apply border-t border-primary-100 bg-primary-50 text-primary-700 font-bold hover:bg-primary-200 transition-colors py-3 px-4 rounded-b-lg;
 }

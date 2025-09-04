@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as os from 'os';
+import { getDefaultTemplates } from '../../renderer/services/assessment/defaultTemplatesService';
 
 interface AssessmentTemplate {
   id: string;
@@ -170,5 +171,59 @@ export class AssessmentManager {
 
   getAssessmentTemplatesDirectory(): string {
     return this.assessmentTemplatesDir;
+  }
+
+  /**
+   * Initialize default templates if none exist (first run)
+   * Returns true if templates were initialized, false if they already existed
+   */
+  async initializeDefaultTemplates(): Promise<boolean> {
+    try {
+      console.log('🔍 AssessmentManager: Checking for existing templates...');
+      
+      // Check if any templates already exist
+      const existingTemplates = await this.getAllAssessmentTemplates();
+      
+      if (existingTemplates.length > 0) {
+        console.log(`✅ AssessmentManager: Found ${existingTemplates.length} existing templates, skipping default initialization`);
+        return false;
+      }
+
+      console.log('📝 AssessmentManager: No existing templates found, initializing default templates...');
+      
+      // Get default templates
+      const defaultTemplates = getDefaultTemplates();
+      let initializedCount = 0;
+
+      // Store each default template
+      for (const template of defaultTemplates) {
+        const success = await this.storeAssessmentTemplate(template);
+        if (success) {
+          initializedCount++;
+          console.log(`✅ AssessmentManager: Initialized default template: ${template.name}`);
+        } else {
+          console.error(`❌ AssessmentManager: Failed to initialize template: ${template.name}`);
+        }
+      }
+
+      console.log(`🎉 AssessmentManager: Successfully initialized ${initializedCount}/${defaultTemplates.length} default templates`);
+      return initializedCount > 0;
+    } catch (error) {
+      console.error('❌ AssessmentManager: Failed to initialize default templates:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Check if this is the first run (no templates exist)
+   */
+  async isFirstRun(): Promise<boolean> {
+    try {
+      const templates = await this.getAllAssessmentTemplates();
+      return templates.length === 0;
+    } catch (error) {
+      console.error('❌ AssessmentManager: Failed to check first run status:', error);
+      return true; // Assume first run if we can't check
+    }
   }
 }

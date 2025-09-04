@@ -67,7 +67,7 @@ const AssessmentSidebar: React.FC<AssessmentSidebarProps> = ({
   ];
 
   // Handle assessment response
-  const handleSurveyResponse = async (
+  const handleAssessmentResponse = async (
     questionId: string,
     position: 'beginning' | 'turn6' | 'end',
     rating: number
@@ -127,13 +127,13 @@ const AssessmentSidebar: React.FC<AssessmentSidebarProps> = ({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Survey Sections */}
+      {/* Assessment Sections */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {assessmentSections.map((section) => (
           <AssessmentSection
             key={section.position}
             section={section}
-            onResponse={handleSurveyResponse}
+            onResponse={handleAssessmentResponse}
             isVisible={section.isVisible}
             conversationId={conversationId}
           />

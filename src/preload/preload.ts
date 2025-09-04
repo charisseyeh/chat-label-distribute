@@ -22,6 +22,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   updateAssessmentTemplate: (templateId: string, updates: any) => ipcRenderer.invoke('assessment:update-template', templateId, updates),
   deleteAssessmentTemplate: (templateId: string) => ipcRenderer.invoke('assessment:delete-template', templateId),
   getAssessmentTemplateStats: () => ipcRenderer.invoke('assessment:get-template-stats'),
+  initializeDefaultTemplates: () => ipcRenderer.invoke('assessment:initialize-default-templates'),
+  isFirstRun: () => ipcRenderer.invoke('assessment:is-first-run'),
   // Test handler
   testPing: () => ipcRenderer.invoke('test:ping'),
   // OpenAI API calls
@@ -50,6 +52,8 @@ declare global {
       updateAssessmentTemplate: (templateId: string, updates: any) => Promise<{ success: boolean; data?: any; error?: string }>;
       deleteAssessmentTemplate: (templateId: string) => Promise<{ success: boolean; data?: any; error?: string }>;
       getAssessmentTemplateStats: () => Promise<{ success: boolean; data?: any; error?: string }>;
+      initializeDefaultTemplates: () => Promise<{ success: boolean; data?: { initialized: boolean; reason?: string }; error?: string }>;
+      isFirstRun: () => Promise<{ success: boolean; data?: { isFirstRun: boolean }; error?: string }>;
       testPing: () => Promise<{ success: boolean; message?: string }>;
       callOpenAIAPI: (params: { apiKey: string; model: string; prompt: string }) => Promise<{ content?: string; error?: string }>;
     };

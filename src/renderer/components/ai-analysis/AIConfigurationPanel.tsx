@@ -60,7 +60,7 @@ const AIConfigurationPanel: React.FC<AIConfigurationPanelProps> = ({
         </button>
       </div>
 
-      {/* Survey Template Display - Compact version */}
+      {/* assessment Template Display - Compact version */}
       {currentTemplate && (
         <div>
           <span className="text-body-secondary">

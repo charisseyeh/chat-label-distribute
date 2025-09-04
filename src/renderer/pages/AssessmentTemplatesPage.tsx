@@ -137,7 +137,7 @@ const AssessmentTemplatesPage: React.FC = () => {
 
       {/* Templates List using Design System */}
       {templates.length === 0 ? (
-        <div className="text-center py-12">
+        <div className="container-empty-state">
           <p className="text-muted-foreground mb-4">No Assessment templates found.</p>
           <button
             onClick={handleCreateTemplate}
@@ -147,10 +147,7 @@ const AssessmentTemplatesPage: React.FC = () => {
           </button>
         </div>
       ) : (
-        <div 
-          className="border border-border overflow-hidden"
-          style={{ borderRadius: 'var(--radius-lg)' }}
-        >
+        <div className="container-templates-list">
           <List
             variant="with-dividers"
             listItemVariant="double"
@@ -159,12 +156,10 @@ const AssessmentTemplatesPage: React.FC = () => {
           />
           
           {/* Create New Template Button at bottom */}
-          <div 
-            className="border-t border-primary/20 bg-primary-100 hover:bg-primary-200 transition-colors"
-          >
+          <div className="container-create-footer">
             <button
               onClick={handleCreateTemplate}
-              className="w-full text-left text-primary-800 hover:text-primary-900 py-3 px-4 transition-colors"
+              className="btn-unstyled"
             >
               + Create new template
             </button>

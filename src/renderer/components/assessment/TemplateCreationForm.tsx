@@ -17,7 +17,7 @@ const TemplateCreationForm: React.FC<TemplateCreationFormProps> = ({
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Create Survey Template</h1>
+        <h1 className="text-3xl font-bold text-foreground mb-2">Create Assessment Template</h1>
         <p className="text-muted-foreground">
           Create a new assessment question template for psychological assessment of conversations.
         </p>
