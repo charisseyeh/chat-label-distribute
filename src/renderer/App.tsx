@@ -13,6 +13,7 @@ import SurveyTemplatesPage from './pages/SurveyTemplatesPage';
 import { useConversationStore } from './stores/conversationStore';
 import { useNavigationStore } from './stores/navigationStore';
 import { performanceMonitor } from './utils/performance';
+import { useStartupLoading, useStoreSync } from './hooks/core';
 
 // Component to sync navigation store with route changes
 const NavigationSync: React.FC = React.memo(() => {
