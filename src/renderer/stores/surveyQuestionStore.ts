@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { SurveyQuestion, SurveyTemplate } from '../types/survey';
 import { generateDefaultLabels } from '../utils/surveyUtils';
+import { DEFAULT_TEMPLATES } from '../constants/defaultTemplates';
 
 interface SurveyQuestionState {
   templates: SurveyTemplate[];
@@ -46,84 +47,10 @@ interface SurveyQuestionActions {
 
 type SurveyQuestionStore = SurveyQuestionState & SurveyQuestionActions;
 
-// Default survey questions based on the existing implementation
-const getDefaultQuestions = (): SurveyQuestion[] => [
-  {
-    id: '1',
-    text: 'How would you rate the overall mood or emotional tone?',
-    scale: 7,
-    labels: {
-      1: 'Very negative',
-      2: 'Negative', 
-      3: 'Somewhat negative',
-      4: 'Neutral',
-      5: 'Somewhat positive',
-      6: 'Positive',
-      7: 'Very positive'
-    },
-    order: 1
-  },
-  {
-    id: '2',
-    text: 'How well is the person managing and controlling their emotions?',
-    scale: 7,
-    labels: {
-      1: 'Poor control',
-      2: 'Below average',
-      3: 'Somewhat poor',
-      4: 'Average',
-      5: 'Somewhat good',
-      6: 'Good control',
-      7: 'Excellent control'
-    },
-    order: 2
-  },
-  {
-    id: '3',
-    text: 'How stressed or overwhelmed does the person appear to be?',
-    scale: 7,
-    labels: {
-      1: 'Extremely stressed',
-      2: 'Very stressed',
-      3: 'Stressed',
-      4: 'Moderate',
-      5: 'Somewhat relaxed',
-      6: 'Relaxed',
-      7: 'No stress'
-    },
-    order: 3
-  },
-  {
-    id: '4',
-    text: 'How energetic and engaged does the person seem?',
-    scale: 7,
-    labels: {
-      1: 'Very low energy',
-      2: 'Low energy',
-      3: 'Somewhat low',
-      4: 'Moderate',
-      5: 'Somewhat high',
-      6: 'High energy',
-      7: 'Very high energy'
-    },
-    order: 4
-  },
-  {
-    id: '5',
-    text: 'How would you rate the person\'s overall psychological wellbeing?',
-    scale: 7,
-    labels: {
-      1: 'Very poor',
-      2: 'Poor',
-      3: 'Below average',
-      4: 'Average',
-      5: 'Above average',
-      6: 'Good',
-      7: 'Excellent'
-    },
-    order: 5
-  }
-];
+// Default survey questions - now using the first template's questions as fallback
+const getDefaultQuestions = (): SurveyQuestion[] => {
+  return DEFAULT_TEMPLATES[0]?.questions || [];
+};
 
 export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
   (set, get) => {
@@ -452,13 +379,35 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
           const { templates } = get();
           
           if (templates.length === 0) {
-            const defaultTemplate = await get().createTemplate('Default Survey Template');
-            set({ currentTemplate: defaultTemplate });
+            // Create all default templates
+            const createdTemplates: SurveyTemplate[] = [];
+            
+            for (const template of DEFAULT_TEMPLATES) {
+              try {
+                if (window.electronAPI?.createSurveyTemplate) {
+                  const result = await window.electronAPI.createSurveyTemplate(template);
+                  if (result.success) {
+                    createdTemplates.push(template);
+                  }
+                } else {
+                  // Fallback to localStorage if electronAPI is not available
+                  createdTemplates.push(template);
+                }
+              } catch (error) {
+                console.error(`Failed to create template "${template.name}":`, error);
+              }
+            }
+            
+            // Update the store with created templates
+            set({ 
+              templates: createdTemplates,
+              currentTemplate: createdTemplates[0] || null
+            });
           } else if (!get().currentTemplate) {
             set({ currentTemplate: templates[0] });
           }
         } catch (error) {
-          set({ error: error instanceof Error ? error.message : 'Failed to initialize default template' });
+          set({ error: error instanceof Error ? error.message : 'Failed to initialize default templates' });
         }
       },
 

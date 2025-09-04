@@ -14,7 +14,7 @@
 }
 
 .message-bubble.system {
-  @apply bg-gray-50 text-gray-900 border-gray-200;
+  @apply bg-gray-50 text-gray-900 border-border;
 }
 
 /* Chat Message Layout */
@@ -161,7 +161,7 @@
 }
 
 .role-badge.system {
-  @apply bg-gray-100 text-gray-800 border-gray-200;
+  @apply bg-gray-100 text-gray-800 border-border;
 }
 
 /* Message Variants */
