@@ -314,24 +314,6 @@ const AssessmentQuestionsPage: React.FC = () => {
     });
   }, [currentTemplate?.name, updateUiState]);
 
-  // Memoized questions list
-  const memoizedQuestions = useMemo(() => {
-    if (!currentTemplate) return [];
-    
-    return currentTemplate.questions
-      .filter(question => !uiState.deletedQuestions.has(question.id))
-      .map((question, index) => (
-        <EditableQuestionCard
-          key={question.id}
-          question={question}
-          index={index}
-          globalScale={uiState.globalScale}
-          onSave={(questionData) => handleUpdateQuestion(question.id, questionData)}
-          onDelete={() => handleDeleteQuestion(question.id)}
-          onTrackChanges={(questionData) => updatePendingChanges(question.id, questionData)}
-        />
-      ));
-  }, [currentTemplate, uiState.deletedQuestions, uiState.globalScale, handleUpdateQuestion, handleDeleteQuestion, updatePendingChanges]);
 
 
   if (loading) {
@@ -388,7 +370,28 @@ const AssessmentQuestionsPage: React.FC = () => {
 
           {/* Questions Display */}
           <div className="space-y-4">
-            {memoizedQuestions}
+            {currentTemplate.questions
+              .filter(question => !uiState.deletedQuestions.has(question.id))
+              .map((question, index) => {
+                // Use the new scale from uiState if there are scale changes, otherwise use the question's scale
+                const questionWithUpdatedScale = uiState.hasScaleChanges ? {
+                  ...question,
+                  scale: uiState.globalScale,
+                  labels: generateDefaultLabels(uiState.globalScale)
+                } : question;
+                
+                return (
+                  <EditableQuestionCard
+                    key={`${question.id}-${uiState.globalScale}`}
+                    question={questionWithUpdatedScale}
+                    index={index}
+                    globalScale={uiState.globalScale}
+                    onSave={(questionData) => handleUpdateQuestion(question.id, questionData)}
+                    onDelete={() => handleDeleteQuestion(question.id)}
+                    onTrackChanges={(questionData) => updatePendingChanges(question.id, questionData)}
+                  />
+                );
+              })}
           </div>
         </>
       )}

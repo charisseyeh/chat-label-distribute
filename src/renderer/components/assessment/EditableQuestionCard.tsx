@@ -19,27 +19,29 @@ const EditableQuestionCard: React.FC<EditableQuestionCardProps> = ({
   onDelete,
   onTrackChanges
 }) => {
-  // Initialize form data with current question data - use lazy initialization
-  const [formData, setFormData] = useState(() => ({
+  const [formData, setFormData] = useState({
+    id: question.id,
     text: question.text,
     scale: question.scale,
     labels: { ...question.labels }
-  }));
+  });
 
-  // Use global scale for rendering
+  // Use global scale for rendering, but keep local scale for tracking changes
   const displayScale = globalScale;
 
-  // Only update form data when the global scale changes
+  // Handle question prop changes - only update when question ID changes (template switch)
   useEffect(() => {
-    if (displayScale !== formData.scale) {
-      const newLabels = generateDefaultLabels(displayScale);
-      setFormData(prev => ({
-        ...prev,
-        scale: displayScale,
-        labels: newLabels
-      }));
+    // Only reset form data when the question ID changes (template switch)
+    // This prevents the effect from overriding user input while typing
+    if (question.id !== formData.id) {
+      setFormData({
+        id: question.id,
+        text: question.text,
+        scale: question.scale,
+        labels: { ...question.labels }
+      });
     }
-  }, [displayScale]);
+  }, [question.id]);
 
 
 
