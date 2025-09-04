@@ -256,7 +256,7 @@ const AssessmentQuestionsPage: React.FC = () => {
     
     // Don't update currentTemplate immediately - let the save function handle it
     // This prevents the useEffect from resetting hasScaleChanges
-  }, [uiState.globalScale, updateUiState]);
+  }, [updateUiState]);
 
   // Handle question creation
   const handleAddQuestion = useCallback(async () => {
@@ -276,7 +276,7 @@ const AssessmentQuestionsPage: React.FC = () => {
   }, [currentTemplate, uiState.globalScale, addQuestion, generateDefaultLabels]);
 
   // Handle question update - now just tracks changes for batch saving
-  const handleUpdateQuestion = useCallback(async (questionId: string, questionData: Partial<AssessmentQuestion>) => {
+  const handleUpdateQuestion = useCallback((questionId: string, questionData: Partial<AssessmentQuestion>) => {
     if (!currentTemplate) return;
 
     // Just track the changes - they will be saved when user clicks "Save Changes"
@@ -313,6 +313,25 @@ const AssessmentQuestionsPage: React.FC = () => {
       hasTitleChanges: hasChanges
     });
   }, [currentTemplate?.name, updateUiState]);
+
+  // Memoized questions list
+  const memoizedQuestions = useMemo(() => {
+    if (!currentTemplate) return [];
+    
+    return currentTemplate.questions
+      .filter(question => !uiState.deletedQuestions.has(question.id))
+      .map((question, index) => (
+        <EditableQuestionCard
+          key={question.id}
+          question={question}
+          index={index}
+          globalScale={uiState.globalScale}
+          onSave={(questionData) => handleUpdateQuestion(question.id, questionData)}
+          onDelete={() => handleDeleteQuestion(question.id)}
+          onTrackChanges={(questionData) => updatePendingChanges(question.id, questionData)}
+        />
+      ));
+  }, [currentTemplate, uiState.deletedQuestions, uiState.globalScale, handleUpdateQuestion, handleDeleteQuestion, updatePendingChanges]);
 
 
   if (loading) {
@@ -369,28 +388,7 @@ const AssessmentQuestionsPage: React.FC = () => {
 
           {/* Questions Display */}
           <div className="space-y-4">
-            {currentTemplate.questions
-              .filter(question => !uiState.deletedQuestions.has(question.id))
-              .map((question, index) => {
-                // Use the new scale from uiState if there are scale changes, otherwise use the question's scale
-                const questionWithUpdatedScale = uiState.hasScaleChanges ? {
-                  ...question,
-                  scale: uiState.globalScale,
-                  labels: generateDefaultLabels(uiState.globalScale)
-                } : question;
-                
-                return (
-                  <EditableQuestionCard
-                    key={`${question.id}-${uiState.globalScale}`}
-                    question={questionWithUpdatedScale}
-                    index={index}
-                    globalScale={uiState.globalScale}
-                    onSave={(questionData) => handleUpdateQuestion(question.id, questionData)}
-                    onDelete={() => handleDeleteQuestion(question.id)}
-                    onTrackChanges={(questionData) => updatePendingChanges(question.id, questionData)}
-                  />
-                );
-              })}
+            {memoizedQuestions}
           </div>
         </>
       )}
