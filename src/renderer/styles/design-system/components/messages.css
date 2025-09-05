@@ -2,7 +2,8 @@
 
 /* Message Bubble Styles */
 .message-bubble {
-  @apply text-foreground rounded-xl py-2 px-3 
+  @apply text-foreground rounded-xl py-2 px-3 break-words;
+  overflow-wrap: anywhere;
 }
 
 .message-bubble.user {
@@ -31,7 +32,8 @@
 }
 
 .message-content {
-  @apply max-w-[80%];
+  @apply max-w-[80%] break-words;
+  overflow-wrap: anywhere;
 }
 
 .message-content.user {

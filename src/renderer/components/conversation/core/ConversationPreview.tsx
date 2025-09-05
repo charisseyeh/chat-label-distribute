@@ -73,17 +73,35 @@ const ConversationPreview: React.FC<ConversationPreviewProps> = ({
       }
       
       if (fullConversationData) {
-        // Extract messages using the service
+        // Extract messages using the service with error handling
         let allMessages: Message[] = [];
-        if (fullConversationData.mapping) {
-          allMessages = extractMessagesFromMapping(fullConversationData.mapping);
-        } else if (fullConversationData.messages) {
-          allMessages = fullConversationData.messages;
+        try {
+          if (fullConversationData.mapping) {
+            allMessages = extractMessagesFromMapping(fullConversationData.mapping);
+          } else if (fullConversationData.messages) {
+            allMessages = fullConversationData.messages;
+          }
+          
+          // Validate and sanitize messages
+          allMessages = allMessages.filter(msg => 
+            msg && 
+            typeof msg === 'object' && 
+            msg.content && 
+            typeof msg.content === 'string'
+          ).map(msg => ({
+            ...msg,
+            content: msg.content.trim(),
+            role: ['user', 'assistant', 'system'].includes(msg.role) ? msg.role : 'user'
+          }));
+          
+          // Limit to maxMessages for preview
+          const previewMessages = allMessages.slice(0, maxMessages);
+          setMessages(previewMessages);
+        } catch (extractionError) {
+          console.error('Error extracting messages:', extractionError);
+          setError('Failed to extract messages from conversation data');
+          return;
         }
-        
-        // Limit to maxMessages for preview
-        const previewMessages = allMessages.slice(0, maxMessages);
-        setMessages(previewMessages);
         
         // Cache the messages
         try {
@@ -140,23 +158,20 @@ const ConversationPreview: React.FC<ConversationPreviewProps> = ({
   }
 
   return (
-    <div className="border-t border-gray-200 bg-gray-50">
-      <div className="p-4">
-        <div className="text-xs text-gray-500 mb-3 font-medium">
-          Conversation Preview ({messages.length} messages shown)
-        </div>
+    <div className="border-y border-gray-200">
+      <div>
         <div className="max-h-64 overflow-y-auto">
           <MessageList
             messages={messages.map((msg, index) => ({
-              id: msg.id,
-              role: msg.role,
-              content: msg.content,
-              timestamp: msg.create_time,
+              id: msg.id || `msg-${index}`,
+              role: msg.role || 'user',
+              content: msg.content || '',
+              timestamp: msg.create_time || Date.now() / 1000,
               messageIndex: index
             }))}
             layout="single"
             messageVariant="bubble"
-            showRole={true}
+            showRole={false}
             showTimestamp={false}
             className="space-y-2"
           />

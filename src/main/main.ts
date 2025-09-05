@@ -47,7 +47,8 @@ const createWindow = () => {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, '../preload/preload.js')
+      preload: path.join(__dirname, '../preload/preload.js'),
+      webSecurity: true
     }
   });
 
@@ -67,6 +68,23 @@ const createWindow = () => {
   // Show the window once it's ready
   mainWindow.once('ready-to-show', () => {
     mainWindow?.show();
+  });
+
+  // Set Content Security Policy headers
+  mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; " +
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+          "style-src 'self' 'unsafe-inline'; " +
+          "img-src 'self' data: blob:; " +
+          "font-src 'self' data:; " +
+          "connect-src 'self' ws: wss:;"
+        ]
+      }
+    });
   });
 
   // Load the renderer

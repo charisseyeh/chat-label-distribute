@@ -52,49 +52,66 @@ const Message: React.FC<MessageProps> = ({
   };
 
   const formatMessageContent = (content: string) => {
-    // Use ReactMarkdown for rich markdown rendering
+    // Sanitize content to prevent layout breaking
+    const sanitizedContent = content
+      .replace(/^#+/gm, '') // Remove markdown headers that might break layout
+      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold formatting
+      .replace(/\*(.*?)\*/g, '$1') // Remove italic formatting
+      .replace(/`([^`]+)`/g, '$1') // Remove inline code formatting
+      .replace(/```[\s\S]*?```/g, (match) => {
+        // Convert code blocks to plain text with proper line breaks
+        return match.replace(/```[\w]*\n?/g, '').replace(/```/g, '');
+      });
+
+    // Use ReactMarkdown for rich markdown rendering with error handling
     return (
-      <div className="markdown-content prose prose-sm max-w-none">
+      <div className="markdown-content prose prose-sm max-w-none break-words">
         <ReactMarkdown 
           remarkPlugins={[remarkGfm]}
           components={{
             // Customize code block styling
-          code: ({ inline, className, children, ...props }: any) => {
-            if (inline) {
+            code: ({ inline, className, children, ...props }: any) => {
+              if (inline) {
+                return (
+                  <code className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono break-all" {...props}>
+                    {children}
+                  </code>
+                );
+              }
               return (
-                <code className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono" {...props}>
+                <code className="block bg-gray-100 p-3 rounded-lg text-sm font-mono overflow-x-auto break-all" {...props}>
                   {children}
                 </code>
               );
-            }
-            return (
-              <code className="block bg-gray-100 p-3 rounded-lg text-sm font-mono overflow-x-auto" {...props}>
+            },
+            // Customize link styling
+            a: ({ children, href, ...props }: any) => (
+              <a 
+                href={href} 
+                className="text-blue-600 hover:text-blue-800 underline break-all" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                {...props}
+              >
                 {children}
-              </code>
-            );
-          },
-          // Customize link styling
-          a: ({ children, href, ...props }: any) => (
-            <a 
-              href={href} 
-              className="text-blue-600 hover:text-blue-800 underline" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              {...props}
-            >
-              {children}
-            </a>
-          ),
-          // Customize blockquote styling
-          blockquote: ({ children, ...props }: any) => (
-            <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-700" {...props}>
-              {children}
-            </blockquote>
-          ),
-        }}
-      >
-        {content}
-      </ReactMarkdown>
+              </a>
+            ),
+            // Customize blockquote styling
+            blockquote: ({ children, ...props }: any) => (
+              <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-700 break-words" {...props}>
+                {children}
+              </blockquote>
+            ),
+            // Handle paragraphs to prevent overflow
+            p: ({ children, ...props }: any) => (
+              <p className="break-words overflow-wrap-anywhere" {...props}>
+                {children}
+              </p>
+            ),
+          }}
+        >
+          {sanitizedContent}
+        </ReactMarkdown>
       </div>
     );
   };
