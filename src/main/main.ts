@@ -1,18 +1,72 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, nativeImage } from 'electron';
 import * as path from 'path';
 import { IPCHandlers } from './ipc-handlers';
+
+// Set the app name immediately after import
+app.setName('Self-labeler');
+
+// Try setting the app name in the process
+process.title = 'Self-labeler';
+
+// Also try setting the app name in the process environment
+process.env.ELECTRON_APP_NAME = 'Self-labeler';
+
+// Also try setting the app user model ID for Windows
+if (process.platform === 'win32') {
+  app.setAppUserModelId('com.selflabeler.app');
+}
+
+// Define icon path - use PNG for development, ICNS for production
+const iconPath = process.env.NODE_ENV === 'development'
+  ? path.join(process.cwd(), 'assets/icons/icon.png')
+  : (process.platform === 'darwin' 
+    ? path.join(process.cwd(), 'assets/icons/icon.icns')
+    : path.join(process.cwd(), 'assets/icons/icon.png'));
+
+// Set the app icon and name for macOS
+if (process.platform === 'darwin') {
+  if (require('fs').existsSync(iconPath)) {
+    app.dock.setIcon(iconPath);
+  }
+  // Force the dock to update the app name
+  app.dock.setBadge('');
+}
 
 let mainWindow: BrowserWindow | null = null;
 
 const createWindow = () => {
+  // Create native image from icon
+  const iconImage = nativeImage.createFromPath(iconPath);
+  
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
+    icon: iconImage,
+    title: 'Self-labeler',
+    show: false, // Don't show until ready
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, '../preload/preload.js')
     }
+  });
+
+  // Force the app name to be set on the window
+  mainWindow.setTitle('Self-labeler');
+  
+  // Also try setting the app name on the app itself
+  if (process.platform === 'darwin') {
+    app.dock.setBadge('');
+  }
+  
+  // Force the window to update its title
+  mainWindow.on('ready-to-show', () => {
+    mainWindow?.setTitle('Self-labeler');
+  });
+ 
+  // Show the window once it's ready
+  mainWindow.once('ready-to-show', () => {
+    mainWindow?.show();
   });
 
   // Load the renderer

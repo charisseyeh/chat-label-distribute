@@ -1,5 +1,5 @@
 {
-  "name": "chat-labeling-app",
+  "name": "Self-labeler",
   "version": "1.0.0",
   "description": "Desktop application for conversation analysis and labeling using AI assistance",
   "main": "./dist/main/main.js",
@@ -61,8 +61,8 @@
     "zustand": "^5.0.8"
   },
   "build": {
-    "appId": "com.chatlabeling.app",
-    "productName": "Chat Labeling App",
+    "appId": "com.selflabeler.app",
+    "productName": "Self-labeler",
     "directories": {
       "output": "dist-electron"
     },
@@ -70,15 +70,19 @@
       "dist/**/*",
       "node_modules/**/*"
     ],
+    "icon": "assets/icons/icon.png",
     "mac": {
       "category": "public.app-category.productivity",
-      "target": "dmg"
+      "target": "dmg",
+      "icon": "assets/icons/icon.icns"
     },
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "assets/icons/icon.ico"
     },
     "linux": {
-      "target": "AppImage"
+      "target": "AppImage",
+      "icon": "assets/icons/icon.png"
     }
   }
 }
