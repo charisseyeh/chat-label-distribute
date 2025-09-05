@@ -203,13 +203,13 @@ const ExportComparisonModal: React.FC<ExportComparisonModalProps> = ({
               <div className="space-x-2">
                 <button
                   onClick={handleSelectAll}
-                  className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                  className="text-sm text-blue-600 hover:text-blue-800 transition-colors whitespace-nowrap"
                 >
                   Select All
                 </button>
                 <button
                   onClick={handleDeselectAll}
-                  className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                  className="text-sm text-blue-600 hover:text-blue-800 transition-colors whitespace-nowrap"
                 >
                   Deselect all
                 </button>

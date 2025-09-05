@@ -141,13 +141,13 @@ const ConversationSelector: React.FC<ConversationSelectorProps> = ({
           <div className="flex gap-2">
             <button
               onClick={onSelectAll}
-              className="btn-outline btn-sm"
+              className="btn-outline btn-sm whitespace-nowrap"
             >
               Select All
             </button>
             <button
               onClick={onDeselectAll}
-              className="btn-outline btn-sm"
+              className="btn-outline btn-sm whitespace-nowrap"
             >
               Deselect All
             </button>

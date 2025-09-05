@@ -223,13 +223,13 @@ const ConversationSelectorPage: React.FC = () => {
               <div className="flex gap-2">
                 <button
                   onClick={handleSelectAll}
-                  className="btn-outline btn-sm"
+                  className="btn-outline btn-sm whitespace-nowrap"
                 >
                   Select All
                 </button>
                 <button
                   onClick={handleDeselectAll}
-                  className="btn-outline btn-sm"
+                  className="btn-outline btn-sm whitespace-nowrap"
                 >
                   Deselect All
                 </button>
