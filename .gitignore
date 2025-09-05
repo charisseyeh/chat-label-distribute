@@ -243,8 +243,11 @@ logs/
 # yarn.lock
 # pnpm-lock.yaml
 
-# Markdown files
+# Markdown files (except documentation)
 *.md
+!README.md
+!CONTRIBUTING.md
+!docs/*.md
 
 # Archive files
 *.zip
