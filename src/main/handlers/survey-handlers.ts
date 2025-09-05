@@ -5,11 +5,8 @@ export class SurveyHandlers {
   private surveyManager: SurveyManager;
 
   constructor(surveyManager: SurveyManager) {
-    console.log('📊 SurveyHandlers: Constructor called');
     this.surveyManager = surveyManager;
-    console.log('📊 SurveyHandlers: Setting up handlers...');
     this.setupHandlers();
-    console.log('✅ SurveyHandlers: Handlers set up successfully');
   }
 
   private setupHandlers() {
@@ -60,19 +57,16 @@ export class SurveyHandlers {
 
     ipcMain.handle('survey:update-template', async (event, templateId: string, updates: any) => {
       try {
-        console.log('🔄 SurveyHandlers: survey:update-template called', { templateId, updates });
         const success = await this.surveyManager.updateSurveyTemplate(templateId, updates);
-        console.log('📁 SurveyManager: updateSurveyTemplate result:', success);
         
         if (success) {
-          console.log('✅ SurveyHandlers: Template updated successfully');
           return { success: true, data: { updated: true } };
         } else {
-          console.error('❌ SurveyHandlers: Failed to update template');
+          console.error('SurveyHandlers: Failed to update template');
           return { success: false, error: 'Failed to update template' };
         }
       } catch (error) {
-        console.error('❌ SurveyHandlers: Error updating template:', error);
+        console.error('SurveyHandlers: Error updating template:', error);
         return { 
           success: false, 
           error: error instanceof Error ? error.message : 'Unknown error occurred' 

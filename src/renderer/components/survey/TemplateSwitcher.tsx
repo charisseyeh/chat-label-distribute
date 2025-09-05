@@ -25,12 +25,10 @@ const TemplateSwitcher: React.FC<TemplateSwitcherProps> = ({
       template,
       () => {
         // Success callback
-        console.log('✅ Template switched successfully');
         onTemplateSwitch?.(template);
       },
       () => {
         // Cancel callback
-        console.log('❌ Template switch cancelled');
       }
     );
   };

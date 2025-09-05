@@ -29,9 +29,9 @@ export const usePendingChanges = (
       await Promise.all(updatePromises);
       
       setPendingChanges(new Map());
-      console.log('✅ All changes saved successfully');
+      // All changes saved successfully
     } catch (error) {
-      console.error('❌ Failed to save changes:', error);
+      console.error('Failed to save changes:', error);
       throw error;
     }
   }, [currentTemplate?.id, updateQuestion]);

@@ -34,7 +34,7 @@ export const FileList: React.FC<FileListProps> = ({
         <h3 className="text-h3">Files for conversationss</h3>
         <button
           onClick={onUploadNew}
-          className="text-blue-600 hover:text-blue-700 text-xs underline"
+          className="text-blue-600 hover:text-blue-700 text-xs underline whitespace-nowrap"
         >
           Upload New
         </button>
@@ -61,13 +61,13 @@ export const FileList: React.FC<FileListProps> = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={() => onLoadFile(file.storedPath)}
-                className="text-blue-600 hover:text-blue-700 text-xs underline"
+                className="text-blue-600 hover:text-blue-700 text-xs underline whitespace-nowrap"
               >
                 Load
               </button>
               <button
                 onClick={() => onDeleteFile(file.id)}
-                className="text-red-600 hover:text-red-700 text-xs underline"
+                className="text-red-600 hover:text-red-700 text-xs underline whitespace-nowrap"
               >
                 Delete
               </button>

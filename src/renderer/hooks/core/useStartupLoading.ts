@@ -2,7 +2,12 @@ import { useEffect, useRef } from 'react';
 import { useConversationStore } from '../../stores/conversationStore';
 
 export const useStartupLoading = () => {
-  const { loadSelectedConversationsFromStorage } = useConversationStore();
+  const { 
+    loadSelectedConversationsFromStorage, 
+    currentSourceFile, 
+    loadedConversations,
+    ensureConversationsLoaded 
+  } = useConversationStore();
   const hasLoadedRef = useRef(false);
 
   useEffect(() => {
@@ -13,14 +18,26 @@ export const useStartupLoading = () => {
 
     const loadOnStartup = async () => {
       try {
+        // First load selected conversations from storage
         await loadSelectedConversationsFromStorage();
+        
+        // Then check if we have a persisted source file but no loaded conversations
+        // This handles the case where the app was closed with a file loaded
+        if (currentSourceFile && loadedConversations.length === 0) {
+          try {
+            await ensureConversationsLoaded(currentSourceFile);
+          } catch (error) {
+            console.warn('Failed to restore conversations from source file:', error);
+          }
+        }
+        
         hasLoadedRef.current = true;
       } catch (error) {
-        console.warn('Failed to load selected conversations on startup:', error);
+        console.warn('Failed to load data on startup:', error);
         hasLoadedRef.current = true; // Mark as loaded even on error to prevent retries
       }
     };
     
     loadOnStartup();
-  }, [loadSelectedConversationsFromStorage]);
+  }, [loadSelectedConversationsFromStorage, currentSourceFile, loadedConversations, ensureConversationsLoaded]);
 };

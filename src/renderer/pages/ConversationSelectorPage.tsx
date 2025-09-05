@@ -45,7 +45,7 @@ const ConversationSelectorPage: React.FC = () => {
         try {
           await ensureConversationsLoaded(currentSourceFile);
         } catch (error) {
-          console.warn('Failed to restore conversations on page load:', error);
+          console.warn('ConversationSelectorPage: Failed to restore conversations on page load:', error);
         }
       }
     };
@@ -69,6 +69,24 @@ const ConversationSelectorPage: React.FC = () => {
     // Then handle filter application
     handleFilterApplication();
   }, [currentSourceFile, loadedConversations, activeFilters, ensureConversationsLoaded, applyFilters]);
+
+  // Additional effect to handle the case where the source file is restored after the component mounts
+  useEffect(() => {
+    const handleDelayedRestoration = async () => {
+      // Small delay to allow the store to fully rehydrate
+      if (currentSourceFile && loadedConversations.length === 0) {
+        setTimeout(async () => {
+          try {
+            await ensureConversationsLoaded(currentSourceFile);
+          } catch (error) {
+            console.warn('ConversationSelectorPage: Delayed restoration failed:', error);
+          }
+        }, 100);
+      }
+    };
+
+    handleDelayedRestoration();
+  }, [currentSourceFile, loadedConversations.length, ensureConversationsLoaded]);
 
   // Load conversations from a stored file
   const loadConversationsFromStoredFile = async (filePath: string) => {
@@ -155,7 +173,7 @@ const ConversationSelectorPage: React.FC = () => {
 
           {/* File List moved to sidebar */}
           {storedFiles.length > 0 && (
-            <div>
+            <div className="p-4">
               <FileList
                 storedFiles={storedFiles}
                 currentSourceFile={currentSourceFile}

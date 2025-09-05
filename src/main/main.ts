@@ -89,11 +89,9 @@ const createWindow = () => {
 app.whenReady().then(() => {
   createWindow();
   try {
-    console.log('🚀 Initializing IPC handlers...');
     const ipcHandlers = new IPCHandlers();
-    console.log('✅ IPC handlers initialized successfully');
   } catch (error) {
-    console.error('❌ Failed to initialize IPC handlers:', error);
+    console.error('Failed to initialize IPC handlers:', error);
   }
 });
 

@@ -11,19 +11,15 @@ export class IPCHandlers {
   private surveyHandlers: SurveyHandlers;
 
   constructor() {
-    console.log('🔧 IPCHandlers: Initializing...');
     this.conversationManager = new ConversationManager();
     this.surveyManager = new SurveyManager();
-    console.log('📊 IPCHandlers: Creating SurveyHandlers...');
     this.surveyHandlers = new SurveyHandlers(this.surveyManager);
-    console.log('✅ IPCHandlers: SurveyHandlers created successfully');
     this.setupConversationHandlers();
     
     // Add a simple test handler to verify IPC is working
     ipcMain.handle('test:ping', () => {
       return { success: true, message: 'pong' };
     });
-    console.log('✅ IPCHandlers: All handlers initialized');
   }
 
   private setupConversationHandlers() {

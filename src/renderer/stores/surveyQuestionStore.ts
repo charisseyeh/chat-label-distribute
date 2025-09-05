@@ -180,9 +180,9 @@ export const useSurveyQuestionStore = create<SurveyQuestionStore>()(
             set({ currentTemplate: newCurrentTemplate });
           }
           
-          console.log('✅ SurveyQuestionStore: updateTemplate completed successfully');
+          // Template updated successfully
         } catch (error) {
-          console.error('❌ SurveyQuestionStore: updateTemplate failed:', error);
+          console.error('SurveyQuestionStore: updateTemplate failed:', error);
           set({ error: error instanceof Error ? error.message : 'Failed to update template' });
           throw error;
         }

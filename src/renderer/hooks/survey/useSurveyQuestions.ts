@@ -89,19 +89,15 @@ export const useSurveyQuestions = () => {
         const templateToValidate = { ...currentTemplate, ...updates } as SurveyTemplate;
         console.log('📋 Template to validate:', templateToValidate);
         const validation = QuestionService.validateTemplate(templateToValidate);
-        console.log('✅ Validation result:', validation);
-        
         if (!validation.isValid) {
-          console.error('❌ Template validation failed:', validation.errors);
+          console.error('Template validation failed:', validation.errors);
           throw new Error(`Template validation failed: ${validation.errors.join(', ')}`);
         }
       }
       
-      console.log('📡 Calling store updateTemplate...');
       await updateTemplate(id, updates);
-      console.log('✅ Store updateTemplate completed');
     } catch (err) {
-      console.error('❌ useSurveyQuestions: handleUpdateTemplate failed:', err);
+      console.error('useSurveyQuestions: handleUpdateTemplate failed:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to update template';
       setError(errorMessage);
       throw err;
