@@ -10,6 +10,7 @@ export interface ScrollTracker {
   getState: () => any;
   getVisibleMessages: () => number[];
   setInitialVisibleMessages: (visibleIndices: number[]) => void;
+  resetUserScrolled: () => void;
 }
 
 export interface ScrollTrackingOptions {
@@ -101,6 +102,13 @@ export class ScrollTrackingService implements ScrollTracker {
   }
 
   /**
+   * Reset the user scrolled state (useful when switching conversations)
+   */
+  resetUserScrolled(): void {
+    this.hasUserScrolled = false;
+  }
+
+  /**
    * Get array of currently visible message indices
    */
   getVisibleMessages(): number[] {
@@ -153,6 +161,9 @@ export class ScrollTrackingService implements ScrollTracker {
       }
     };
     
+    // Reset user scrolled state when setting up new observer
+    this.resetUserScrolled();
+    
     if (scrollableContainer) {
       scrollableContainer.addEventListener('scroll', handleScroll, { passive: true });
     } else {
@@ -200,6 +211,7 @@ export class ScrollTrackingService implements ScrollTracker {
     this.visibleMessages.clear();
     this.initialVisibleMessages.clear();
     this.hasUserScrolled = false;
+    this.messageCount = 0;
     
     if (this.intersectionObserver) {
       this.intersectionObserver.disconnect();

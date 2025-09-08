@@ -254,3 +254,8 @@ logs/
 
 # Large distribution files
 *.dmg
+
+*.p8
+AuthKey_*.p8
+
+.env

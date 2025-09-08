@@ -53,28 +53,13 @@ const ConversationPage: React.FC = () => {
     setScrollTrackingState(prev => ({ ...prev, endReached: true }));
   }, []);
 
-  // Set current conversation ID in navigation store
-  useEffect(() => {
-    if (id) {
-      setCurrentConversationId(id);
-    }
-    
-    return () => {
-      // Clear current conversation ID when component unmounts
-      setCurrentConversationId(null);
-    };
-  }, [id, setCurrentConversationId]);
-
   // Load selected conversations from permanent storage on mount - only run once
   useEffect(() => {
     const loadFromStorage = async () => {
       try {
-        const result = await loadSelectedConversationsFromStorage();
-        if (result) {
-          // Silent success - no console log needed
-        }
+        await loadSelectedConversationsFromStorage();
       } catch (error) {
-        // Silent error handling - no console log needed
+        // Silent error handling
       }
     };
     loadFromStorage();
@@ -88,47 +73,45 @@ const ConversationPage: React.FC = () => {
         title: conv.title
       })));
     } else {
-      // Clear the navigation store if there are no selected conversations
       setSelectedConversations([]);
     }
   }, [storeSelectedConversations, setSelectedConversations]);
 
-  // Ensure current source file is set for the conversation
+  // Handle conversation changes and data loading
   useEffect(() => {
-    if (id && storeSelectedConversations.length > 0) {
-      const currentConv = storeSelectedConversations.find(conv => conv.id === id);
-      if (currentConv?.sourceFilePath && currentConv.sourceFilePath !== currentSourceFile) {
-        // Silent logging - no console log needed
-        setCurrentSourceFile(currentConv.sourceFilePath);
-        
-        // Ensure conversations are loaded for this source file
-        ensureConversationsLoaded(currentConv.sourceFilePath).then((loadedConvs) => {
-          // Silent success - no console log needed
-          
-          // Also load the full conversation data for the current conversation
-          if (id) {
-            loadFullConversationData(id, currentConv.sourceFilePath).then((data) => {
-              if (data) {
-                // Silent success - no console log needed
-              } else {
-                // Silent warning - no console log needed
-              }
-            });
-          }
-        }).catch(error => {
-          // Silent error handling - no console log needed
-        });
-      }
-    }
-  }, [id, storeSelectedConversations, currentSourceFile, setCurrentSourceFile, ensureConversationsLoaded, loadFullConversationData]);
+    if (!id) return;
 
-  // Reset scroll tracking state when conversation changes
-  useEffect(() => {
+    // Reset scroll tracking state when conversation changes
     setScrollTrackingState({
       turn6Reached: false,
       endReached: false
     });
-  }, [id]);
+
+    // Set current conversation ID in navigation store
+    setCurrentConversationId(id);
+
+    // Load conversation data if we have selected conversations
+    if (storeSelectedConversations.length > 0) {
+      const currentConv = storeSelectedConversations.find(conv => conv.id === id);
+      if (currentConv?.sourceFilePath && currentConv.sourceFilePath !== currentSourceFile) {
+        setCurrentSourceFile(currentConv.sourceFilePath);
+        
+        // Load conversations and full conversation data
+        ensureConversationsLoaded(currentConv.sourceFilePath)
+          .then(() => {
+            return loadFullConversationData(id, currentConv.sourceFilePath);
+          })
+          .catch(error => {
+            // Silent error handling
+          });
+      }
+    }
+
+    // Cleanup function
+    return () => {
+      setCurrentConversationId(null);
+    };
+  }, [id, storeSelectedConversations, currentSourceFile, setCurrentSourceFile, setCurrentConversationId, ensureConversationsLoaded, loadFullConversationData]);
 
   // Get survey completion status
   const getSurveyCompletionStatus = () => {

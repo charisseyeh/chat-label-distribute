@@ -5,13 +5,8 @@ import { useScrollTracking } from '../../../hooks/core/useScrollTracking';
 
 interface ConversationDisplayProps {
   messages: Message[];
-  displayedMessages: Message[];
   loading: boolean;
   error: string | null;
-  hasMoreMessages: boolean;
-  totalMessageCount: number;
-  onLoadMore: () => void;
-  onShowAll: () => void;
   onRetry: () => void;
   // Add these new props to connect scroll tracking to parent
   onTurn6Reached?: () => void;
@@ -20,13 +15,8 @@ interface ConversationDisplayProps {
 
 const ConversationDisplay: React.FC<ConversationDisplayProps> = React.memo(({
   messages,
-  displayedMessages,
   loading,
   error,
-  hasMoreMessages,
-  totalMessageCount,
-  onLoadMore,
-  onShowAll,
   onRetry,
   onTurn6Reached,  // Add this
   onEndReached     // Add this
@@ -62,6 +52,9 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = React.memo(({
   // Start tracking when messages are loaded - only when messages.length changes
   useEffect(() => {
     if (messages.length > 0) {
+      // Reset tracking state first to clear any previous conversation state
+      resetTracking();
+      
       // Set the message count for turn 6 detection
       setMessageCount(messages.length);
       
@@ -72,7 +65,7 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = React.memo(({
         stopTracking();
       };
     }
-  }, [messages.length, startTracking, stopTracking, setMessageCount]);
+  }, [messages.length, startTracking, stopTracking, setMessageCount, resetTracking]);
 
   // Set up intersection observer when messages container is ready
   useEffect(() => {
@@ -194,7 +187,7 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = React.memo(({
       scrollableContainer.removeEventListener('scroll', handleScroll);
       window.removeEventListener('scroll', handleWindowScroll);
     };
-  }, [messages.length, isTracking, setupIntersectionObserver, setInitialVisibleMessages]);
+  }, [messages, isTracking, setupIntersectionObserver, setInitialVisibleMessages]);
 
   // Debug function to test message visibility tracking
   const testMessageVisibility = useCallback(() => {
@@ -207,7 +200,7 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = React.memo(({
   // Memoize the message list to prevent unnecessary re-renders
   const messageList = React.useMemo(() => (
     <MessageList
-      messages={displayedMessages.map((msg, index) => ({
+      messages={messages.map((msg, index) => ({
         id: msg.id,
         role: msg.role,
         content: msg.content,
@@ -219,34 +212,8 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = React.memo(({
       showRole={false}
       showTimestamp={false}
     />
-  ), [displayedMessages]);
+  ), [messages]);
 
-  // Memoize the lazy loading controls to prevent unnecessary re-renders
-  const lazyLoadingControls = React.useMemo(() => {
-    if (!hasMoreMessages) return null;
-    
-    return (
-      <div className="mt-6 text-center">
-        <div className="flex items-center justify-center space-x-4">
-          <button
-            onClick={onLoadMore}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-          >
-            Load More Messages (+50)
-          </button>
-          <button
-            onClick={onShowAll}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-          >
-            Show All Messages ({totalMessageCount})
-          </button>
-        </div>
-        <p className="text-sm text-muted-foreground mt-2">
-          Loading messages in batches for better performance
-        </p>
-      </div>
-    );
-  }, [hasMoreMessages, onLoadMore, onShowAll, totalMessageCount]);
 
   if (loading) {
     return (
@@ -281,19 +248,14 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = React.memo(({
   return (
     <div className="flex-1 overflow-y-auto p-6 pb-44 messages-container min-h-0" ref={messagesContainerRef}>
       {messageList}
-      
-      {lazyLoadingControls}
     </div>
   );
 }, (prevProps, nextProps) => {
   // Update the comparison function to include new props
   return (
     prevProps.messages.length === nextProps.messages.length &&
-    prevProps.displayedMessages.length === nextProps.displayedMessages.length &&
     prevProps.loading === nextProps.loading &&
     prevProps.error === nextProps.error &&
-    prevProps.hasMoreMessages === nextProps.hasMoreMessages &&
-    prevProps.totalMessageCount === nextProps.totalMessageCount &&
     prevProps.onTurn6Reached === nextProps.onTurn6Reached &&
     prevProps.onEndReached === nextProps.onEndReached
   );

@@ -99,7 +99,7 @@ export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
       setState(prev => ({
         turn6Reached: false,
         endReached: false,
-        isTracking: prev.isTracking, // Preserve current tracking state
+        isTracking: false, // Reset tracking state too
         visibleMessages: []
       }));
     }
@@ -147,6 +147,13 @@ export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
     }
   }, []); // No dependencies needed since we use refs
 
+  // Reset user scrolled state - memoized with no dependencies
+  const resetUserScrolled = useCallback(() => {
+    if (trackerRef.current && 'resetUserScrolled' in trackerRef.current) {
+      (trackerRef.current as any).resetUserScrolled();
+    }
+  }, []); // No dependencies needed since we use refs
+
   // Get current tracking state - memoized with no dependencies
   const getTrackingState = useCallback(() => {
     if (trackerRef.current) {
@@ -190,6 +197,7 @@ export const useScrollTracking = (options: UseScrollTrackingOptions = {}) => {
     setMessageCount,
     setInitialVisibleMessages,
     setupIntersectionObserver,
+    resetUserScrolled,
     
     // Utility - memoized and stable
     getTrackingState,

@@ -13,31 +13,19 @@ const ConversationDetail: React.FC<ConversationDetailProps> = ({
 }) => {
   const {
     messages,
-    displayedMessages,
     loading,
     error,
-    hasMoreMessages,
-    totalMessageCount,
-    handleRefreshMessages,
-    loadMoreMessages,
-    showAllMessagesHandler
+    handleRefreshMessages
   } = useConversationDetail();
 
-  const handleLoadMore = loadMoreMessages;
-  const handleShowAll = showAllMessagesHandler;
   const handleRetry = handleRefreshMessages;
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
       <ConversationDisplay
         messages={messages}
-        displayedMessages={displayedMessages}
         loading={loading}
         error={error}
-        hasMoreMessages={hasMoreMessages}
-        totalMessageCount={totalMessageCount}
-        onLoadMore={handleLoadMore}
-        onShowAll={handleShowAll}
         onRetry={handleRetry}
         onTurn6Reached={onTurn6Reached}
         onEndReached={onEndReached}

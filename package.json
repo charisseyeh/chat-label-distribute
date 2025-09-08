@@ -14,7 +14,10 @@
     "build:preload": "tsc -p tsconfig.preload.json",
     "build:renderer": "vite build",
     "dist": "npm run build && electron-builder",
-    "dist:clean": "npm run clean && npm run dist",
+    "dist:clean": "npm run clean && npm run dist:mac",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:mac:unsigned": "npm run build && electron-builder --mac --config.mac.identity=null",
+    "dist:mac:dev": "npm run build && electron-builder --mac --config.mac.identity=null --config.mac.hardenedRuntime=false --config.mac.gatekeeperAssess=false",
     "postinstall": "electron-builder install-app-deps",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
@@ -30,6 +33,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@electron/notarize": "^3.1.0",
     "@tailwindcss/forms": "^0.5.7",
     "@tailwindcss/typography": "^0.5.10",
     "@types/electron": "^1.6.10",
@@ -75,8 +79,23 @@
     "icon": "assets/icons/icon.png",
     "mac": {
       "category": "public.app-category.productivity",
-      "target": "dmg",
-      "icon": "assets/icons/icon.icns"
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "assets/icons/icon.icns",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "notarize": {
+        "appBundleId": "com.selflabeler.app"
+      }
     },
     "win": {
       "target": "nsis",
